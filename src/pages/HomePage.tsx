@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { getPostings } from '@/apis/posting';
+import PostingCard from '@/shared/components/PostingCard';
 
 // 보일러플레이트 동작 확인용 예시 페이지.
-// 실제 홈 피드(3섹션)는 features/posting 또는 별도 화면으로 구현하세요.
 export default function HomePage() {
   const { data, isPending, isError } = useQuery({
     queryKey: ['postings'],
@@ -13,20 +13,44 @@ export default function HomePage() {
   if (isError) return <div className="p-4">에러가 발생했어요.</div>;
 
   return (
-    <main className="mx-auto max-w-md p-4">
-      <h1 className="mb-4 text-2xl font-bold text-blue-600">FitMe</h1>
-      <p className="mb-4 text-sm text-gray-500">맞춤 추천 피드 (보일러플레이트 동작 확인)</p>
-      <ul className="space-y-3">
-        {data?.map((posting) => (
-          <li key={posting.id} className="rounded-xl border border-gray-200 p-3">
-            <span className="text-xs text-gray-400">
-              {posting.type === 'SCHOLARSHIP' ? '장학금' : '공모전'}
-            </span>
-            <p className="font-semibold">{posting.title}</p>
-            <p className="text-sm text-gray-500">{posting.organization}</p>
-          </li>
-        ))}
-      </ul>
+    <main className="mx-auto max-w-md p-4 space-y-6 bg-slate-50/50 min-h-screen">
+      <div>
+        <h1 className="text-2xl font-bold text-blue-600">FitMe</h1>
+        <p className="text-xs text-gray-400 mt-1">공통 PostingCard 컴포넌트 동작 검증 화면</p>
+      </div>
+
+      {/* 섹션 1: 가로형 리스트 레이아웃 */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+          맞춤 추천 공고 (가로형 리스트)
+        </h2>
+        <div className="flex flex-col gap-3">
+          {data?.map((posting) => (
+            <PostingCard
+              key={posting.id}
+              posting={posting}
+              variant="horizontal"
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* 섹션 2: 세로형 캐러셀 레이아웃 */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+          실시간 인기 공고 (세로형 카드)
+        </h2>
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none snap-x snap-mandatory">
+          {data?.map((posting) => (
+            <div key={posting.id} className="snap-start flex-shrink-0">
+              <PostingCard
+                posting={posting}
+                variant="vertical"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }
