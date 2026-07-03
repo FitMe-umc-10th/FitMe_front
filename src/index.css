@@ -28,3 +28,12 @@ body {
 .animate-fade-in-up {
   animation: fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* 스크롤바 숨기기 유틸리티 (캐러셀 가로 스와이프용) */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
