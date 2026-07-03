@@ -3,48 +3,168 @@ import React, { useRef, useState, useEffect } from 'react';
 interface CarouselProps {
   children: React.ReactNode;
   showIndicator?: boolean;
+  loop?: boolean;
 }
 
-export default function Carousel({ children, showIndicator = false }: CarouselProps) {
+export default function Carousel({ children, showIndicator = false, loop = false }: CarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [totalItems, setTotalItems] = useState(0);
+  const childrenArray = React.Children.toArray(children).filter(Boolean);
+  const count = childrenArray.length;
 
+  // 무한 루프일 때 자식 배열 구성: [마지막 아이템, ...기본 아이템들, 첫 번째 아이템]
+  const displayItems = loop && count > 1
+    ? [childrenArray[count - 1], ...childrenArray, childrenArray[0]]
+    : childrenArray;
+
+  // 컴포넌트 마운트 및 렌더링 시 무한 루프의 첫 실물 아이템(인덱스 1)으로 초기 스크롤 위치 조정
   useEffect(() => {
-    setTotalItems(React.Children.count(children));
-  }, [children]);
+    if (loop && count > 1) {
+      const timer = setTimeout(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const childrenElements = container.children;
+        const targetChild = childrenElements[1] as HTMLElement; // 첫 번째 실물 아이템
+        if (targetChild) {
+          const targetLeft = targetChild.offsetLeft + targetChild.offsetWidth / 2 - container.clientWidth / 2;
+          container.scrollLeft = targetLeft;
+          setCurrentIndex(0);
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [loop, count]);
 
   const handleScroll = () => {
-    if (!containerRef.current) return;
-    const { scrollLeft, clientWidth } = containerRef.current;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const { scrollLeft, clientWidth } = container;
     if (clientWidth === 0) return;
 
-    const firstChild = containerRef.current.firstElementChild as HTMLElement;
-    if (!firstChild) return;
+    const childrenElements = container.children;
+    if (childrenElements.length === 0) return;
 
-    const itemWidth = firstChild.offsetWidth;
-    const index = Math.round(scrollLeft / itemWidth);
-    setCurrentIndex(index);
+    // 컨테이너 중앙 좌표 기준 가장 가까운 자식 인덱스 탐색
+    const containerCenter = scrollLeft + clientWidth / 2;
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    for (let i = 0; i < childrenElements.length; i++) {
+      const child = childrenElements[i] as HTMLElement;
+      const childCenter = child.offsetLeft + child.offsetWidth / 2;
+      const distance = Math.abs(containerCenter - childCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = i;
+      }
+    }
+
+    if (loop && count > 1) {
+      let realIndex = closestIndex - 1;
+      if (realIndex < 0) realIndex = count - 1;
+      if (realIndex >= count) realIndex = 0;
+      setCurrentIndex(realIndex);
+    } else {
+      setCurrentIndex(closestIndex);
+    }
   };
 
+  // 무한 루프 스크롤 위치 보정 (스크롤이 멈췄을 때 실행 - 디바운스 적용하여 크로스브라우징 완벽 지원)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !loop || count <= 1) return;
+
+    let scrollTimeout: NodeJS.Timeout;
+
+    const handleScrollEnd = () => {
+      const { scrollLeft, clientWidth } = container;
+      const childrenElements = container.children;
+      if (childrenElements.length === 0) return;
+
+      const containerCenter = scrollLeft + clientWidth / 2;
+      let closestIndex = 0;
+      let minDistance = Infinity;
+
+      for (let i = 0; i < childrenElements.length; i++) {
+        const child = childrenElements[i] as HTMLElement;
+        const childCenter = child.offsetLeft + child.offsetWidth / 2;
+        const distance = Math.abs(containerCenter - childCenter);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = i;
+        }
+      }
+
+      // 복제된 마지막 아이템(인덱스 0)에 도달한 경우 -> 실물 마지막 아이템(인덱스 count)으로 점프
+      if (closestIndex === 0) {
+        const realLastChild = childrenElements[count] as HTMLElement;
+        if (realLastChild) {
+          const targetLeft = realLastChild.offsetLeft + realLastChild.offsetWidth / 2 - clientWidth / 2;
+          container.scrollLeft = targetLeft;
+        }
+      }
+      // 복제된 첫 번째 아이템(인덱스 count + 1)에 도달한 경우 -> 실물 첫 번째 아이템(인덱스 1)으로 점프
+      else if (closestIndex === count + 1) {
+        const realFirstChild = childrenElements[1] as HTMLElement;
+        if (realFirstChild) {
+          const targetLeft = realFirstChild.offsetLeft + realFirstChild.offsetWidth / 2 - clientWidth / 2;
+          container.scrollLeft = targetLeft;
+        }
+      }
+      // 일반 아이템이고, 스크롤 정렬 상태가 정중앙에서 살짝 벗어나 있다면 자석처럼 스르륵 정중앙 정렬
+      else {
+        const targetChild = childrenElements[closestIndex] as HTMLElement;
+        if (targetChild) {
+          const targetLeft = targetChild.offsetLeft + targetChild.offsetWidth / 2 - clientWidth / 2;
+          const currentDiff = Math.abs(scrollLeft - targetLeft);
+          if (currentDiff > 2) {
+            container.scrollTo({ left: targetLeft, behavior: 'smooth' });
+          }
+        }
+      }
+    };
+
+    const handleScrollEvent = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(handleScrollEnd, 150); // 150ms 동안 스크롤 이벤트가 없으면 멈춘 것으로 판단
+    };
+
+    container.addEventListener('scroll', handleScrollEvent);
+
+    return () => {
+      container.removeEventListener('scroll', handleScrollEvent);
+      clearTimeout(scrollTimeout);
+    };
+  }, [loop, count]);
+
+  // 무한 루프 시 좌우 50px 패딩을 주어 인접 카드가 삐져나오도록 유도하고 중앙 스냅 지정
+  const paddingClass = loop ? 'px-[50px] py-3' : 'pb-1';
+  const scrollPaddingStyle = loop
+    ? { scrollPaddingLeft: '50px', scrollPaddingRight: '50px' }
+    : undefined;
+
   return (
-    <div className="relative w-full">
+    <div className="relative w-full overflow-visible">
       {/* 가로 스와이프 스냅 컨테이너 */}
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-1"
+        className={`flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory ${paddingClass}`}
+        style={scrollPaddingStyle}
       >
-        {React.Children.map(children, (child) => {
-          if (!child) return null;
-          return <div className="snap-start flex-shrink-0">{child}</div>;
-        })}
+        {displayItems.map((child, index) => (
+          <div key={index} className={loop ? 'snap-center flex-shrink-0' : 'snap-start flex-shrink-0'}>
+            {child}
+          </div>
+        ))}
       </div>
 
-      {/* 인디케이터 표시 (showIndicator가 true일 때만 노출) */}
-      {showIndicator && totalItems > 0 && (
-        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold select-none z-10">
-          {currentIndex + 1} / {totalItems}
+      {/* 인디케이터 표시 (showIndicator가 true일 때만 노출, 인기 공고 카드 우측 상단 오버레이 위치로 조율) */}
+      {showIndicator && count > 0 && (
+        <div className="absolute top-6 right-[70px] bg-black/25 backdrop-blur-sm text-white/90 text-[10px] px-2.5 py-0.5 rounded-full font-bold select-none z-10 pointer-events-none">
+          {currentIndex + 1} / {count}
         </div>
       )}
     </div>

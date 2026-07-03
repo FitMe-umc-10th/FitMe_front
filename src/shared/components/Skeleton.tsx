@@ -1,6 +1,6 @@
 interface SkeletonProps {
   count?: number;
-  variant?: 'card' | 'list';
+  variant?: 'card' | 'list' | 'popular';
 }
 
 export default function Skeleton({ count = 1, variant = 'list' }: SkeletonProps) {
@@ -31,6 +31,44 @@ export default function Skeleton({ count = 1, variant = 'list' }: SkeletonProps)
 
               {/* 세 번째 행: 기관 골격 */}
               <div className="w-2/3 h-2.5 bg-slate-100 rounded mt-1.5" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // 실시간 인기 공고 스켈레톤 (variant === 'popular')
+  if (variant === 'popular') {
+    return (
+      <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-none">
+        {items.map((_, index) => (
+          <div
+            key={index}
+            className="relative flex flex-col justify-between w-[292px] h-[239px] rounded-2xl border border-slate-100 shadow-sm overflow-hidden select-none animate-pulse flex-shrink-0 pt-[16px] pb-[16px] px-[20px]"
+          >
+            {/* 전체 배경 이미지 슬롯 */}
+            <div className="absolute inset-0 bg-slate-200 -z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent" />
+
+            {/* 상단 빈 영역 */}
+            <div className="h-6" />
+
+            {/* 하단 정보 영역 골격 */}
+            <div className="flex items-end justify-between gap-4 mt-auto">
+              <div className="flex-1 min-w-0">
+                {/* 배지 */}
+                <div className="w-12 h-5 bg-white/40 border border-white/20 rounded-full mb-2" />
+                {/* 제목 */}
+                <div className="flex flex-col gap-1.5 mb-2">
+                  <div className="w-11/12 h-3.5 bg-slate-200 rounded" />
+                  <div className="w-8/12 h-3.5 bg-slate-200 rounded" />
+                </div>
+                {/* 기관 */}
+                <div className="w-1/2 h-3 bg-slate-100 rounded" />
+              </div>
+              {/* 하트 버튼 */}
+              <div className="w-8 h-8 bg-slate-100 rounded-full flex-shrink-0" />
             </div>
           </div>
         ))}

@@ -76,7 +76,15 @@ export default function EmptyState({
         </p>
       )}
 
-      {/* 버튼 들어갈 자리 */}
+      {/* CTA 버튼 (대략적인 뼈대 구현) */}
+      {cta && (
+        <button
+          onClick={cta.onClick}
+          className="mt-4 px-6 py-2.5 bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-semibold text-sm rounded-full shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+        >
+          {cta.label}
+        </button>
+      )}
     </div>
   );
 }
