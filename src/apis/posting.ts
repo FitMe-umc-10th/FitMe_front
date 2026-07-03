@@ -19,6 +19,12 @@ export const toggleSave = async (postingId: number, isSaved: boolean): Promise<b
     throw new Error('의도된 서버 에러: 찜하기 상태 변경 실패');
   }
 
+  // 메모리 상의 mock 데이터를 실제로 업데이트하여 refetch 시에도 상태가 보존되게 함
+  const target = MOCK_POSTINGS.find((p) => p.id === postingId);
+  if (target) {
+    target.isSaved = !isSaved;
+  }
+
   return !isSaved; // 정상 처리 시 반전된 값 반환
 };
 
