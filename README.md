@@ -10,24 +10,24 @@
 
 ```text
 src/
- ├ apis/        # Axios 인스턴스 설정 및 공통 API 요청 함수
- ├ constants/   # Mock 데이터 및 전역 상수 관리
- ├ features/    # 핵심 비즈니스 기능(도메인)별 폴더
- │  ├ auth/      # 로그인, 회원가입, 온보딩 로직 및 컴포넌트
- │  ├ posting/   # 공고 피드, 공고 상세, 탐색(검색)
- │  ├ saved/     # 찜한 공고 목록 (보관함)
- │  ├ history/   # 지원 및 매칭 히스토리
- │  └ mypage/    # 내 정보 설정 및 프로필
- ├ shared/      # 여러 기능에서 공동으로 재사용하는 요소
- │  ├ components/# Button, Modal, Chip, PostingCard 등 공통 UI 컴포넌트
- │  ├ hooks/     # useDebounce, useInfiniteScroll 등 커스텀 훅
- │  └ utils/     # 날짜 포맷팅, D-Day 계산 등 유틸리티 함수
- ├ pages/       # 라우터에 바인딩되는 개별 화면 컴포넌트
- ├ routes/      # react-router-dom을 이용한 페이지 경로 및 권한 설정
- ├ store/       # Zustand를 활용한 전역 클라이언트 상태 (Auth 등)
- ├ types/       # 공통 TypeScript 타입 정의 (.d.ts 등)
- ├ lib/         # React Query Client 등 라이브러리 설정 파일
- └ package.json # 프로젝트 의존성 및 스크립트 설정
+ ├ apis/
+ ├ constants/
+ ├ features/
+ │  ├ auth/
+ │  ├ posting/
+ │  ├ saved/
+ │  ├ history/
+ │  └ mypage/
+ ├ shared/
+ │  ├ components/
+ │  ├ hooks/
+ │  └ utils/
+ ├ pages/
+ ├ routes/
+ ├ store/
+ ├ types/
+ ├ lib/
+ └ package.json
 ```
 
 ## 🌿 브랜치 및 협업 전략
@@ -114,8 +114,8 @@ graph TD
 
 ## 👥 팀원 및 역할 분담
 
-| 이름                              | 역할            | 담당 기능 (R&R)          |
-| :-------------------------------- | :-------------- | :----------------------- |
-| **[서은호](https://github.com/)** | 프론트엔드 개발 | [담당 역할 및 기능 상세] |
-| **[김경섭](https://github.com/)** | 프론트엔드 개발 | [담당 역할 및 기능 상세] |
-| **[정종욱](https://github.com/)** | 프론트엔드 개발 | [담당 역할 및 기능 상세] |
+| 이름                                       | 역할           | 담당 기능                                  |
+| :----------------------------------------- | :------------- | :----------------------------------------- |
+| **[서은호](https://github.com/eunho0216)** | 앱골격 및 인증 | 로그인 및 로그아웃, 라우터 뼈대, 토큰 관리 |
+| **[김경섭](https://github.com/kimgs1107)** | 공고 발견 흐름 | 홈 피드, 공고 상세, 찜 목록                |
+| **[정종욱](https://github.com/Beuja)**     | 탐색 및 검색   | 검색, 필터, 프로필 설정, 관리, 알림        |
