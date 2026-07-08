@@ -5,6 +5,7 @@ import Button from '@/shared/components/Button';
 import Logo from '@/shared/components/Logo';
 import { useAuthStore } from '@/store/authStore';
 import { useToastStore } from '@/store/toastStore';
+import { login } from '@/apis/auth';
 
 export default function EmailLoginPage() {
   const navigate = useNavigate();
@@ -20,14 +21,12 @@ export default function EmailLoginPage() {
 
   const handleLogin = async () => {
     try {
-      // TODO: 실제 로그인 API(FIT-LGN-02)로 교체
-      // const { data } = await login({ email, password });
-      // setAccessToken(data.accessToken);
-
-      // --- Mock (백엔드 나오기 전) ---
-      setAccessToken('mock-access-token');
-      navigate('/'); // 로그인 성공 → 홈
+      // auth.ts의 login 함수 호출 (지금은 mock 토큰 반환)
+      const { accessToken } = await login({ email, password });
+      setAccessToken(accessToken); // authStore에 토큰 저장 → 로그인 상태
+      navigate('/'); // 홈으로 (Protected Route가 온보딩 여부 보고 분기)
     } catch {
+      // 실패 시 토스트 (지금 mock은 항상 성공이라 안 뜸)
       toastError('로그인에 실패했습니다. 다시 시도해주세요.');
     }
   };

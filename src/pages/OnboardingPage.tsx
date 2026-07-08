@@ -7,6 +7,7 @@ import Chip from '@/shared/components/Chip';
 import Dropdown from '@/shared/components/Dropdown';
 import BottomSheet from '@/shared/components/BottomSheet';
 import { useAuthStore } from '@/store/authStore';
+import { saveOnboarding } from '@/apis/auth';
 
 const INTERESTS = ['마케팅', '기획/아이디어', '디자인', 'IT/개발', '어학', '영상편집'];
 const RESIDENCE_OPTIONS = [
@@ -57,9 +58,11 @@ export default function OnboardingPage() {
           ? interests.length > 0 || customInterest.trim() !== ''
           : true;
 
-  const handleFinish = () => {
-    setOnboarded(true);
-    navigate('/');
+  const handleFinish = async () => {
+    // 온보딩에서 수집한 조건들을 서버에 저장 (지금은 mock)
+    await saveOnboarding({ residence, university, gpa, income, interests });
+    setOnboarded(true); // authStore 온보딩 완료 표시 → Protected Route가 홈 허용
+    navigate('/'); // 홈으로
   };
 
   const labelClass = 'mb-1.5 block font-semibold';

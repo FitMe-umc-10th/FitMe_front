@@ -7,6 +7,7 @@ import Input from '@/shared/components/Input';
 import Button from '@/shared/components/Button';
 import Logo from '@/shared/components/Logo';
 import { useToastStore } from '@/store/toastStore';
+import { signup, sendEmailCode, verifyEmailCode } from '@/apis/auth';
 
 // 검증 규칙 (Zod)
 const signupSchema = z
@@ -54,27 +55,35 @@ export default function SignupPage() {
   const emailValue = watch('email') ?? '';
   const emailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
 
-  const sendCode = () => {
-    // TODO: 실제 인증번호 발송 API
-    setCodeSent(true);
+  // 인증번호 발송
+  const sendCode = async () => {
+    await sendEmailCode(watch('email')); // 현재 입력된 이메일로 발송
+    setCodeSent(true); // 버튼 텍스트 '재전송'으로, 인증칸 열림
     toast.success('인증번호를 전송했어요 (mock)');
   };
 
-  const verifyCode = () => {
-    // TODO: 실제 인증번호 확인 API — 지금은 6자리면 통과
-    if (code.length === 6) {
-      setIsVerified(true);
+  // 인증번호 확인
+  const verifyCode = async () => {
+    const ok = await verifyEmailCode(watch('email'), code); // mock: 6자리면 true
+    if (ok) {
+      setIsVerified(true); // 인증 완료 → 칸 잠기고 '인증 완료' 표시
       toast.success('인증 완료');
     } else {
       toast.error('인증번호 6자리를 입력해주세요');
     }
   };
 
-  const onSubmit = (data: SignupForm) => {
-    // TODO: 실제 회원가입 API(FIT-MEM-01)
-    console.log('회원가입 데이터:', data);
+  // 최종 가입
+  const onSubmit = async (data: SignupForm) => {
+    // 폼 데이터에서 필요한 값만 뽑아 회원가입 요청
+    await signup({
+      name: data.name,
+      birth: data.birth,
+      email: data.email,
+      password: data.password,
+    });
     toast.success('회원가입이 완료되었어요!');
-    navigate('/login');
+    navigate('/login'); // 가입 후 로그인 화면으로
   };
 
   const labelClass = 'mb-1.5 block font-semibold text-gray-900';
