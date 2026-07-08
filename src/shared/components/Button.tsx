@@ -34,7 +34,7 @@ export default function Button({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`${base} ${variants[variant]} ${sizes[size]}`}
+      className={`${base} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''}`}
     >
       {children}
     </button>

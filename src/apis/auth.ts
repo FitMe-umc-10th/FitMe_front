@@ -41,6 +41,7 @@ export async function login(body: LoginRequest): Promise<LoginResponse> {
   // TODO: 실제 API 로 교체
   // return (await axiosInstance.post('/auth/login', body)).data;
   await mockDelay();
+  console.log('로그인 요청:', body); // mock: 콘솔에만 찍음
   return { accessToken: 'mock-access-token' }; // mock: 항상 성공
 }
 
@@ -63,6 +64,7 @@ export async function sendEmailCode(email: string): Promise<void> {
 export async function verifyEmailCode(email: string, code: string): Promise<boolean> {
   // TODO: return (await axiosInstance.post('/auth/email/verify', { email, code })).data.verified;
   await mockDelay();
+  console.log('인증 확인:', email, code);
   return code.length === 6; // mock: 6자리면 성공 처리
 }
 
