@@ -1,15 +1,20 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getProfile, getNotices } from '@/apis/mypage';
 import { Layout, TabBar } from '@/shared/components';
-import { useModalStore } from '@/store/modalStore';
 import { useToastStore } from '@/store/toastStore';
+import exclamationBorder from '@/assets/exclamation_mark_border.svg';
+import exclamationStick from '@/assets/exclamation_mark_stick.svg';
+import exclamationDot from '@/assets/exclamation_mark_dot.svg';
 
 export default function MyPageMain() {
   const navigate = useNavigate();
-  const openModal = useModalStore((state) => state.openModal);
-  const closeModal = useModalStore((state) => state.closeModal);
   const toast = useToastStore();
+
+  // 로컬 모달 팝업 상태 정의 (공통 모달 코드 영향 최소화)
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+  const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
 
   // 1. 유저 프로필 데이터 조회
   const { data: profile, isLoading } = useQuery({
@@ -33,60 +38,12 @@ export default function MyPageMain() {
 
   // 로그아웃 버튼 핸들러
   const handleLogoutClick = () => {
-    openModal({
-      title: '로그아웃 하시겠어요?',
-      description: '로그아웃 시 맞춤 공고 알림이 제한됩니다.',
-      buttons: [
-        {
-          label: '취소',
-          variant: 'secondary',
-          onClick: closeModal,
-        },
-        {
-          label: '로그아웃',
-          variant: 'primary',
-          onClick: () => {
-            closeModal();
-            toast.success('로그아웃 되었습니다.');
-          },
-        },
-      ],
-    });
+    setIsLogoutOpen(true);
   };
 
   // 회원탈퇴 버튼 핸들러
   const handleWithdrawalClick = () => {
-    if (!profile) return;
-
-    openModal({
-      title: '정말 탈퇴하시겠어요?',
-      description: `지금 탈퇴하시면 ${profile.name}님이 모은 아래 데이터가 영구적으로 삭제됩니다.`,
-      children: (
-        <div className="mt-4 flex flex-col items-center justify-center rounded-2xl bg-blue-50/70 p-4 border border-blue-100/50">
-          <p className="text-xs font-semibold text-blue-500 uppercase tracking-wider mb-1">
-            삭제 예정 혜택
-          </p>
-          <p className="text-base font-bold text-blue-600">
-            누적 장학금 {formatScholarship(profile.activitySummary.accumulatedScholarship)}
-          </p>
-        </div>
-      ),
-      buttons: [
-        {
-          label: '취소',
-          variant: 'secondary',
-          onClick: closeModal,
-        },
-        {
-          label: '탈퇴하기',
-          variant: 'danger',
-          onClick: () => {
-            closeModal();
-            toast.error('회원 탈퇴가 완료되었습니다.');
-          },
-        },
-      ],
-    });
+    setIsWithdrawalOpen(true);
   };
 
   // 로딩 상태 (레이아웃 깜빡임과 밀림을 방지하기 위한 완성형 스켈레톤 Shimmer UI)
@@ -286,6 +243,116 @@ export default function MyPageMain() {
           </div>
         </div>
       </div>
+
+      {/* ======================================================== */}
+      {/* 커스텀 로컬 모달 렌더링 영역 (피그마 픽셀 스펙 일치) */}
+      {/* ======================================================== */}
+
+      {/* 1. 로그아웃 모달 (w-323, h-177) */}
+      {isLogoutOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6">
+          <div className="absolute inset-0" onClick={() => setIsLogoutOpen(false)} />
+          <section
+            role="dialog"
+            aria-modal="true"
+            className="relative w-[323px] h-[177px] rounded-[24px] bg-white pt-[24px] pb-[24px] px-[20px] flex flex-col justify-between items-center text-center shadow-2xl animate-fade-in-up"
+          >
+            <div className="flex flex-col items-center w-full">
+              <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-900 font-pretendard text-center">
+                로그아웃 하시겠어요?
+              </h2>
+              <p className="mt-[16px] text-[16px] font-normal leading-[140%] tracking-[-2%] text-gray-400 font-pretendard text-center">
+                로그아웃 시 맞춤 공고 알림이 제한됩니다.
+              </p>
+            </div>
+
+            <div className="flex gap-[8px] justify-center w-full mt-auto">
+              <button
+                type="button"
+                onClick={() => setIsLogoutOpen(false)}
+                className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-gray-100 text-gray-500 hover:bg-gray-200 active:scale-95"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLogoutOpen(false);
+                  toast.success('로그아웃 되었습니다.');
+                }}
+                className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
+              >
+                로그아웃
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* 2. 회원탈퇴 모달 (w-323, h-323) */}
+      {isWithdrawalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6">
+          <div className="absolute inset-0" onClick={() => setIsWithdrawalOpen(false)} />
+          <section
+            role="dialog"
+            aria-modal="true"
+            className="relative w-[323px] h-[323px] rounded-[24px] bg-white pt-[24px] pb-[24px] px-[20px] flex flex-col justify-between items-center text-center shadow-2xl animate-fade-in-up"
+          >
+            <div className="flex flex-col items-center w-full">
+              {/* 느낌표 에셋 이미지 결합형 (높이 55px, 느낌표 밑 gap 16px) */}
+              <div className="relative size-[55px] flex items-center justify-center select-none mb-[16px] shrink-0">
+                <img src={exclamationBorder} className="absolute inset-0 size-full" alt="" />
+                <img
+                  src={exclamationStick}
+                  className="absolute top-[14px]"
+                  style={{ left: 'calc(50% - 2.5px)' }}
+                  alt=""
+                />
+                <img
+                  src={exclamationDot}
+                  className="absolute bottom-[14px]"
+                  style={{ left: 'calc(50% - 3.0px)' }}
+                  alt=""
+                />
+              </div>
+
+              <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-900 font-pretendard text-center">
+                정말 탈퇴하시겠어요?
+              </h2>
+              {/* 타이틀 밑 gap 16px */}
+              <p className="mt-[16px] text-[16px] font-normal leading-[140%] tracking-[-2%] text-gray-400 font-pretendard text-center whitespace-pre-line">
+                {`지금 탈퇴하시면 ${profile?.name}님이 모은\n아래 데이터가 영구적으로 삭제됩니다.`}
+              </p>
+            </div>
+
+            {/* 삭제 예정 데이터 박스 (w-238, h-42, 패딩 상하 10px 좌우 50px, gap 16px) */}
+            <div className="w-[238px] h-[42px] py-[10px] px-[50px] whitespace-nowrap rounded-[8px] bg-[#f0f6ff] text-blue-600 flex items-center justify-center select-none border border-blue-100/30 text-[16px] font-semibold leading-[140%] tracking-normal text-center mt-[16px] mx-auto">
+              누적 장학금 {formatScholarship(profile?.activitySummary.accumulatedScholarship || 0)}
+            </div>
+
+            {/* 박스 밑 gap 24px 및 버튼 두께 font-medium 보정 */}
+            <div className="flex gap-[8px] justify-center w-full mt-[24px]">
+              <button
+                type="button"
+                onClick={() => setIsWithdrawalOpen(false)}
+                className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-gray-100 text-gray-500 hover:bg-gray-200 active:scale-95"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsWithdrawalOpen(false);
+                  toast.error('회원 탈퇴가 완료되었습니다.');
+                }}
+                className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
+              >
+                탈퇴하기
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </Layout>
   );
 }
