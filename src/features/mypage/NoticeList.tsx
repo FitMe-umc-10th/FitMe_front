@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { getNotices } from '@/apis/mypage';
-import { Header, Layout } from '@/shared/components';
+import { Layout } from '@/shared/components';
 
 export default function NoticeList() {
+  const navigate = useNavigate();
+  
   // 1. 공지사항 데이터 조회
   const { data: notices, isLoading } = useQuery({
     queryKey: ['notices'],
     queryFn: getNotices,
   });
 
-  // 클릭 시 아코디언 형태로 본문이 펼쳐지도록 로컬 상태 관리
+  // 클릭 시 아코디언 형태로 본문이 펼쳐지도록 로컬 상태 관리 (타입 number로 매핑)
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const handleToggle = (id: number) => {
@@ -19,7 +22,16 @@ export default function NoticeList() {
 
   if (isLoading) {
     return (
-      <Layout header={<Header title="공지사항" showBack />}>
+      <Layout
+        header={
+          <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
+            <div className="w-[41px] h-[41px]" />
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard text-center">
+              공지 사항
+            </h1>
+          </header>
+        }
+      >
         <div className="animate-pulse space-y-3 p-4">
           <div className="h-16 rounded-xl bg-gray-100" />
           <div className="h-16 rounded-xl bg-gray-100" />
@@ -30,59 +42,78 @@ export default function NoticeList() {
   }
 
   return (
-    <Layout header={<Header title="공지사항" showBack />} className="bg-slate-50/50">
-      <div className="p-4">
+    <Layout
+      header={
+        <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="w-[41px] h-[41px] flex items-center justify-center rounded-full text-gray-800 hover:bg-gray-50 active:scale-95 transition-all shrink-0"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6">
+              <path
+                d="M15 18L9 12L15 6"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2.2"
+              />
+            </svg>
+          </button>
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard select-none text-center">
+            공지 사항
+          </h1>
+          <div className="w-[41px] h-[41px]" />
+        </header>
+      }
+      className="bg-white"
+    >
+      <div className="w-full max-w-[402px] mx-auto bg-white flex flex-col">
         {notices && notices.length > 0 ? (
-          <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden shadow-sm divide-y divide-gray-50">
+          <div className="flex flex-col bg-white">
             {notices.map((notice) => {
               const isExpanded = expandedId === notice.id;
+              const isHighlighted = notice.isNew; // New 공지사항은 연한 블루 배경 및 배지 적용
 
               return (
-                <div key={notice.id} className="transition-all">
+                <div key={notice.id} className="w-full flex flex-col">
                   {/* 헤더 영역 (클릭 시 토글) */}
                   <button
                     type="button"
                     onClick={() => handleToggle(notice.id)}
-                    className="flex w-full items-start justify-between p-4 text-left hover:bg-gray-50/50 active:bg-gray-100/30 transition-colors focus:outline-none"
+                    className={`w-full h-[75px] px-[20px] py-[24px] flex items-center justify-between transition-colors focus:outline-none ${
+                      isHighlighted ? 'bg-[#f0f6ff]/70' : 'bg-white border-b border-gray-100/80'
+                    }`}
                   >
-                    <div className="min-w-0 flex-1 pr-3 space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {/* 공지사항 태그 */}
-                        <span className="inline-block rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-500 shadow-sm">
-                          {notice.type}
-                        </span>
-                        {/* 새 소식 N 배지 */}
-                        {notice.isNew && (
-                          <span className="flex size-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm shrink-0">
-                            N
-                          </span>
-                        )}
-                        <span className="text-[11px] font-semibold text-gray-400">
-                          {notice.createdAt}
-                        </span>
-                      </div>
-                      <h4 className="text-sm font-bold text-gray-800 leading-snug">
+                    <div className="flex items-center gap-[8px] min-w-0">
+                      {/* 안내 배지 (w-45 h-27, 8px gap) */}
+                      <span
+                        className={`w-[45px] h-[27px] rounded-[8px] text-[12px] font-semibold leading-[160%] tracking-[-0.24px] flex items-center justify-center shrink-0 ${
+                          isHighlighted
+                            ? 'bg-[#e6f0ff] text-[#0066ff]'
+                            : 'bg-gray-100 text-gray-500'
+                        }`}
+                      >
+                        안내
+                      </span>
+                      {/* 공지사항 제목 (16px SemiBold, leading-140%) */}
+                      <span className="text-[16px] font-semibold leading-[140%] tracking-normal text-gray-800 font-pretendard truncate select-none">
                         {notice.title}
-                      </h4>
+                      </span>
                     </div>
 
-                    {/* 화살표 아이콘 */}
-                    <svg
-                      className={`size-4.5 text-gray-400 mt-1 shrink-0 transition-transform duration-200 ${
-                        isExpanded ? 'rotate-180 text-blue-500' : ''
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
+                    {/* 시간 표시 (12px Medium, leading-160%) */}
+                    <span className="text-[12px] font-medium leading-[160%] tracking-normal text-gray-400 font-pretendard shrink-0 select-none ml-2">
+                      {notice.createdAt}
+                    </span>
                   </button>
 
                   {/* 펼쳐지는 본문 내용 */}
                   {isExpanded && (
-                    <div className="bg-slate-50/50 px-4 pb-5 pt-3 text-xs leading-relaxed text-gray-500 whitespace-pre-line border-t border-gray-50 animate-fade-in-up">
+                    <div className={`px-[20px] py-[24px] text-[14px] leading-[150%] text-gray-600 whitespace-pre-wrap font-pretendard border-b border-gray-100/80 animate-fade-in-up ${
+                      isHighlighted ? 'bg-[#f0f6ff]/40' : 'bg-slate-50/50'
+                    }`}>
                       {notice.content}
                     </div>
                   )}
