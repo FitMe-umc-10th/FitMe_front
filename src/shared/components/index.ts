@@ -4,3 +4,5 @@ export { Layout } from './Layout';
 export { ProgressBar } from './ProgressBar';
 export { Tab } from './Tab';
 export { TabBar } from './TabBar';
+export { Switch } from './Switch';
+export { Accordion } from './Accordion';
