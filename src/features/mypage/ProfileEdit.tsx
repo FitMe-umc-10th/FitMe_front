@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getProfile, updateProfile } from '@/apis/mypage';
-import { Header, Layout } from '@/shared/components';
-import Chip from '@/shared/components/Chip';
+import { Layout } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
 
 const AVAILABLE_FIELDS = [
@@ -30,7 +29,7 @@ export default function ProfileEdit() {
   const toast = useToastStore();
   const queryClient = useQueryClient();
 
-  // 갤러리 파일 선택기 & 직접 촬영 카메라 선택기 ref
+  // 파일 선택기 ref
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,8 +47,10 @@ export default function ProfileEdit() {
   const [region, setRegion] = useState('');
   const [profileImg, setProfileImg] = useState('');
 
-  // 바텀시트 상태
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  // 통합 바텀시트 제어 상태 ('photo' | 'income' | 'region' | null)
+  const [activeBottomSheet, setActiveBottomSheet] = useState<'photo' | 'income' | 'region' | null>(
+    null,
+  );
   const [selectedUploadOption, setSelectedUploadOption] = useState<'camera' | 'gallery' | null>(
     null,
   );
@@ -99,15 +100,14 @@ export default function ProfileEdit() {
     }
   };
 
-  // 바텀시트 확인 버튼 핸들러 (실제 기기 카메라/갤러리 연동)
+  // 바텀시트 확인 버튼 핸들러 (사진 업로드 전용)
   const handleConfirmUpload = () => {
     if (selectedUploadOption === 'gallery') {
       fileInputRef.current?.click();
     } else if (selectedUploadOption === 'camera') {
-      // 카메라 직접 촬영을 트리거 (capture="environment")
       cameraInputRef.current?.click();
     }
-    setIsSheetOpen(false);
+    setActiveBottomSheet(null);
   };
 
   // 프로필 정보 폼 서브밋 핸들러
@@ -132,7 +132,16 @@ export default function ProfileEdit() {
 
   if (isLoading) {
     return (
-      <Layout header={<Header title="내 프로필" showBack />}>
+      <Layout
+        header={
+          <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
+            <div className="w-[41px] h-[41px]" />
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard text-center">
+              내 프로필
+            </h1>
+          </header>
+        }
+      >
         <div className="animate-pulse space-y-6 p-4">
           <div className="mx-auto size-24 rounded-full bg-gray-100" />
           <div className="space-y-4">
@@ -146,29 +155,55 @@ export default function ProfileEdit() {
   }
 
   return (
-    <Layout header={<Header title="내 프로필" showBack />} className="bg-slate-50/50">
+    <Layout
+      header={
+        <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="w-[41px] h-[41px] flex items-center justify-center rounded-full text-gray-800 hover:bg-gray-50 active:scale-95 transition-all shrink-0"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6">
+              <path
+                d="M15 18L9 12L15 6"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2.2"
+              />
+            </svg>
+          </button>
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard select-none text-center">
+            내 프로필
+          </h1>
+          <div className="w-[41px] h-[41px]" />
+        </header>
+      }
+      className="bg-white"
+    >
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col min-h-[calc(100vh-3.5rem)] p-4 justify-between"
+        className="flex flex-col min-h-[calc(100vh-3.5rem)] px-[20px] pb-6 justify-between"
       >
         {/* 상단 폼 입력부 */}
-        <div className="space-y-6">
+        <div className="space-y-0">
           {/* 1. 프로필 이미지 편집 영역 */}
-          <div className="flex flex-col items-center justify-center py-2">
-            <div className="relative">
-              <div className="size-24 overflow-hidden rounded-full border border-gray-200/80 shadow-md">
+          <div className="flex flex-col items-center justify-center mt-[20px]">
+            <div className="relative w-[101px] h-[101px]">
+              <div className="w-[101px] h-[101px] overflow-hidden rounded-[50.5px] border border-gray-200/80 shadow-md">
                 <img src={profileImg} alt="프로필 미리보기" className="size-full object-cover" />
               </div>
               {/* 카메라 토글 버튼 */}
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedUploadOption(null); // 초기화
-                  setIsSheetOpen(true);
+                  setSelectedUploadOption(null);
+                  setActiveBottomSheet('photo');
                 }}
-                className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full bg-white border border-gray-200 shadow-md hover:bg-gray-50 active:scale-95 transition-all text-gray-500"
+                className="absolute bottom-0 right-0 w-[26px] h-[26px] flex items-center justify-center rounded-full bg-white border-[2px] border-gray-200 p-[1px] shadow-sm hover:bg-gray-50 active:scale-95 transition-all text-gray-500 z-10"
               >
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4.5">
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3">
                   <path
                     d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
                     fill="none"
@@ -188,50 +223,51 @@ export default function ProfileEdit() {
                 </svg>
               </button>
             </div>
-            <h2 className="mt-3 text-base font-bold text-gray-800">{profile?.name}</h2>
-            <p className="text-xs font-semibold text-gray-400 mt-0.5">
-              {profile?.university} | {profile?.grade}
+            <h2 className="mt-[12px] text-lg font-bold text-gray-800 leading-tight">{name}</h2>
+            <p className="mt-[4px] text-xs font-semibold text-gray-400 leading-none">
+              동국대학교 서울캠퍼스 | 22학번
             </p>
           </div>
 
-          <hr className="border-gray-100" />
+          {/* 2. 학업 정보 설정 (16px 마진 탑) */}
+          <section className="mt-[16px]">
+            <h3 className="w-full max-w-[402px] h-[45px] pt-[10px] pb-[10px] flex items-center text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800">
+              학업 정보
+            </h3>
 
-          {/* 2. 학업 정보 설정 */}
-          <section className="space-y-3.5">
-            <h3 className="text-sm font-bold text-gray-800">학업 정보</h3>
-            <div className="flex gap-3">
-              {/* GPA 입력 */}
-              <div className="flex-1 space-y-1.5">
-                <label className="text-xs font-semibold text-gray-400">현재 학점 (GPA)</label>
-                <div className="relative">
+            {/* GPA & 소득구간 입력부 (8px 마진 탑) */}
+            <div className="flex justify-between gap-[12px] mt-[8px] w-full max-w-[362px] mx-auto">
+              {/* GPA 입력 (w-175 h-76) */}
+              <div className="w-[175px] h-[76px] flex flex-col gap-[8px]">
+                <label className="w-[93px] h-[20px] text-xs font-semibold text-gray-400 flex items-center">
+                  현재 학점 (GPA)
+                </label>
+                <div className="relative w-[175px] h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between shadow-sm transition-all focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10">
                   <input
                     type="text"
                     inputMode="decimal"
                     value={gpa}
                     onChange={(e) => setGpa(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-3.5 pr-12 text-sm font-bold text-gray-800 shadow-sm transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                    className="w-full h-full bg-transparent text-sm font-bold text-gray-800 focus:outline-none pr-8"
                   />
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 select-none">
+                  <span className="absolute right-[15px] text-xs font-semibold text-gray-400 select-none">
                     / 4.5
                   </span>
                 </div>
               </div>
-              {/* 소득구간 선택 */}
-              <div className="flex-1 space-y-1.5">
-                <label className="text-xs font-semibold text-gray-400">소득구간</label>
-                <div className="relative">
-                  <select
-                    value={incomeBracket}
-                    onChange={(e) => setIncomeBracket(Number(e.target.value))}
-                    className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-3.5 pr-10 text-sm font-bold text-gray-800 shadow-sm transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
-                  >
-                    {INCOME_BRACKETS.map((num) => (
-                      <option key={num} value={num}>
-                        {num}구간
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+
+              {/* 소득구간 선택 - 프리미엄 바텀시트 연동 (w-175 h-76) */}
+              <div className="w-[175px] h-[76px] flex flex-col gap-[8px]">
+                <label className="w-[49px] h-[20px] text-xs font-semibold text-gray-400 flex items-center">
+                  소득구간
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setActiveBottomSheet('income')}
+                  className="w-[175px] h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between shadow-sm hover:border-blue-500 hover:ring-4 hover:ring-blue-500/10 active:scale-[0.98] transition-all text-left focus:outline-none"
+                >
+                  <span className="text-sm font-bold text-gray-800">{incomeBracket}구간</span>
+                  <div className="text-gray-400">
                     <svg
                       className="size-4"
                       fill="none"
@@ -239,49 +275,60 @@ export default function ProfileEdit() {
                       stroke="currentColor"
                       strokeWidth="2.5"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
-                </div>
+                </button>
               </div>
             </div>
           </section>
 
-          {/* 3. 맞춤 핏 조건 설정 */}
-          <section className="space-y-3.5">
-            <h3 className="text-sm font-bold text-gray-800">맞춤 핏 조건 설정</h3>
+          {/* 3. 맞춤 핏 조건 설정 (20px 마진 탑) */}
+          <section className="mt-[20px]">
+            <h3 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800">
+              맞춤 핏 조건 설정
+            </h3>
 
-            {/* 관심 직무 및 분야 */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-gray-400">관심 직무 및 분야</label>
-              <div className="flex flex-wrap gap-2">
-                {AVAILABLE_FIELDS.map((field) => (
-                  <Chip
-                    key={field}
-                    label={field}
-                    selected={fields.includes(field)}
-                    onToggle={() => handleToggleField(field)}
-                  />
-                ))}
+            {/* 관심 직무 및 분야 (8px 마진 탑) */}
+            <div className="mt-[8px]">
+              <label className="text-[14px] font-medium leading-[140%] tracking-normal text-gray-400 select-none block">
+                관심 직무 및 분야
+              </label>
+
+              {/* 선택 칩 세트 (12px 마진 탑 - 가로 스와이프 스크롤 연동) */}
+              <div className="flex flex-row gap-2 mt-[12px] w-full max-w-[362px] mx-auto overflow-x-auto whitespace-nowrap scrollbar-none py-1">
+                {AVAILABLE_FIELDS.map((field) => {
+                  const selected = fields.includes(field);
+                  return (
+                    <button
+                      key={field}
+                      type="button"
+                      onClick={() => handleToggleField(field)}
+                      className={`h-[36px] px-[12px] py-[8px] rounded-full text-xs font-semibold flex items-center justify-center shrink-0 transition-all ${
+                        selected
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {field}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* 희망 활동 지역 */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-gray-400">희망 활동 지역</label>
-              <div className="relative">
-                <select
-                  value={region}
-                  onChange={(e) => setRegion(e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-3.5 pr-10 text-sm font-bold text-gray-800 shadow-sm transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
-                >
-                  {AVAILABLE_REGIONS.map((reg) => (
-                    <option key={reg} value={reg}>
-                      {reg}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+            {/* 희망 활동 지역 (선택지 칩 세트와 12px 마진 탑 - 프리미엄 바텀시트 연동) */}
+            <div className="mt-[12px] w-full max-w-[362px] mx-auto">
+              <label className="text-[14px] font-medium leading-[140%] tracking-normal text-gray-400 select-none block mb-[12px]">
+                희망 활동 지역
+              </label>
+              <button
+                type="button"
+                onClick={() => setActiveBottomSheet('region')}
+                className="w-full h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between shadow-sm hover:border-blue-500 hover:ring-4 hover:ring-blue-500/10 active:scale-[0.98] transition-all text-left focus:outline-none"
+              >
+                <span className="text-sm font-bold text-gray-800">{region}</span>
+                <div className="text-gray-400">
                   <svg
                     className="size-4"
                     fill="none"
@@ -289,20 +336,20 @@ export default function ProfileEdit() {
                     stroke="currentColor"
                     strokeWidth="2.5"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
-              </div>
+              </button>
             </div>
           </section>
         </div>
 
-        {/* 하단 저장하기 버튼 */}
-        <div className="mt-8">
+        {/* 하단 저장하기 버튼 (희망 지역 셀렉트 박스에서 96px 마진 탑, 크기 w-361 h-56) */}
+        <div className="mt-[96px] w-full max-w-[361px] mx-auto">
           <button
             type="submit"
             disabled={isSaving}
-            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all active:scale-[0.98] disabled:bg-gray-300 disabled:cursor-not-allowed text-sm shadow-md"
+            className="w-full h-[56px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-[18px] leading-[140%] tracking-normal text-center transition-all active:scale-[0.98] disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md flex items-center justify-center"
           >
             {isSaving ? '저장 중...' : '저장하기'}
           </button>
@@ -318,7 +365,7 @@ export default function ProfileEdit() {
         className="hidden"
       />
 
-      {/* 숨겨진 카메라 파일 선택기 (모바일 기기 카메라 다이얼로그 호출) */}
+      {/* 숨겨진 카메라 파일 선택기 */}
       <input
         type="file"
         ref={cameraInputRef}
@@ -329,9 +376,9 @@ export default function ProfileEdit() {
       />
 
       {/* 이미지 업로드 방식 바텀시트 모달 */}
-      {isSheetOpen && (
+      {activeBottomSheet === 'photo' && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 px-0">
-          <div className="absolute inset-0" onClick={() => setIsSheetOpen(false)} />
+          <div className="absolute inset-0" onClick={() => setActiveBottomSheet(null)} />
           <div className="relative w-full max-w-[390px] rounded-t-3xl bg-white p-5 shadow-2xl animate-fade-in-up pb-[env(safe-area-inset-bottom,20px)]">
             <div className="mx-auto mb-4 h-1.2 w-11 rounded-full bg-gray-200" />
             <h3 className="mb-5 text-center text-sm font-bold text-gray-700">
@@ -363,7 +410,7 @@ export default function ProfileEdit() {
               </button>
               <button
                 type="button"
-                onClick={() => setIsSheetOpen(false)}
+                onClick={() => setActiveBottomSheet(null)}
                 className="w-full py-4 text-center text-sm font-bold rounded-xl bg-red-50/70 text-red-500 hover:bg-red-50/90 active:scale-[0.99] transition-all"
               >
                 돌아가기
@@ -377,6 +424,90 @@ export default function ProfileEdit() {
               className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-sm active:scale-[0.98]"
             >
               확인
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 소득구간 선택 바텀시트 모달 */}
+      {activeBottomSheet === 'income' && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 px-0">
+          <div className="absolute inset-0" onClick={() => setActiveBottomSheet(null)} />
+          <div className="relative w-full max-w-[390px] rounded-t-3xl bg-white p-5 shadow-2xl animate-fade-in-up pb-[env(safe-area-inset-bottom,20px)]">
+            <div className="mx-auto mb-4 h-1.2 w-11 rounded-full bg-gray-200" />
+            <h3 className="mb-5 text-center text-sm font-bold text-gray-700">
+              소득구간을 선택해주세요.
+            </h3>
+
+            <div className="space-y-2 mb-5 max-h-[260px] overflow-y-auto scrollbar-none px-1">
+              {INCOME_BRACKETS.map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => {
+                    setIncomeBracket(num);
+                    setActiveBottomSheet(null);
+                    toast.success(`${num}구간이 선택되었습니다.`);
+                  }}
+                  className={`w-full py-3.5 text-center text-sm font-semibold rounded-xl transition-all ${
+                    incomeBracket === num
+                      ? 'bg-blue-600 text-white shadow-sm font-bold'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100/50'
+                  }`}
+                >
+                  {num}구간
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setActiveBottomSheet(null)}
+              className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition-all active:scale-[0.98]"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 희망 활동 지역 선택 바텀시트 모달 */}
+      {activeBottomSheet === 'region' && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 px-0">
+          <div className="absolute inset-0" onClick={() => setActiveBottomSheet(null)} />
+          <div className="relative w-full max-w-[390px] rounded-t-3xl bg-white p-5 shadow-2xl animate-fade-in-up pb-[env(safe-area-inset-bottom,20px)]">
+            <div className="mx-auto mb-4 h-1.2 w-11 rounded-full bg-gray-200" />
+            <h3 className="mb-5 text-center text-sm font-bold text-gray-700">
+              희망 활동 지역을 선택해주세요.
+            </h3>
+
+            <div className="space-y-2 mb-5">
+              {AVAILABLE_REGIONS.map((reg) => (
+                <button
+                  key={reg}
+                  type="button"
+                  onClick={() => {
+                    setRegion(reg);
+                    setActiveBottomSheet(null);
+                    toast.success(`${reg} 지역이 선택되었습니다.`);
+                  }}
+                  className={`w-full py-3.5 text-center text-sm font-semibold rounded-xl transition-all ${
+                    region === reg
+                      ? 'bg-blue-600 text-white shadow-sm font-bold'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100/50'
+                  }`}
+                >
+                  {reg}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setActiveBottomSheet(null)}
+              className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition-all active:scale-[0.98]"
+            >
+              취소
             </button>
           </div>
         </div>
