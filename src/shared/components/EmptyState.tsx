@@ -2,11 +2,12 @@ import emptySavedAnnounce from '@/assets/empty_saved_announce.svg';
 import emptyMatchedList from '@/assets/empty_matched_list.svg';
 import emptyBookmarkedListFlag from '@/assets/empty_Bookmarked_list_flag.svg';
 import emptyBookmarkedListDot from '@/assets/empty_Bookmarked_list_dot.svg';
+import emptyWaitingList from '@/assets/empty_waiting_list.svg';
 
 interface EmptyStateProps {
   message: string;
   subMessage?: string;
-  illustration?: 'heart-plus' | 'heart-wave' | 'bookmark' | 'none';
+  illustration?: 'heart-plus' | 'heart-wave' | 'bookmark' | 'clock' | 'none';
   cta?: {
     label: string;
     onClick: () => void;
@@ -53,6 +54,14 @@ export default function EmptyState({
             />
           </div>
         );
+      case 'clock':
+        return (
+          <img
+            src={emptyWaitingList}
+            className="w-[92px] h-[92px] mb-4 object-contain"
+            alt="결과 대기중인 이력"
+          />
+        );
       case 'none':
       default:
         return null;
@@ -65,22 +74,22 @@ export default function EmptyState({
       {renderIllustration()}
 
       {/* 메인 메시지 */}
-      <h3 className="font-['Pretendard'] font-semibold text-slate-700 text-[14px] leading-snug">
+      <h3 className="font-['Pretendard'] font-semibold text-slate-700 text-[14px] leading-snug mt-3">
         {message}
       </h3>
 
       {/* 서브 설명글 */}
       {subMessage && (
-        <p className="font-['Pretendard'] text-slate-400 text-[12px] leading-normal mt-1 max-w-[260px]">
+        <p className="font-['Pretendard'] text-slate-400 text-[12px] leading-normal mt-1.5 max-w-[260px] whitespace-pre-line">
           {subMessage}
         </p>
       )}
 
-      {/* CTA 버튼 (대략적인 뼈대 구현) */}
+      {/* CTA 버튼 (시안 맞춤 크기 및 스타일) */}
       {cta && (
         <button
           onClick={cta.onClick}
-          className="mt-4 px-6 py-2.5 bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-semibold text-sm rounded-full shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+          className="mt-6 w-[290px] h-[48px] bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm rounded-[14px] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer flex items-center justify-center"
         >
           {cta.label}
         </button>

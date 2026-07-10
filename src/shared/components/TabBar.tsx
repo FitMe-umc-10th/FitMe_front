@@ -86,13 +86,24 @@ function TabBarIcon({ name, active }: TabBarIconProps) {
         />
       )}
       {name === 'history' && (
-        <path
-          d="M5 6H19M5 12H19M5 18H13"
-          fill="none"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeWidth="1.8"
-        />
+        <>
+          <circle
+            cx="12"
+            cy="12"
+            r="8.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          />
+          <path
+            d="M12 7.5V12L14.5 14.5"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+          />
+        </>
       )}
       {name === 'my' && (
         <path

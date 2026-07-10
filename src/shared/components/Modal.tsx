@@ -35,10 +35,10 @@ export function Modal({ isOpen, onClose, title, description, buttons, children }
         aria-labelledby="modal-title"
         className="w-full max-w-[342px] rounded-2xl bg-white p-5 shadow-xl"
       >
-        <h2 id="modal-title" className="text-lg font-semibold text-gray-950">
+        <h2 id="modal-title" className="text-lg font-semibold text-gray-950 text-center">
           {title}
         </h2>
-        {description && <p className="mt-2 text-sm leading-6 text-gray-500">{description}</p>}
+        {description && <p className="mt-2 text-sm leading-6 text-gray-500 text-center">{description}</p>}
         {children && <div className="mt-4">{children}</div>}
         <div className="mt-6 flex gap-2">
           {modalButtons.map((button) => {
