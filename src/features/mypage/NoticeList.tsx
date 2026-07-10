@@ -6,7 +6,7 @@ import { Layout } from '@/shared/components';
 
 export default function NoticeList() {
   const navigate = useNavigate();
-  
+
   // 1. 공지사항 데이터 조회
   const { data: notices, isLoading } = useQuery({
     queryKey: ['notices'],
@@ -26,7 +26,7 @@ export default function NoticeList() {
         header={
           <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
             <div className="w-[41px] h-[41px]" />
-            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard text-center">
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 text-center">
               공지 사항
             </h1>
           </header>
@@ -61,7 +61,7 @@ export default function NoticeList() {
               />
             </svg>
           </button>
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard select-none text-center">
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 select-none text-center">
             공지 사항
           </h1>
           <div className="w-[41px] h-[41px]" />
@@ -98,22 +98,24 @@ export default function NoticeList() {
                         안내
                       </span>
                       {/* 공지사항 제목 (16px SemiBold, leading-140%) */}
-                      <span className="text-[16px] font-semibold leading-[140%] tracking-normal text-gray-800 font-pretendard truncate select-none">
+                      <span className="text-[16px] font-semibold leading-[140%] tracking-normal text-gray-800 truncate select-none">
                         {notice.title}
                       </span>
                     </div>
 
                     {/* 시간 표시 (12px Medium, leading-160%) */}
-                    <span className="text-[12px] font-medium leading-[160%] tracking-normal text-gray-400 font-pretendard shrink-0 select-none ml-2">
+                    <span className="text-[12px] font-medium leading-[160%] tracking-normal text-gray-400 shrink-0 select-none ml-2">
                       {notice.createdAt}
                     </span>
                   </button>
 
                   {/* 펼쳐지는 본문 내용 */}
                   {isExpanded && (
-                    <div className={`px-[20px] py-[24px] text-[14px] leading-[150%] text-gray-600 whitespace-pre-wrap font-pretendard border-b border-gray-100/80 animate-fade-in-up ${
-                      isHighlighted ? 'bg-[#f0f6ff]/40' : 'bg-slate-50/50'
-                    }`}>
+                    <div
+                      className={`px-[20px] py-[24px] text-[14px] leading-[150%] text-gray-600 whitespace-pre-wrap border-b border-gray-100/80 animate-fade-in-up ${
+                        isHighlighted ? 'bg-[#f0f6ff]/40' : 'bg-slate-50/50'
+                      }`}
+                    >
                       {notice.content}
                     </div>
                   )}

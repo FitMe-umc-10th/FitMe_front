@@ -136,7 +136,7 @@ export default function ProfileEdit() {
         header={
           <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
             <div className="w-[41px] h-[41px]" />
-            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard text-center">
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 text-center">
               내 프로필
             </h1>
           </header>
@@ -174,7 +174,7 @@ export default function ProfileEdit() {
               />
             </svg>
           </button>
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard select-none text-center">
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 select-none text-center">
             내 프로필
           </h1>
           <div className="w-[41px] h-[41px]" />
@@ -223,8 +223,8 @@ export default function ProfileEdit() {
                 </svg>
               </button>
             </div>
-            <h2 className="mt-[12px] text-lg font-bold text-gray-800 leading-tight">{name}</h2>
-            <p className="mt-[4px] text-xs font-semibold text-gray-400 leading-none">
+            <h2 className="mt-[12px] text-lg font-semibold text-gray-800 leading-tight">{name}</h2>
+            <p className="mt-[10px] text-xs font-medium text-gray-400 leading-none">
               동국대학교 서울캠퍼스 | 22학번
             </p>
           </div>
@@ -239,10 +239,10 @@ export default function ProfileEdit() {
             <div className="flex justify-between gap-[12px] mt-[8px] w-full max-w-[362px] mx-auto">
               {/* GPA 입력 (w-175 h-76) */}
               <div className="w-[175px] h-[76px] flex flex-col gap-[8px]">
-                <label className="w-[93px] h-[20px] text-xs font-semibold text-gray-400 flex items-center">
+                <label className="w-[93px] h-[20px] text-xs font-medium text-gray-400 flex items-center">
                   현재 학점 (GPA)
                 </label>
-                <div className="relative w-[175px] h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between shadow-sm transition-all focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10">
+                <div className="relative w-[175px] h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between transition-all focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10">
                   <input
                     type="text"
                     inputMode="decimal"
@@ -258,13 +258,13 @@ export default function ProfileEdit() {
 
               {/* 소득구간 선택 - 프리미엄 바텀시트 연동 (w-175 h-76) */}
               <div className="w-[175px] h-[76px] flex flex-col gap-[8px]">
-                <label className="w-[49px] h-[20px] text-xs font-semibold text-gray-400 flex items-center">
+                <label className="w-[49px] h-[20px] text-xs font-medium text-gray-400 flex items-center">
                   소득구간
                 </label>
                 <button
                   type="button"
                   onClick={() => setActiveBottomSheet('income')}
-                  className="w-[175px] h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between shadow-sm hover:border-blue-500 hover:ring-4 hover:ring-blue-500/10 active:scale-[0.98] transition-all text-left focus:outline-none"
+                  className="w-[175px] h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between hover:border-blue-500 hover:ring-4 hover:ring-blue-500/10 active:scale-[0.98] transition-all text-left focus:outline-none"
                 >
                   <span className="text-sm font-bold text-gray-800">{incomeBracket}구간</span>
                   <div className="text-gray-400">
@@ -284,19 +284,19 @@ export default function ProfileEdit() {
           </section>
 
           {/* 3. 맞춤 핏 조건 설정 (20px 마진 탑) */}
-          <section className="mt-[20px]">
+          <section className="mt-[28px]">
             <h3 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800">
               맞춤 핏 조건 설정
             </h3>
 
             {/* 관심 직무 및 분야 (8px 마진 탑) */}
-            <div className="mt-[8px]">
+            <div className="mt-[18px]">
               <label className="text-[14px] font-medium leading-[140%] tracking-normal text-gray-400 select-none block">
                 관심 직무 및 분야
               </label>
 
               {/* 선택 칩 세트 (12px 마진 탑 - 가로 스와이프 스크롤 연동) */}
-              <div className="flex flex-row gap-2 mt-[12px] w-full max-w-[362px] mx-auto overflow-x-auto whitespace-nowrap scrollbar-none py-1">
+              <div className="flex flex-row gap-2 mt-[6px] w-full max-w-[362px] mx-auto overflow-x-auto whitespace-nowrap scrollbar-none py-1">
                 {AVAILABLE_FIELDS.map((field) => {
                   const selected = fields.includes(field);
                   return (
@@ -304,7 +304,7 @@ export default function ProfileEdit() {
                       key={field}
                       type="button"
                       onClick={() => handleToggleField(field)}
-                      className={`h-[36px] px-[12px] py-[8px] rounded-full text-xs font-semibold flex items-center justify-center shrink-0 transition-all ${
+                      className={`h-[36px] px-[12px] py-[8px] rounded-full text-xs font-medium flex items-center justify-center shrink-0 transition-all ${
                         selected
                           ? 'bg-blue-600 text-white shadow-sm'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -327,7 +327,7 @@ export default function ProfileEdit() {
                 onClick={() => setActiveBottomSheet('region')}
                 className="w-full h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between shadow-sm hover:border-blue-500 hover:ring-4 hover:ring-blue-500/10 active:scale-[0.98] transition-all text-left focus:outline-none"
               >
-                <span className="text-sm font-bold text-gray-800">{region}</span>
+                <span className="text-sm font-medium text-gray-800">{region}</span>
                 <div className="text-gray-400">
                   <svg
                     className="size-4"
@@ -349,7 +349,7 @@ export default function ProfileEdit() {
           <button
             type="submit"
             disabled={isSaving}
-            className="w-full h-[56px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-[18px] leading-[140%] tracking-normal text-center transition-all active:scale-[0.98] disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md flex items-center justify-center"
+            className="w-full h-[56px] bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-[18px] leading-[140%] tracking-normal text-center transition-all active:scale-[0.98] disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md flex items-center justify-center"
           >
             {isSaving ? '저장 중...' : '저장하기'}
           </button>

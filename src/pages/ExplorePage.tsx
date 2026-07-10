@@ -108,31 +108,25 @@ export default function ExplorePage() {
   };
 
   // 무한 스크롤 쿼리 구성
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
-  } = useInfiniteQuery({
-    queryKey: [
-      'postings',
-      'explore',
-      { keyword: searchQuery, type: activeTab, category: selectedCategory, sortBy },
-    ],
-    queryFn: ({ pageParam = 0 }) =>
-      getExplorePostings({
-        keyword: searchQuery,
-        type: activeTab,
-        category: activeTab === 'contest' ? selectedCategory : undefined,
-        sortBy,
-        page: pageParam,
-        limit: 4, // 테스트 및 동작 검증을 위해 페이지당 4개씩 분할
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => lastPage.nextPage,
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
+    useInfiniteQuery({
+      queryKey: [
+        'postings',
+        'explore',
+        { keyword: searchQuery, type: activeTab, category: selectedCategory, sortBy },
+      ],
+      queryFn: ({ pageParam = 0 }) =>
+        getExplorePostings({
+          keyword: searchQuery,
+          type: activeTab,
+          category: activeTab === 'contest' ? selectedCategory : undefined,
+          sortBy,
+          page: pageParam,
+          limit: 4, // 테스트 및 동작 검증을 위해 페이지당 4개씩 분할
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => lastPage.nextPage,
+    });
 
   // 무한 스크롤 트리거 관측용 커스텀 훅 연동
   const observerRef = useIntersectionObserver({
@@ -146,9 +140,11 @@ export default function ExplorePage() {
   return (
     <Layout
       header={
-        <div className={`sticky top-0 z-20 flex flex-col bg-white transition-all ${
-          isSearchFocused ? 'pt-[25px]' : 'pt-[29px] border-b border-slate-100'
-        }`}>
+        <div
+          className={`sticky top-0 z-20 flex flex-col bg-white transition-all ${
+            isSearchFocused ? 'pt-[25px]' : 'pt-[29px] border-b border-slate-100'
+          }`}
+        >
           {/* 상단 검색바 영역 (오버레이 활성화 시 뒤로가기 화살표가 왼쪽에 노출) */}
           <div className="flex items-center px-[20px] pb-[8px]">
             {isSearchFocused && (
@@ -158,7 +154,15 @@ export default function ExplorePage() {
                 className="shrink-0 w-[16px] h-[16px] flex items-center justify-center text-slate-800 mr-[15px] cursor-pointer"
                 aria-label="검색 취소"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-[16px] h-[16px]">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-[16px] h-[16px]"
+                >
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
               </button>
@@ -180,7 +184,11 @@ export default function ExplorePage() {
               <div className="flex gap-[10px] w-[206px] h-full">
                 {(['all', 'scholarship', 'contest'] as const).map((tabVal) => {
                   const labels = { all: '전체', scholarship: '장학금', contest: '공모전' };
-                  const tabWidths = { all: 'w-[52px]', scholarship: 'w-[67px]', contest: 'w-[67px]' };
+                  const tabWidths = {
+                    all: 'w-[52px]',
+                    scholarship: 'w-[67px]',
+                    contest: 'w-[67px]',
+                  };
                   const isActive = activeTab === tabVal;
                   return (
                     <button
@@ -190,7 +198,7 @@ export default function ExplorePage() {
                         setActiveTab(tabVal);
                         setSelectedCategory(undefined);
                       }}
-                      className={`${tabWidths[tabVal]} h-[43px] py-[9px] px-[10px] flex items-center justify-center font-['Pretendard'] font-semibold text-[18px] leading-[1.4] text-center transition-all cursor-pointer ${
+                      className={`${tabWidths[tabVal]} h-[43px] py-[9px] px-[10px] flex items-center justify-center font-semibold text-[18px] leading-[1.4] text-center transition-all cursor-pointer ${
                         isActive
                           ? 'text-slate-900 border-b-2 border-blue-500'
                           : 'text-slate-300 border-b-2 border-transparent'
@@ -213,7 +221,7 @@ export default function ExplorePage() {
         <div className="flex-1 bg-white pt-[20px] pb-6 flex flex-col">
           {/* 최근 검색어 헤더 (왼쪽 20px 떨어져 있음) */}
           <div className="flex items-center justify-between px-[20px]">
-            <h4 className="font-['Pretendard'] font-semibold text-[16px] text-slate-800">최근 검색어</h4>
+            <h4 className="font-semibold text-[16px] text-slate-800">최근 검색어</h4>
             {recentSearches.length > 0 && (
               <button
                 type="button"
@@ -242,7 +250,15 @@ export default function ExplorePage() {
                       className="text-blue-400 hover:text-blue-600 flex items-center justify-center cursor-pointer w-[9.33px] h-[9.33px]"
                       aria-label={`${kw} 삭제`}
                     >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-[9.33px] h-[9.33px]">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-[9.33px] h-[9.33px]"
+                      >
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                       </svg>
@@ -253,14 +269,14 @@ export default function ExplorePage() {
 
               {/* 추천 테마 레이아웃 (최근 검색어 칩 하단 24px 거리에 배치) */}
               <div className="mt-[24px] bg-[#F5F9FF] px-[20px] py-[16px] flex flex-col gap-[16px]">
-                <h4 className="font-['Pretendard'] font-semibold text-[16px] text-slate-800">추천 테마</h4>
+                <h4 className="font-semibold text-[16px] text-slate-800">추천 테마</h4>
                 <div className="flex flex-wrap gap-[8px]">
                   {RECOMMENDED_THEMES.map((theme) => (
                     <button
                       key={theme}
                       type="button"
                       onClick={() => handleSelectKeyword(theme)}
-                      className="h-[30px] min-w-[90px] rounded-[100px] border border-blue-200 bg-white px-[10px] py-[5px] text-[14px] font-medium font-['Pretendard'] leading-[1.4] text-center text-blue-500 hover:bg-blue-50 transition-colors cursor-pointer select-none"
+                      className="h-[30px] min-w-[90px] rounded-[100px] border border-blue-200 bg-white px-[10px] py-[5px] text-[14px] font-medium leading-[1.4] text-center text-blue-500 hover:bg-blue-50 transition-colors cursor-pointer select-none"
                     >
                       #{theme}
                     </button>
@@ -272,21 +288,21 @@ export default function ExplorePage() {
             <div className="mt-[32px]">
               {/* 최근 검색어 없음 문구 (타이틀 기준 32px 거리) */}
               <div className="text-center w-full px-[20px]">
-                <p className="font-['Pretendard'] font-medium text-[14px] leading-[1.4] text-slate-400 text-center">
+                <p className="font-medium text-[14px] leading-[1.4] text-slate-400 text-center">
                   최근 검색어가 없습니다.
                 </p>
               </div>
 
               {/* 추천 테마 레이아웃 (최근 검색어 없음 문구 하단 32px 거리에 배치) */}
               <div className="mt-[32px] bg-[#F5F9FF] px-[20px] py-[16px] flex flex-col gap-[16px]">
-                <h4 className="font-['Pretendard'] font-semibold text-[16px] text-slate-800">추천 테마</h4>
+                <h4 className="font-semibold text-[16px] text-slate-800">추천 테마</h4>
                 <div className="flex flex-wrap gap-[8px]">
                   {RECOMMENDED_THEMES.map((theme) => (
                     <button
                       key={theme}
                       type="button"
                       onClick={() => handleSelectKeyword(theme)}
-                      className="h-[30px] min-w-[90px] rounded-[100px] border border-blue-200 bg-white px-[10px] py-[5px] text-[14px] font-medium font-['Pretendard'] leading-[1.4] text-center text-blue-500 hover:bg-blue-50 transition-colors cursor-pointer select-none"
+                      className="h-[30px] min-w-[90px] rounded-[100px] border border-blue-200 bg-white px-[10px] py-[5px] text-[14px] font-medium leading-[1.4] text-center text-blue-500 hover:bg-blue-50 transition-colors cursor-pointer select-none"
                     >
                       #{theme}
                     </button>
@@ -298,10 +314,8 @@ export default function ExplorePage() {
 
           {/* 실시간 공고 헤더 (추천 테마와 24px 거리 두고, 기준 표시와 8px 띄움) */}
           <div className="mt-[24px] flex items-baseline gap-[8px] px-[20px]">
-            <h4 className="font-['Pretendard'] font-semibold text-[16px] leading-[1.4] text-slate-800">
-              실시간 공고
-            </h4>
-            <span className="font-['Pretendard'] font-medium text-[12px] leading-[1.4] text-slate-400">
+            <h4 className="font-semibold text-[16px] leading-[1.4] text-slate-800">실시간 공고</h4>
+            <span className="font-medium text-[12px] leading-[1.4] text-slate-400">
               오늘 22시 기준
             </span>
           </div>
@@ -317,13 +331,13 @@ export default function ExplorePage() {
                 <div className="flex items-center flex-1 min-w-0">
                   {/* 숫자랑 검색어는 28px 거리가 있음 */}
                   <span
-                    className={`font-['Pretendard'] font-semibold text-[14px] w-[16px] text-center mr-[28px] shrink-0 ${
+                    className={`font-semibold text-[14px] w-[16px] text-center mr-[28px] shrink-0 ${
                       idx < 3 ? 'text-blue-500' : 'text-slate-400'
                     }`}
                   >
                     {idx + 1}
                   </span>
-                  <span className="font-['Pretendard'] font-medium text-[14px] text-slate-800 group-hover:text-blue-500 transition-colors truncate flex-1 pr-4">
+                  <span className="font-medium text-[14px] text-slate-800 group-hover:text-blue-500 transition-colors truncate flex-1 pr-4">
                     {item.title}
                   </span>
                 </div>
@@ -331,12 +345,22 @@ export default function ExplorePage() {
                 {/* 피그마 규격 화살표 (8x6) 및 작대기 (11px) */}
                 <div className="flex items-center justify-center w-[16px] h-[16px] shrink-0">
                   {item.status === 'up' && (
-                    <svg width="8" height="6" viewBox="0 0 8 6" className="text-blue-500 fill-current">
+                    <svg
+                      width="8"
+                      height="6"
+                      viewBox="0 0 8 6"
+                      className="text-blue-500 fill-current"
+                    >
                       <polygon points="4,0 8,6 0,6" />
                     </svg>
                   )}
                   {item.status === 'down' && (
-                    <svg width="8" height="6" viewBox="0 0 8 6" className="text-red-500 fill-current">
+                    <svg
+                      width="8"
+                      height="6"
+                      viewBox="0 0 8 6"
+                      className="text-red-500 fill-current"
+                    >
                       <polygon points="4,6 8,0 0,0" />
                     </svg>
                   )}
@@ -369,15 +393,17 @@ export default function ExplorePage() {
           )}
 
           {/* 정렬 드롭다운 배치 (칩이 있을 경우 pt-0, 없을 경우 pt-[16px]) */}
-          <div className={`flex items-center justify-between pl-[20px] pr-[20px] ${
-            activeTab === 'contest' ? 'pt-0' : 'pt-[16px]'
-          }`}>
+          <div
+            className={`flex items-center justify-between pl-[20px] pr-[20px] ${
+              activeTab === 'contest' ? 'pt-0' : 'pt-[16px]'
+            }`}
+          >
             <Dropdown
               options={SORT_OPTIONS}
               value={sortBy}
               onChange={(val) => setSortBy(val as any)}
             />
-            <span className="text-xs text-slate-400 font-semibold font-['Pretendard']">
+            <span className="text-xs text-slate-400 font-semibold">
               {!isLoading && `총 ${data?.pages[0]?.total ?? 0}건`}
             </span>
           </div>
@@ -386,7 +412,14 @@ export default function ExplorePage() {
           {isLoading && postings.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3">
               <svg className="animate-spin h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
               <span className="text-xs text-slate-400">공고를 불러오고 있어요...</span>
@@ -418,8 +451,19 @@ export default function ExplorePage() {
               <div ref={observerRef} className="h-14 flex items-center justify-center pt-4">
                 {isFetchingNextPage && (
                   <div className="flex items-center gap-2 text-xs text-slate-400">
-                    <svg className="animate-spin h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <svg
+                      className="animate-spin h-4 w-4 text-blue-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
                     <span>더 가져오고 있어요...</span>

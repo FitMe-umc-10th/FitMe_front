@@ -80,7 +80,7 @@ export default function MyPageMain() {
     <Layout tabBar={<TabBar />} className="bg-slate-50/50">
       <div>
         {/* 1. 프로필 카드 (전체 화면 상단 배치, 높이 377px) */}
-        <section className="relative w-full h-[377px] bg-slate-950 text-white px-5 py-6 flex flex-col justify-between overflow-hidden shadow-md">
+        <section className="relative w-full h-[377px] bg-slate-950 text-white px-5 py-6 flex flex-col justify-between overflow-hidden">
           {/* 선명한 배경 이미지 (opacity: 0.5, 블러 없음) */}
           <div
             style={{ backgroundImage: `url(${profile.profileImageUrl})`, opacity: 0.5 }}
@@ -92,14 +92,14 @@ export default function MyPageMain() {
 
           {/* 상단: "마이페이지" 흰색 글자 */}
           <div className="relative z-10 pt-4">
-            <h2 className="text-xl font-bold tracking-tight text-white">마이페이지</h2>
+            <h2 className="text-xl font-semibold tracking-tight text-white">마이페이지</h2>
           </div>
 
           {/* 하단: 유저 정보 및 수정 버튼 */}
           <div className="relative z-10 flex items-end justify-between">
             <div className="space-y-1.5">
-              <h3 className="text-2xl font-bold tracking-tight text-white">{profile.name}</h3>
-              <p className="text-sm font-semibold text-slate-300">
+              <h3 className="text-2xl font-medium tracking-tight text-white">{profile.name}</h3>
+              <p className="text-sm font-medium text-slate-300">
                 {profile.university} | {profile.grade}
               </p>
             </div>
@@ -107,7 +107,7 @@ export default function MyPageMain() {
               <button
                 type="button"
                 onClick={() => navigate('/my/profile')}
-                className="w-[63px] h-[22px] rounded-full bg-white text-gray-800 text-[9.5px] font-bold tracking-tighter flex items-center justify-center pt-[3px] pr-[6px] pb-[3px] pl-[6px] gap-[3px] shadow-sm transition-all hover:bg-gray-50 active:scale-95 focus:outline-none"
+                className="w-[63px] h-[22px] rounded-full bg-white text-gray-800 text-[9.5px] font-medium tracking-tighter flex items-center justify-center pt-[3px] pr-[6px] pb-[3px] pl-[6px] gap-[3px] shadow-sm transition-all hover:bg-gray-50 active:scale-95 focus:outline-none"
               >
                 내 정보 수정
               </button>
@@ -258,10 +258,10 @@ export default function MyPageMain() {
             className="relative w-[323px] h-[177px] rounded-[24px] bg-white pt-[24px] pb-[24px] px-[20px] flex flex-col justify-between items-center text-center shadow-2xl animate-fade-in-up"
           >
             <div className="flex flex-col items-center w-full">
-              <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-900 font-pretendard text-center">
+              <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-900 text-center">
                 로그아웃 하시겠어요?
               </h2>
-              <p className="mt-[16px] text-[16px] font-normal leading-[140%] tracking-[-2%] text-gray-400 font-pretendard text-center">
+              <p className="mt-[16px] text-[16px] font-normal leading-[140%] tracking-[-2%] text-gray-400 text-center">
                 로그아웃 시 맞춤 공고 알림이 제한됩니다.
               </p>
             </div>
@@ -316,11 +316,11 @@ export default function MyPageMain() {
                 />
               </div>
 
-              <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-900 font-pretendard text-center">
+              <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-900 text-center">
                 정말 탈퇴하시겠어요?
               </h2>
               {/* 타이틀 밑 gap 16px */}
-              <p className="mt-[16px] text-[16px] font-normal leading-[140%] tracking-[-2%] text-gray-400 font-pretendard text-center whitespace-pre-line">
+              <p className="mt-[16px] text-[16px] font-normal leading-[140%] tracking-[-2%] text-gray-400 text-center whitespace-pre-line">
                 {`지금 탈퇴하시면 ${profile?.name}님이 모은\n아래 데이터가 영구적으로 삭제됩니다.`}
               </p>
             </div>

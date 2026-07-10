@@ -77,7 +77,7 @@ export default function CustomerSupport() {
         header={
           <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
             <div className="w-[41px] h-[41px]" />
-            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard text-center">
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 text-center">
               고객 센터
             </h1>
           </header>
@@ -112,7 +112,7 @@ export default function CustomerSupport() {
               />
             </svg>
           </button>
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard select-none text-center">
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 select-none text-center">
             고객 센터
           </h1>
           <div className="w-[41px] h-[41px]" />
@@ -125,7 +125,7 @@ export default function CustomerSupport() {
         <div className="flex flex-col">
           {/* 자주 묻는 질문 타이틀 레이아웃 (w-402 h-28, px-20, 18px SemiBold) */}
           <div className="w-full max-w-[402px] h-[28px] pl-[20px] pr-[20px] flex items-center mt-[24px] mx-auto text-left">
-            <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800 font-pretendard select-none">
+            <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800 select-none">
               자주 묻는 질문
             </h2>
           </div>
@@ -148,10 +148,10 @@ export default function CustomerSupport() {
                     >
                       {/* 질문 텍스트 스택 (w-255 h-22, gap-16) */}
                       <div className="w-[255px] h-[22px] flex items-center gap-[16px] min-w-0">
-                        <span className="text-[16px] font-bold text-[#0066ff] shrink-0 font-pretendard select-none">
+                        <span className="text-[16px] font-bold text-[#0066ff] shrink-0 select-none">
                           Q.
                         </span>
-                        <span className="text-[16px] font-semibold leading-[140%] tracking-normal text-gray-800 font-pretendard truncate select-none">
+                        <span className="text-[16px] font-semibold leading-[140%] tracking-normal text-gray-800 truncate select-none">
                           {faq.question}
                         </span>
                       </div>
@@ -174,7 +174,7 @@ export default function CustomerSupport() {
 
                     {/* 답변 카드 영역 (w-362, min-h-106, pt-15 pb-15 px-18, rounded-8, bg-#f4f8ff) */}
                     {isExpanded && (
-                      <div className="w-[362px] min-h-[106px] pt-[15px] pr-[18px] pb-[15px] pl-[18px] rounded-[8px] bg-[#f4f8ff] text-gray-700 text-[12px] font-medium leading-[160%] tracking-normal font-pretendard text-left whitespace-pre-wrap mt-[4px] mb-[20px] mx-auto animate-fade-in-up flex flex-col justify-center">
+                      <div className="w-[362px] min-h-[106px] pt-[15px] pr-[18px] pb-[15px] pl-[18px] rounded-[8px] bg-[#f4f8ff] text-gray-700 text-[12px] font-medium leading-[160%] tracking-normal text-left whitespace-pre-wrap mt-[4px] mb-[20px] mx-auto animate-fade-in-up flex flex-col justify-center">
                         {faq.answer}
                       </div>
                     )}
@@ -194,7 +194,7 @@ export default function CustomerSupport() {
           <button
             type="button"
             onClick={() => setIsInquiryOpen(true)}
-            className="w-full h-[56px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-[18px] leading-[140%] tracking-normal text-center shadow-md active:scale-[0.98] transition-all flex items-center justify-center"
+            className="w-full h-[56px] bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-[18px] leading-[140%] tracking-normal text-center shadow-md active:scale-[0.98] transition-all flex items-center justify-center"
           >
             1:1 문의 남기기
           </button>
@@ -217,7 +217,7 @@ export default function CustomerSupport() {
           >
             {/* Layout 1: Header (w-323 h-67, pt-32 pb-10 px-20, rounded-t-16) */}
             <div className="w-[323px] h-[67px] pt-[32px] pr-[20px] pb-[10px] pl-[20px] rounded-t-[16px] flex items-center justify-between shrink-0 bg-white">
-              <h3 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-900 font-pretendard text-left">
+              <h3 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-900 text-left">
                 1:1 문의 남기기
               </h3>
               {/* x 버튼 (w-24 h-24) */}
@@ -243,7 +243,7 @@ export default function CustomerSupport() {
             <div className="w-[323px] h-[305px] pt-[10px] pb-[16px] flex flex-col items-center shrink-0 bg-white">
               {/* 1. 답변 받을 이메일 라벨 */}
               <div className="w-[283px] text-left">
-                <label className="text-[14px] font-semibold leading-[140%] tracking-[-0.24px] text-gray-900 font-pretendard select-none">
+                <label className="text-[14px] font-semibold leading-[140%] tracking-[-0.24px] text-gray-900 select-none">
                   답변 받을 이메일
                 </label>
               </div>
@@ -260,7 +260,7 @@ export default function CustomerSupport() {
 
               {/* 3. 문의 내용 라벨 (mt-15) */}
               <div className="w-[283px] text-left mt-[15px]">
-                <label className="text-[14px] font-semibold leading-[140%] tracking-[-0.24px] text-gray-900 font-pretendard select-none">
+                <label className="text-[14px] font-semibold leading-[140%] tracking-[-0.24px] text-gray-900 select-none">
                   문의 내용
                 </label>
               </div>
