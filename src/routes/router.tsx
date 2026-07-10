@@ -6,6 +6,7 @@ import NotificationSettings from '@/features/mypage/NotificationSettings';
 import CustomerSupport from '@/features/mypage/CustomerSupport';
 import NoticeList from '@/features/mypage/NoticeList';
 import NotificationList from '@/features/notification/NotificationList';
+import ExplorePage from '@/pages/ExplorePage';
 
 // TODO: 화면 추가될 때마다 라우트 등록
 // 인증 페이지(/login, /signup, /onboarding)는 별도 레이아웃(GNB 없음)
@@ -14,6 +15,10 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <HomePage />,
+  },
+  {
+    path: '/explore',
+    element: <ExplorePage />,
   },
   {
     path: '/my',
