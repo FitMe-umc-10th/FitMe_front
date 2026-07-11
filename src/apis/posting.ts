@@ -1,11 +1,42 @@
-import type { Posting } from '@/types/posting';
+import type { HomePostingFeed, Posting, PostingType } from '@/types/posting';
 import { MOCK_POSTINGS } from '@/constants/mockData';
 // import { axiosInstance } from '@/apis/axiosInstance';
+
+const sortByDeadlineAsc = (postings: Posting[]) =>
+  [...postings].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+
+const sortBySavedCountDesc = (postings: Posting[]) =>
+  [...postings].sort((a, b) => (b.savedCount ?? 0) - (a.savedCount ?? 0));
+
+const getMatchedDeadlinePostings = (type: PostingType) => {
+  const matchedPostings = MOCK_POSTINGS.filter((posting) => posting.type === type && posting.isMatched);
+
+  if (matchedPostings.length > 0) {
+    return sortByDeadlineAsc(matchedPostings);
+  }
+
+  return sortBySavedCountDesc(MOCK_POSTINGS).slice(0, 5);
+};
 
 // === 지금은 mock 반환 (UI 먼저 개발) ===
 export const getPostings = async (): Promise<Posting[]> => {
   await new Promise((r) => setTimeout(r, 300)); // 네트워크 흉내
   return MOCK_POSTINGS;
+};
+
+export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
+  await new Promise((r) => setTimeout(r, 300));
+
+  return {
+    popularPostings: [...MOCK_POSTINGS].sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0)).slice(0, 5),
+    recentViewedPostings: MOCK_POSTINGS.filter((posting) => posting.viewedAt)
+      .sort((a, b) => new Date(b.viewedAt ?? '').getTime() - new Date(a.viewedAt ?? '').getTime())
+      .slice(0, 5),
+    deadlinePostings: {
+      SCHOLARSHIP: getMatchedDeadlinePostings('SCHOLARSHIP'),
+      CONTEST: getMatchedDeadlinePostings('CONTEST'),
+    },
+  };
 };
 
 // === 찜하기 토글 API Mock (낙관적 업데이트 및 롤백 테스트용) ===
