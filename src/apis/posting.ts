@@ -77,6 +77,15 @@ export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
   };
 };
 
+export const getRecentViewedPostings = async (): Promise<Posting[]> => {
+  await new Promise((r) => setTimeout(r, 300));
+  const postings = applyMockSavedPostings();
+
+  return postings
+    .filter((posting) => posting.viewedAt)
+    .sort((a, b) => new Date(b.viewedAt ?? '').getTime() - new Date(a.viewedAt ?? '').getTime());
+};
+
 // === 찜하기 토글 API Mock (낙관적 업데이트 및 롤백 테스트용) ===
 export const toggleSave = async (postingId: number, isSaved: boolean): Promise<boolean> => {
   await new Promise((r) => setTimeout(r, 500)); // 500ms 네트워크 지연 모방
