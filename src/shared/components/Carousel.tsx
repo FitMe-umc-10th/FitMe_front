@@ -76,7 +76,7 @@ export default function Carousel({ children, showIndicator = false, loop = false
     const container = containerRef.current;
     if (!container || !loop || count <= 1) return;
 
-    let scrollTimeout: NodeJS.Timeout;
+    let scrollTimeout: ReturnType<typeof window.setTimeout>;
 
     const handleScrollEnd = () => {
       const { scrollLeft, clientWidth } = container;
