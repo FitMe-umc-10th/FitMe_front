@@ -115,7 +115,7 @@ export default function HomePage() {
             </p>
           )}
           {data && (
-            <Carousel showIndicator loop storageKey="home-popular-carousel-index">
+            <Carousel showIndicator showProgress loop storageKey="home-popular-carousel-index">
               {data.popularPostings.map((posting) => (
                 <PostingCard key={posting.id} posting={posting} variant="popular" />
               ))}

@@ -3,11 +3,18 @@ import React, { useCallback, useRef, useState, useEffect } from 'react';
 interface CarouselProps {
   children: React.ReactNode;
   showIndicator?: boolean;
+  showProgress?: boolean;
   loop?: boolean;
   storageKey?: string;
 }
 
-export default function Carousel({ children, showIndicator = false, loop = false, storageKey }: CarouselProps) {
+export default function Carousel({
+  children,
+  showIndicator = false,
+  showProgress = false,
+  loop = false,
+  storageKey,
+}: CarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const childrenArray = React.Children.toArray(children).filter(Boolean);
@@ -215,6 +222,23 @@ export default function Carousel({ children, showIndicator = false, loop = false
       {showIndicator && count > 0 && (
         <div className="absolute top-6 right-[70px] bg-black/25 backdrop-blur-sm text-white/90 text-[10px] px-2.5 py-0.5 rounded-full font-bold select-none z-10 pointer-events-none">
           {currentIndex + 1} / {count}
+        </div>
+      )}
+
+      {showProgress && count > 0 && (
+        <div className="mt-3 flex items-center justify-center gap-2" aria-hidden="true">
+          {Array.from({ length: count }).map((_, index) => {
+            const isActive = index === currentIndex;
+
+            return (
+              <span
+                key={index}
+                className={`h-2 rounded-full transition-all duration-200 ${
+                  isActive ? 'w-9 bg-blue-300' : 'w-2 bg-gray-100'
+                }`}
+              />
+            );
+          })}
         </div>
       )}
     </div>
