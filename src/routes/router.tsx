@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import HomePage from '@/pages/HomePage';
 import NotificationPage from '@/pages/NotificationPage';
+import PostingDetailPage from '@/pages/PostingDetailPage';
 import RecentViewedPage from '@/pages/RecentViewedPage';
 
 // TODO: 화면 추가될 때마다 라우트 등록
@@ -18,5 +19,9 @@ export const router = createBrowserRouter([
   {
     path: '/recent-postings',
     element: <RecentViewedPage />,
+  },
+  {
+    path: '/postings/:postingId',
+    element: <PostingDetailPage />,
   },
 ]);
