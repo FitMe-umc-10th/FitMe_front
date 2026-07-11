@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
+import ExplorePage from '@/pages/ExplorePage';
 import HomePage from '@/pages/HomePage';
 import NotificationPage from '@/pages/NotificationPage';
 import PostingDetailPage from '@/pages/PostingDetailPage';
@@ -11,6 +12,10 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <HomePage />,
+  },
+  {
+    path: '/explore',
+    element: <ExplorePage />,
   },
   {
     path: '/notifications',

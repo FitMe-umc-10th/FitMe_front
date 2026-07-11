@@ -49,12 +49,14 @@ export const useToggleSave = (postingId: number) => {
       await queryClient.cancelQueries({ queryKey: ['homePostingFeed'] });
       await queryClient.cancelQueries({ queryKey: ['recentViewedPostings'] });
       await queryClient.cancelQueries({ queryKey: ['posting', postingId] });
+      await queryClient.cancelQueries({ queryKey: ['deadlinePostings'] });
 
       // 혹시라도 실패했을 때 원상복구(Rollback)하기 위해 기존 캐시 데이터 스냅샷을 저장합니다.
       const previousPostings = queryClient.getQueryData<Posting[]>(['postings']);
       const previousHomePostingFeed = queryClient.getQueryData<HomePostingFeed>(['homePostingFeed']);
       const previousRecentViewedPostings = queryClient.getQueryData<Posting[]>(['recentViewedPostings']);
       const previousPosting = queryClient.getQueryData<Posting>(['posting', postingId]);
+      const previousDeadlinePostings = queryClient.getQueryData<Posting[]>(['deadlinePostings']);
 
       // 찜하기 상태 값을 먼저 즉시 반전시켜 줍니다.
       queryClient.setQueryData<Posting[]>(['postings'], (old) => {
@@ -77,12 +79,18 @@ export const useToggleSave = (postingId: number) => {
         return updatePostingSavedState(old, postingId, nextSavedState);
       });
 
+      queryClient.setQueryData<Posting[]>(['deadlinePostings'], (old) => {
+        if (!old) return old;
+        return old.map((posting) => updatePostingSavedState(posting, postingId, nextSavedState));
+      });
+
       // 롤백 데이터를 컨텍스트로 반환하여 onError에서 사용할 수 있게 합니다.
       return {
         previousPostings,
         previousHomePostingFeed,
         previousRecentViewedPostings,
         previousPosting,
+        previousDeadlinePostings,
       };
     },
     // 2. 에러가 나면 기존 데이터로 원상복구하고 토스트 알림을 띄웁니다.
@@ -99,6 +107,9 @@ export const useToggleSave = (postingId: number) => {
       if (context?.previousPosting) {
         queryClient.setQueryData(['posting', postingId], context.previousPosting);
       }
+      if (context?.previousDeadlinePostings) {
+        queryClient.setQueryData(['deadlinePostings'], context.previousDeadlinePostings);
+      }
 
       const actionText = currentSavedState ? '저장 해제' : '저장';
       showToast(`${actionText}에 실패했어요.`, 'error');
@@ -109,6 +120,7 @@ export const useToggleSave = (postingId: number) => {
       queryClient.invalidateQueries({ queryKey: ['homePostingFeed'] });
       queryClient.invalidateQueries({ queryKey: ['recentViewedPostings'] });
       queryClient.invalidateQueries({ queryKey: ['posting', postingId] });
+      queryClient.invalidateQueries({ queryKey: ['deadlinePostings'] });
     },
   });
 };
