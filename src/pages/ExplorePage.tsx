@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getDeadlinePostings } from '@/apis/posting';
 import EmptyState from '@/shared/components/EmptyState';
@@ -21,6 +21,10 @@ export default function ExplorePage() {
   });
 
   const filteredPostings = data?.filter((posting) => activeTab === 'ALL' || posting.type === activeTab) ?? [];
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
 
   return (
     <Layout header={<Header title="탐색" />} tabBar={<TabBar />} className="bg-white">
