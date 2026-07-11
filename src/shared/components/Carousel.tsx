@@ -12,15 +12,26 @@ export default function Carousel({ children, showIndicator = false, loop = false
   const [currentIndex, setCurrentIndex] = useState(0);
   const childrenArray = React.Children.toArray(children).filter(Boolean);
   const count = childrenArray.length;
+  const indexStorageKey = storageKey ? `${storageKey}:index` : undefined;
+  const scrollStorageKey = storageKey ? `${storageKey}:scrollLeft` : undefined;
 
   const getStoredIndex = useCallback(() => {
-    if (!storageKey) return 0;
+    if (!indexStorageKey) return 0;
 
-    const storedIndex = Number(window.sessionStorage.getItem(storageKey));
+    const storedIndex = Number(window.sessionStorage.getItem(indexStorageKey));
     if (!Number.isInteger(storedIndex)) return 0;
 
     return Math.min(Math.max(storedIndex, 0), Math.max(count - 1, 0));
-  }, [count, storageKey]);
+  }, [count, indexStorageKey]);
+
+  const getStoredScrollLeft = useCallback(() => {
+    if (!scrollStorageKey) return null;
+
+    const storedScrollLeft = Number(window.sessionStorage.getItem(scrollStorageKey));
+    if (!Number.isFinite(storedScrollLeft)) return null;
+
+    return Math.max(storedScrollLeft, 0);
+  }, [scrollStorageKey]);
 
   const scrollToIndex = useCallback((targetIndex: number, behavior: ScrollBehavior = 'auto') => {
     const container = containerRef.current;
@@ -49,17 +60,25 @@ export default function Carousel({ children, showIndicator = false, loop = false
     if (count === 0) return;
 
     const timer = setTimeout(() => {
+      const storedScrollLeft = getStoredScrollLeft();
+
+      if (!loop && storedScrollLeft !== null && containerRef.current) {
+        containerRef.current.scrollTo({ left: storedScrollLeft, behavior: 'auto' });
+        setCurrentIndex(getStoredIndex());
+        return;
+      }
+
       scrollToIndex(getStoredIndex());
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [count, getStoredIndex, scrollToIndex]);
+  }, [count, getStoredIndex, getStoredScrollLeft, loop, scrollToIndex]);
 
   const updateCurrentIndex = (nextIndex: number) => {
     setCurrentIndex(nextIndex);
 
-    if (storageKey) {
-      window.sessionStorage.setItem(storageKey, String(nextIndex));
+    if (indexStorageKey) {
+      window.sessionStorage.setItem(indexStorageKey, String(nextIndex));
     }
   };
 
@@ -69,6 +88,10 @@ export default function Carousel({ children, showIndicator = false, loop = false
 
     const { scrollLeft, clientWidth } = container;
     if (clientWidth === 0) return;
+
+    if (scrollStorageKey) {
+      window.sessionStorage.setItem(scrollStorageKey, String(scrollLeft));
+    }
 
     const childrenElements = container.children;
     if (childrenElements.length === 0) return;
