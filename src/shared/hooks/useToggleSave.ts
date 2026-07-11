@@ -47,10 +47,12 @@ export const useToggleSave = (postingId: number) => {
       // 쿼리 자동 리프레시 등으로 데이터가 덮어씌워지는 걸 방지하기 위해 쿼리 진행을 일시 취소합니다.
       await queryClient.cancelQueries({ queryKey: ['postings'] });
       await queryClient.cancelQueries({ queryKey: ['homePostingFeed'] });
+      await queryClient.cancelQueries({ queryKey: ['recentViewedPostings'] });
 
       // 혹시라도 실패했을 때 원상복구(Rollback)하기 위해 기존 캐시 데이터 스냅샷을 저장합니다.
       const previousPostings = queryClient.getQueryData<Posting[]>(['postings']);
       const previousHomePostingFeed = queryClient.getQueryData<HomePostingFeed>(['homePostingFeed']);
+      const previousRecentViewedPostings = queryClient.getQueryData<Posting[]>(['recentViewedPostings']);
 
       // 찜하기 상태 값을 먼저 즉시 반전시켜 줍니다.
       queryClient.setQueryData<Posting[]>(['postings'], (old) => {
@@ -63,8 +65,13 @@ export const useToggleSave = (postingId: number) => {
         return updateHomeFeedSavedState(old, postingId, nextSavedState);
       });
 
+      queryClient.setQueryData<Posting[]>(['recentViewedPostings'], (old) => {
+        if (!old) return old;
+        return old.map((posting) => updatePostingSavedState(posting, postingId, nextSavedState));
+      });
+
       // 롤백 데이터를 컨텍스트로 반환하여 onError에서 사용할 수 있게 합니다.
-      return { previousPostings, previousHomePostingFeed };
+      return { previousPostings, previousHomePostingFeed, previousRecentViewedPostings };
     },
     // 2. 에러가 나면 기존 데이터로 원상복구하고 토스트 알림을 띄웁니다.
     onError: (_err, currentSavedState, context) => {
@@ -74,6 +81,9 @@ export const useToggleSave = (postingId: number) => {
       if (context?.previousHomePostingFeed) {
         queryClient.setQueryData(['homePostingFeed'], context.previousHomePostingFeed);
       }
+      if (context?.previousRecentViewedPostings) {
+        queryClient.setQueryData(['recentViewedPostings'], context.previousRecentViewedPostings);
+      }
 
       const actionText = currentSavedState ? '저장 해제' : '저장';
       showToast(`${actionText}에 실패했어요.`, 'error');
@@ -82,6 +92,7 @@ export const useToggleSave = (postingId: number) => {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['postings'] });
       queryClient.invalidateQueries({ queryKey: ['homePostingFeed'] });
+      queryClient.invalidateQueries({ queryKey: ['recentViewedPostings'] });
     },
   });
 };
