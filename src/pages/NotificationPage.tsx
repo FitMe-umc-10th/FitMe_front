@@ -17,19 +17,24 @@ function formatNotificationTime(createdAt: string) {
 
 function NotificationListItem({ notification }: { notification: NotificationItem }) {
   const navigate = useNavigate();
+  const isRead = notification.isRead;
 
   return (
     <button
       type="button"
       onClick={() => navigate(`/postings/${notification.postingId}`)}
-      className={`w-full border-b border-gray-100 px-5 py-5 text-left transition-colors hover:bg-blue-50 ${
-        notification.isRead ? 'bg-white' : 'bg-blue-50'
+      className={`w-full border-b border-gray-100 px-5 py-5 text-left transition-colors ${
+        isRead ? 'bg-white hover:bg-gray-50' : 'bg-blue-50 hover:bg-blue-100'
       }`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold leading-snug text-blue-600">{notification.title}</p>
-          <p className="mt-2 text-sm font-medium leading-relaxed text-slate-800">{notification.message}</p>
+          <p className={`text-sm font-bold leading-snug ${isRead ? 'text-slate-400' : 'text-blue-600'}`}>
+            {notification.title}
+          </p>
+          <p className={`mt-2 text-sm font-medium leading-relaxed ${isRead ? 'text-slate-500' : 'text-slate-800'}`}>
+            {notification.message}
+          </p>
         </div>
         <span className="shrink-0 text-xs font-medium text-slate-400">
           {formatNotificationTime(notification.createdAt)}
@@ -48,6 +53,30 @@ export default function NotificationPage() {
 
   const { mutate: markAllRead } = useMutation({
     mutationFn: markAllNotificationsAsRead,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      await queryClient.cancelQueries({ queryKey: ['notifications', 'unreadCount'] });
+
+      const previousNotifications = queryClient.getQueryData<NotificationItem[]>(['notifications']);
+      const previousUnreadCount = queryClient.getQueryData<number>(['notifications', 'unreadCount']);
+
+      queryClient.setQueryData<NotificationItem[]>(['notifications'], (old) => {
+        if (!old) return old;
+
+        return old.map((notification) => ({ ...notification, isRead: true }));
+      });
+      queryClient.setQueryData(['notifications', 'unreadCount'], 0);
+
+      return { previousNotifications, previousUnreadCount };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(['notifications'], context.previousNotifications);
+      }
+      if (typeof context?.previousUnreadCount === 'number') {
+        queryClient.setQueryData(['notifications', 'unreadCount'], context.previousUnreadCount);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unreadCount'] });
