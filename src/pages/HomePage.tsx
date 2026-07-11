@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { getUnreadNotificationCount } from '@/apis/notification';
 import { getHomePostingFeed } from '@/apis/posting';
 import Carousel from '@/shared/components/Carousel';
 import EmptyState from '@/shared/components/EmptyState';
@@ -47,9 +48,8 @@ function SectionHeader({ title, actionLabel = '더보기', onAction }: SectionHe
   );
 }
 
-function NotificationButton() {
+function NotificationButton({ hasUnreadNotification }: { hasUnreadNotification: boolean }) {
   const navigate = useNavigate();
-  const hasUnreadNotification = true;
 
   return (
     <button
@@ -87,12 +87,21 @@ export default function HomePage() {
     queryKey: ['homePostingFeed'],
     queryFn: getHomePostingFeed,
   });
+  const { data: unreadNotificationCount = 0 } = useQuery({
+    queryKey: ['notifications', 'unreadCount'],
+    queryFn: getUnreadNotificationCount,
+  });
 
   const deadlinePostings = data?.deadlinePostings[activeDeadlineTab] ?? [];
 
   return (
     <Layout
-      header={<Header title="FitMe." rightSlot={<NotificationButton />} />}
+      header={
+        <Header
+          title="FitMe."
+          rightSlot={<NotificationButton hasUnreadNotification={unreadNotificationCount > 0} />}
+        />
+      }
       tabBar={<TabBar />}
       className="bg-white"
     >

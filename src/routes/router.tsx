@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import HomePage from '@/pages/HomePage';
+import NotificationPage from '@/pages/NotificationPage';
 
 // TODO: 화면 추가될 때마다 라우트 등록
 // 인증 페이지(/login, /signup, /onboarding)는 별도 레이아웃(GNB 없음)
@@ -8,5 +9,9 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <HomePage />,
+  },
+  {
+    path: '/notifications',
+    element: <NotificationPage />,
   },
 ]);

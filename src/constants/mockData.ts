@@ -1,4 +1,5 @@
 import type { Posting } from '@/types/posting';
+import type { NotificationItem } from '@/types/notification';
 
 // UI 개발용 가짜 데이터. 백엔드 API 나오면 apis/posting.ts 에서 교체.
 export const MOCK_POSTINGS: Posting[] = [
@@ -77,5 +78,35 @@ export const MOCK_POSTINGS: Posting[] = [
     savedCount: 102,
     viewedAt: '2026-07-09T09:00:00+09:00',
     isMatched: false,
+  },
+];
+
+export const MOCK_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: 1,
+    type: 'DEADLINE',
+    title: '[마감 임박] 대기업 브랜드 마케팅 공모전',
+    message: '마감일이 3일 남았습니다. 잊지 말고 지원하세요!',
+    createdAt: '2026-07-12T09:30:00+09:00',
+    postingId: 5,
+    isRead: false,
+  },
+  {
+    id: 2,
+    type: 'APPLICATION',
+    title: '[지원 관리] 삼성재단 청년 장학금',
+    message: '홈페이지에서 지원을 마치셨나요? 상태를 변경해주세요.',
+    createdAt: '2026-07-11T18:20:00+09:00',
+    postingId: 1,
+    isRead: false,
+  },
+  {
+    id: 3,
+    type: 'DEADLINE',
+    title: '[마감 임박] 청년 사회혁신 챌린지',
+    message: '오늘이 마감일입니다! 마지막까지 화이팅!',
+    createdAt: '2026-07-09T13:00:00+09:00',
+    postingId: 4,
+    isRead: true,
   },
 ];
