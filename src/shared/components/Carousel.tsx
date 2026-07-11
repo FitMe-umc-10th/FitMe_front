@@ -1,40 +1,67 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 
 interface CarouselProps {
   children: React.ReactNode;
   showIndicator?: boolean;
   loop?: boolean;
+  storageKey?: string;
 }
 
-export default function Carousel({ children, showIndicator = false, loop = false }: CarouselProps) {
+export default function Carousel({ children, showIndicator = false, loop = false, storageKey }: CarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const childrenArray = React.Children.toArray(children).filter(Boolean);
   const count = childrenArray.length;
+
+  const getStoredIndex = useCallback(() => {
+    if (!storageKey) return 0;
+
+    const storedIndex = Number(window.sessionStorage.getItem(storageKey));
+    if (!Number.isInteger(storedIndex)) return 0;
+
+    return Math.min(Math.max(storedIndex, 0), Math.max(count - 1, 0));
+  }, [count, storageKey]);
+
+  const scrollToIndex = useCallback((targetIndex: number, behavior: ScrollBehavior = 'auto') => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const childrenElements = container.children;
+    const childIndex = loop && count > 1 ? targetIndex + 1 : targetIndex;
+    const targetChild = childrenElements[childIndex] as HTMLElement | undefined;
+    if (!targetChild) return;
+
+    const targetLeft = loop
+      ? targetChild.offsetLeft + targetChild.offsetWidth / 2 - container.clientWidth / 2
+      : targetChild.offsetLeft;
+
+    container.scrollTo({ left: targetLeft, behavior });
+    setCurrentIndex(targetIndex);
+  }, [count, loop]);
 
   // 무한 루프일 때 자식 배열 구성: [마지막 아이템, ...기본 아이템들, 첫 번째 아이템]
   const displayItems = loop && count > 1
     ? [childrenArray[count - 1], ...childrenArray, childrenArray[0]]
     : childrenArray;
 
-  // 컴포넌트 마운트 및 렌더링 시 무한 루프의 첫 실물 아이템(인덱스 1)으로 초기 스크롤 위치 조정
+  // 컴포넌트 마운트 및 렌더링 시 초기 스크롤 위치 조정
   useEffect(() => {
-    if (loop && count > 1) {
-      const timer = setTimeout(() => {
-        const container = containerRef.current;
-        if (!container) return;
+    if (count === 0) return;
 
-        const childrenElements = container.children;
-        const targetChild = childrenElements[1] as HTMLElement; // 첫 번째 실물 아이템
-        if (targetChild) {
-          const targetLeft = targetChild.offsetLeft + targetChild.offsetWidth / 2 - container.clientWidth / 2;
-          container.scrollLeft = targetLeft;
-          setCurrentIndex(0);
-        }
-      }, 50);
-      return () => clearTimeout(timer);
+    const timer = setTimeout(() => {
+      scrollToIndex(getStoredIndex());
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [count, getStoredIndex, scrollToIndex]);
+
+  const updateCurrentIndex = (nextIndex: number) => {
+    setCurrentIndex(nextIndex);
+
+    if (storageKey) {
+      window.sessionStorage.setItem(storageKey, String(nextIndex));
     }
-  }, [loop, count]);
+  };
 
   const handleScroll = () => {
     const container = containerRef.current;
@@ -65,9 +92,9 @@ export default function Carousel({ children, showIndicator = false, loop = false
       let realIndex = closestIndex - 1;
       if (realIndex < 0) realIndex = count - 1;
       if (realIndex >= count) realIndex = 0;
-      setCurrentIndex(realIndex);
+      updateCurrentIndex(realIndex);
     } else {
-      setCurrentIndex(closestIndex);
+      updateCurrentIndex(Math.min(closestIndex, count - 1));
     }
   };
 

@@ -115,7 +115,7 @@ export default function HomePage() {
             </p>
           )}
           {data && (
-            <Carousel showIndicator loop>
+            <Carousel showIndicator loop storageKey="home-popular-carousel-index">
               {data.popularPostings.map((posting) => (
                 <PostingCard key={posting.id} posting={posting} variant="popular" />
               ))}
@@ -127,7 +127,7 @@ export default function HomePage() {
           <SectionHeader title="현수님의 최근 조회 목록" onAction={() => navigate('/recent-postings')} />
           {isPending && <Skeleton variant="card" count={2} />}
           {data && data.recentViewedPostings.length > 0 && (
-            <Carousel>
+            <Carousel storageKey="home-recent-carousel-index">
               {data.recentViewedPostings.map((posting) => (
                 <PostingCard key={posting.id} posting={posting} variant="vertical" />
               ))}
