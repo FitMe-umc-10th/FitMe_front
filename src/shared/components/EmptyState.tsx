@@ -1,7 +1,7 @@
-import emptySavedAnnounce from '@/assets/empty_saved_announce.svg';
-import emptyMatchedList from '@/assets/empty_matched_list.svg';
-import emptyBookmarkedListFlag from '@/assets/empty_Bookmarked_list_flag.svg';
-import emptyBookmarkedListDot from '@/assets/empty_Bookmarked_list_dot.svg';
+import emptyBookmarkedListDot from '@/assets/illustrations/empty-bookmarked-list-dot.svg';
+import emptyBookmarkedListFlag from '@/assets/illustrations/empty-bookmarked-list-flag.svg';
+import emptyMatchedList from '@/assets/illustrations/empty-matched-list.svg';
+import emptySavedAnnounce from '@/assets/illustrations/empty-saved-announce.svg';
 
 interface EmptyStateProps {
   message: string;
