@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getPostingById } from '@/apis/posting';
@@ -6,10 +6,14 @@ import DayBadge from '@/shared/components/DayBadge';
 import Skeleton from '@/shared/components/Skeleton';
 import { useToggleSave } from '@/shared/hooks/useToggleSave';
 import { Layout } from '@/shared/components';
+import { useModalStore } from '@/store/modalStore';
 import type { Posting } from '@/types/posting';
 
 const DETAIL_SUMMARY =
   '마케팅 분야에 높은 관심을 가지고 계신 학습님께 적합한 공모전입니다. 총 12개의 대기업이 제시한 실무 과제에 대해 마케팅 전략 및 아이디어를 제안해볼 수 있는 기회이고, 실제 기업의 비즈니스 과제를 분석하여 창의적인 마케팅 솔루션을 기획하는 경험을 쌓을 수 있습니다.';
+
+const MOCK_OFFICIAL_APPLY_URL = 'https://www.cjenm.com/ko/';
+const MOCK_APPLICATION_HISTORY_KEY = 'fitme:mockApplicationHistory';
 
 const DETAIL_INFO = {
   period: {
@@ -34,6 +38,25 @@ const DETAIL_TABS = [
 ] as const;
 
 type DetailTab = (typeof DETAIL_TABS)[number]['value'];
+type ApplicationStatus = '-' | '결과 대기 중';
+
+type MockApplicationHistory = Record<number, ApplicationStatus>;
+
+const readMockApplicationHistory = (): MockApplicationHistory => {
+  try {
+    const history = window.localStorage.getItem(MOCK_APPLICATION_HISTORY_KEY);
+    if (!history) return {};
+
+    return JSON.parse(history) as MockApplicationHistory;
+  } catch {
+    return {};
+  }
+};
+
+const writeMockApplicationHistory = (postingId: number, status: ApplicationStatus) => {
+  const history = readMockApplicationHistory();
+  window.localStorage.setItem(MOCK_APPLICATION_HISTORY_KEY, JSON.stringify({ ...history, [postingId]: status }));
+};
 
 function formatCount(count?: number) {
   if (typeof count !== 'number') return '0';
@@ -284,12 +307,80 @@ export default function PostingDetailPage() {
   const { postingId } = useParams();
   const parsedPostingId = Number(postingId);
   const [activeTab, setActiveTab] = useState<DetailTab>('period');
+  const [isWaitingForApplyReturn, setIsWaitingForApplyReturn] = useState(false);
+  const openModal = useModalStore((state) => state.openModal);
+  const closeModal = useModalStore((state) => state.closeModal);
 
   const { data, isPending, isError } = useQuery({
     queryKey: ['posting', parsedPostingId],
     queryFn: () => getPostingById(parsedPostingId),
     enabled: Number.isFinite(parsedPostingId),
   });
+
+  const openApplyCompleteModal = useCallback((posting: Posting) => {
+    openModal({
+      title: '지원을 완료하셨나요?',
+      description: "[예] 버튼을 누르시면, '이력' 탭 상태값이 결과 대기 중으로 변경돼요.\n[아니오] 버튼을 누르시면, '이력' 탭에서 수동으로 설정해야 해요.",
+      buttons: [
+        {
+          label: '아니오, 아직이에요',
+          variant: 'secondary',
+          onClick: closeModal,
+        },
+        {
+          label: '네, 완료했어요.',
+          variant: 'primary',
+          onClick: () => {
+            writeMockApplicationHistory(posting.id, '결과 대기 중');
+            closeModal();
+          },
+        },
+      ],
+    });
+  }, [closeModal, openModal]);
+
+  const handleApplyClick = (posting: Posting) => {
+    openModal({
+      title: '공식 홈페이지로 이동하시겠어요?',
+      description: "지원을 완료하신 후, 핏미에 돌아와\n진행 상태를 꼭 '결과 대기 중'으로 변경해주세요!",
+      buttons: [
+        {
+          label: '취소',
+          variant: 'secondary',
+          onClick: closeModal,
+        },
+        {
+          label: '이동하기',
+          variant: 'primary',
+          onClick: () => {
+            writeMockApplicationHistory(posting.id, '-');
+            closeModal();
+            setIsWaitingForApplyReturn(true);
+            window.open(MOCK_OFFICIAL_APPLY_URL, '_blank', 'noopener,noreferrer');
+          },
+        },
+      ],
+    });
+  };
+
+  useEffect(() => {
+    if (!isWaitingForApplyReturn || !data) return;
+
+    const handleReturnToApp = () => {
+      if (document.visibilityState === 'hidden') return;
+
+      setIsWaitingForApplyReturn(false);
+      openApplyCompleteModal(data);
+    };
+
+    window.addEventListener('focus', handleReturnToApp);
+    document.addEventListener('visibilitychange', handleReturnToApp);
+
+    return () => {
+      window.removeEventListener('focus', handleReturnToApp);
+      document.removeEventListener('visibilitychange', handleReturnToApp);
+    };
+  }, [data, isWaitingForApplyReturn, openApplyCompleteModal]);
 
   return (
     <Layout header={<DetailHeader />} className="bg-white">
@@ -352,6 +443,7 @@ export default function PostingDetailPage() {
               <DetailSaveButton posting={data} />
               <button
                 type="button"
+                onClick={() => handleApplyClick(data)}
                 className="h-[61px] flex-1 rounded-[10px] bg-[#0059FF] text-[15px] font-extrabold text-white transition-colors hover:bg-[#004CE0]"
               >
                 홈페이지에서 지원하기
