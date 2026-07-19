@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getPostingById } from '@/apis/posting';
@@ -15,7 +16,24 @@ const DETAIL_INFO = {
     date: '2026. 05. 01. (월) ~ 2026. 05. 31. (수) 18시',
     method: '공식 홈페이지를 통한 온라인 접수',
   },
+  benefit: {
+    target: '상금 500만원 및 상장',
+    grandPrize: '상금 200만원 및 상장',
+    support: '입상자 전원 CJ ENM 채용 서류전형 가점',
+  },
+  eligibility: {
+    education: '전국 대학생 및 대학원생 (휴학생 포함)',
+    headcount: '개인 또는 팀(4인 이하) 지원 가능',
+  },
 };
+
+const DETAIL_TABS = [
+  { label: '접수 기간', value: 'period' },
+  { label: '활동 혜택', value: 'benefit' },
+  { label: '지원 자격', value: 'eligibility' },
+] as const;
+
+type DetailTab = (typeof DETAIL_TABS)[number]['value'];
 
 function formatCount(count?: number) {
   if (typeof count !== 'number') return '0';
@@ -142,6 +160,85 @@ function TypeBadge({ posting }: { posting: Posting }) {
   );
 }
 
+function DetailInfoTabs({
+  activeTab,
+  onChange,
+}: {
+  activeTab: DetailTab;
+  onChange: (tab: DetailTab) => void;
+}) {
+  return (
+    <div className="grid grid-cols-3 border-b border-[#EEF0F3] text-center text-[14px] font-semibold text-[#1E1E1E]">
+      {DETAIL_TABS.map((tab) => {
+        const isActive = activeTab === tab.value;
+
+        return (
+          <button
+            key={tab.value}
+            type="button"
+            onClick={() => onChange(tab.value)}
+            className="relative h-[38px]"
+          >
+            {tab.label}
+            {isActive && (
+              <span className="absolute inset-x-0 bottom-0 h-[1.5px] rounded-full bg-[#0059FF]" />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function DetailInfoContent({ activeTab }: { activeTab: DetailTab }) {
+  if (activeTab === 'benefit') {
+    return (
+      <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
+        <div className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">대상</dt>
+          <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.target}</dd>
+        </div>
+        <div className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">최우수상</dt>
+          <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.grandPrize}</dd>
+        </div>
+        <div className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">입상자 전원</dt>
+          <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.support}</dd>
+        </div>
+      </dl>
+    );
+  }
+
+  if (activeTab === 'eligibility') {
+    return (
+      <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
+        <div className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">학력</dt>
+          <dd className="font-semibold text-[#333333]">{DETAIL_INFO.eligibility.education}</dd>
+        </div>
+        <div className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">인원 규모</dt>
+          <dd className="font-semibold text-[#333333]">{DETAIL_INFO.eligibility.headcount}</dd>
+        </div>
+      </dl>
+    );
+  }
+
+  return (
+    <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
+      <div className="grid grid-cols-[74px_1fr] gap-2">
+        <dt className="font-bold text-[#4C96FF]">일시</dt>
+        <dd className="font-semibold text-[#333333]">{DETAIL_INFO.period.date}</dd>
+      </div>
+      <div className="grid grid-cols-[74px_1fr] gap-2">
+        <dt className="font-bold text-[#4C96FF]">접수 방법</dt>
+        <dd className="font-semibold text-[#333333]">{DETAIL_INFO.period.method}</dd>
+      </div>
+    </dl>
+  );
+}
+
 function DetailSaveButton({ posting }: { posting: Posting }) {
   const { mutate, isPending } = useToggleSave(posting.id);
   const isSaved = posting.isSaved;
@@ -186,6 +283,7 @@ function DetailSaveButton({ posting }: { posting: Posting }) {
 export default function PostingDetailPage() {
   const { postingId } = useParams();
   const parsedPostingId = Number(postingId);
+  const [activeTab, setActiveTab] = useState<DetailTab>('period');
 
   const { data, isPending, isError } = useQuery({
     queryKey: ['posting', parsedPostingId],
@@ -245,25 +343,8 @@ export default function PostingDetailPage() {
               </section>
 
               <section className="pt-1">
-                <div className="grid grid-cols-3 border-b border-[#EEF0F3] text-center text-[14px] font-semibold">
-                  <button type="button" className="relative h-11 text-[#0059FF]">
-                    접수 기간
-                    <span className="absolute inset-x-0 bottom-0 mx-auto h-0.5 w-[70%] rounded-full bg-[#0059FF]" />
-                  </button>
-                  <button type="button" className="h-11 text-[#A5A5A5]">활동 혜택</button>
-                  <button type="button" className="h-11 text-[#A5A5A5]">지원 자격</button>
-                </div>
-
-                <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-                  <div className="grid grid-cols-[64px_1fr] gap-2">
-                    <dt className="font-bold text-[#4C96FF]">일시</dt>
-                    <dd className="font-semibold text-[#333333]">{DETAIL_INFO.period.date}</dd>
-                  </div>
-                  <div className="grid grid-cols-[64px_1fr] gap-2">
-                    <dt className="font-bold text-[#4C96FF]">접수 방법</dt>
-                    <dd className="font-semibold text-[#333333]">{DETAIL_INFO.period.method}</dd>
-                  </div>
-                </dl>
+                <DetailInfoTabs activeTab={activeTab} onChange={setActiveTab} />
+                <DetailInfoContent activeTab={activeTab} />
               </section>
             </div>
 
