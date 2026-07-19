@@ -196,10 +196,10 @@ export default function Carousel({
     };
   }, [loop, count]);
 
-  // 무한 루프 시 좌우 50px 패딩을 주어 인접 카드가 삐져나오도록 유도하고 중앙 스냅 지정
-  const paddingClass = loop ? 'px-[50px] py-3' : 'pb-1';
+  // 무한 루프 시 좌우 여백을 두어 인접 카드가 Figma 시안처럼 살짝 보이도록 맞춘다.
+  const paddingClass = loop ? 'px-[38px] py-3' : 'pb-1';
   const scrollPaddingStyle = loop
-    ? { scrollPaddingLeft: '50px', scrollPaddingRight: '50px' }
+    ? { scrollPaddingLeft: '38px', scrollPaddingRight: '38px' }
     : undefined;
 
   return (
@@ -220,13 +220,13 @@ export default function Carousel({
 
       {/* 인디케이터 표시 (showIndicator가 true일 때만 노출, 인기 공고 카드 우측 상단 오버레이 위치로 조율) */}
       {showIndicator && count > 0 && (
-        <div className="absolute top-6 right-[70px] bg-black/25 backdrop-blur-sm text-white/90 text-[10px] px-2.5 py-0.5 rounded-full font-bold select-none z-10 pointer-events-none">
+        <div className="pointer-events-none absolute right-[54px] top-7 z-10 rounded-full bg-[#9FA4AA]/80 px-2.5 py-1 text-[11px] font-bold leading-none text-white/95 backdrop-blur-sm select-none">
           {currentIndex + 1} / {count}
         </div>
       )}
 
       {showProgress && count > 0 && (
-        <div className="mt-3 flex items-center justify-center gap-2" aria-hidden="true">
+        <div className="mt-2 flex items-center justify-center gap-2" aria-hidden="true">
           {Array.from({ length: count }).map((_, index) => {
             const isActive = index === currentIndex;
 
@@ -234,7 +234,7 @@ export default function Carousel({
               <span
                 key={index}
                 className={`h-2 rounded-full transition-all duration-200 ${
-                  isActive ? 'w-9 bg-blue-300' : 'w-2 bg-gray-100'
+                  isActive ? 'w-9 bg-[#A8D2FF]' : 'w-2 bg-[#F0F0F0]'
                 }`}
               />
             );

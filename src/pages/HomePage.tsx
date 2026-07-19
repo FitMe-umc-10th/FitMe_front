@@ -24,12 +24,12 @@ const deadlineTabs: { label: string; value: PostingType }[] = [
 function SectionHeader({ title, actionLabel = '더보기', onAction }: SectionHeaderProps) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <h2 className="text-[17px] font-bold leading-snug text-slate-900">{title}</h2>
+      <h2 className="text-[17px] font-extrabold leading-snug text-[#202124]">{title}</h2>
       {onAction && (
         <button
           type="button"
           onClick={onAction}
-          className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-slate-400 transition-colors hover:text-slate-600"
+          className="flex shrink-0 items-center gap-0.5 text-[12px] font-medium text-[#A1A1A1] transition-colors hover:text-[#6B7280]"
         >
           <span>{actionLabel}</span>
           <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4">
@@ -106,8 +106,8 @@ export default function HomePage() {
       tabBar={<TabBar />}
       className="bg-white"
     >
-      <div className="space-y-8 px-5 pb-6 pt-6">
-        <section className="space-y-3">
+      <div className="space-y-8 px-5 pb-6 pt-4">
+        <section className="space-y-2">
           <SectionHeader title="실시간 인기 공고" />
           {isPending && <Skeleton variant="popular" count={2} />}
           {isError && (
@@ -124,7 +124,7 @@ export default function HomePage() {
           )}
         </section>
 
-        <section className="-mx-5 space-y-4 bg-blue-50 px-5 py-5">
+        <section className="-mx-5 space-y-4 bg-[#EEF6FF] px-5 py-5">
           <SectionHeader title="현수님의 최근 조회 목록" onAction={() => navigate('/recent-postings')} />
           {isPending && <Skeleton variant="card" count={2} />}
           {data && data.recentViewedPostings.length > 0 && (
