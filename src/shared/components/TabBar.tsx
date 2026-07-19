@@ -1,4 +1,8 @@
 import { NavLink } from 'react-router-dom';
+import historyIcon from '@/assets/icons/gnb-history.svg';
+import myIcon from '@/assets/icons/gnb-my.svg';
+import savedIcon from '@/assets/icons/gnb-saved.svg';
+import searchIcon from '@/assets/icons/gnb-search.svg';
 
 type TabBarItem = {
   label: string;
@@ -20,7 +24,7 @@ type TabBarProps = {
 
 export function TabBar({ items = DEFAULT_ITEMS }: TabBarProps) {
   return (
-    <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-[390px] -translate-x-1/2 border-t border-gray-100 bg-white px-2 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-[390px] -translate-x-1/2 rounded-t-[28px] border border-b-0 border-gray-100 bg-white px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(15,23,42,0.06)]">
       <ul className="grid h-16 grid-cols-5">
         {items.map((item) => (
           <li key={item.to}>
@@ -35,7 +39,13 @@ export function TabBar({ items = DEFAULT_ITEMS }: TabBarProps) {
             >
               {({ isActive }) => (
                 <>
-                  <TabBarIcon name={item.icon} active={isActive} />
+                  <span
+                    className={`flex size-7 items-center justify-center rounded-full ${
+                      isActive ? 'bg-blue-50' : 'bg-transparent'
+                    }`}
+                  >
+                    <TabBarIcon name={item.icon} active={isActive} />
+                  </span>
                   <span>{item.label}</span>
                 </>
               )}
@@ -54,6 +64,27 @@ type TabBarIconProps = {
 
 function TabBarIcon({ name, active }: TabBarIconProps) {
   const fill = active ? 'currentColor' : 'none';
+  const assetIconMap = {
+    search: searchIcon,
+    saved: savedIcon,
+    history: historyIcon,
+    my: myIcon,
+  } satisfies Partial<Record<TabBarItem['icon'], string>>;
+
+  const assetIcon = assetIconMap[name as keyof typeof assetIconMap];
+
+  if (assetIcon) {
+    return (
+      <span
+        aria-hidden="true"
+        className="block size-6 bg-current"
+        style={{
+          mask: `url(${assetIcon}) center / contain no-repeat`,
+          WebkitMask: `url(${assetIcon}) center / contain no-repeat`,
+        }}
+      />
+    );
+  }
 
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5">
