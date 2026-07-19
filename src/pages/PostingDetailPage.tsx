@@ -49,16 +49,16 @@ function DetailHeader() {
         type="button"
         aria-label="뒤로가기"
         onClick={() => navigate(-1)}
-        className="absolute left-2 flex size-10 items-center justify-center rounded-full text-[#333333] transition-colors hover:bg-gray-100"
+        className="absolute left-2 flex size-[41px] items-center justify-center rounded-full transition-colors hover:bg-gray-100"
       >
-        <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6">
+        <svg viewBox="0 0 41 41" aria-hidden="true" className="size-[41px]">
           <path
-            d="M15 5L8 12L15 19"
+            d="M26.125 11.7734L15.875 20.9984L26.125 30.2234"
             fill="none"
-            stroke="currentColor"
+            stroke="#404040"
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth="2"
+            strokeWidth="2.05"
           />
         </svg>
       </button>
