@@ -9,4 +9,14 @@ export interface Posting {
   deadline: string; // ISO 날짜 (D-Day 계산용)
   posterUrl: string;
   isSaved: boolean; // 찜 여부
+  viewCount?: number;
+  savedCount?: number;
+  viewedAt?: string;
+  isMatched?: boolean;
+}
+
+export interface HomePostingFeed {
+  popularPostings: Posting[];
+  recentViewedPostings: Posting[];
+  deadlinePostings: Record<PostingType, Posting[]>;
 }
