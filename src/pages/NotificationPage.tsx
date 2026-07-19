@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getNotifications, markAllNotificationsAsRead } from '@/apis/notification';
-import { Header, Layout } from '@/shared/components';
+import { Layout } from '@/shared/components';
 import type { NotificationItem } from '@/types/notification';
 
 function formatNotificationTime(createdAt: string) {
@@ -15,28 +15,75 @@ function formatNotificationTime(createdAt: string) {
   return `${diffDays}일 전`;
 }
 
+function splitNotificationTitle(title: string) {
+  const matchedTitle = title.match(/^(\[[^\]]+\])\s*(.*)$/);
+
+  if (!matchedTitle) {
+    return { prefix: '', content: title };
+  }
+
+  return {
+    prefix: matchedTitle[1],
+    content: matchedTitle[2],
+  };
+}
+
+function NotificationHeader() {
+  const navigate = useNavigate();
+
+  return (
+    <header className="sticky top-0 z-20 flex h-[72px] items-center justify-center bg-white px-5">
+      <button
+        type="button"
+        aria-label="뒤로가기"
+        onClick={() => navigate(-1)}
+        className="absolute left-4 flex size-10 items-center justify-center rounded-full text-[#333333] transition-colors hover:bg-gray-100"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7">
+          <path
+            d="M15.5 4.5L8 12L15.5 19.5"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2.4"
+          />
+        </svg>
+      </button>
+      <h1 className="text-[18px] font-extrabold leading-none text-[#0F172A]">알림</h1>
+    </header>
+  );
+}
+
 function NotificationListItem({ notification }: { notification: NotificationItem }) {
   const navigate = useNavigate();
   const isRead = notification.isRead;
+  const { prefix, content } = splitNotificationTitle(notification.title);
 
   return (
     <button
       type="button"
       onClick={() => navigate(`/postings/${notification.postingId}`)}
-      className={`w-full border-b border-gray-100 px-5 py-5 text-left transition-colors ${
-        isRead ? 'bg-white hover:bg-gray-50' : 'bg-blue-50 hover:bg-blue-100'
+      className={`w-full text-left transition-colors ${
+        isRead ? 'bg-white hover:bg-gray-50' : 'bg-[#EEF6FF] hover:bg-[#E6F2FF]'
       }`}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <p className={`text-sm font-bold leading-snug ${isRead ? 'text-slate-400' : 'text-blue-600'}`}>
-            {notification.title}
+      <div className="mx-5 flex min-h-[92px] items-start justify-between gap-4 border-b border-[#EEF0F3] py-5">
+        <div className="min-w-0 flex-1 space-y-2">
+          <p className="line-clamp-2 text-[15px] font-extrabold leading-[1.45] text-[#202124]">
+            {prefix && (
+              <span className={isRead ? 'text-[#8C8C8C]' : 'text-[#0059FF]'}>
+                {prefix}
+              </span>
+            )}
+            {prefix && ' '}
+            <span>{content}</span>
           </p>
-          <p className={`mt-2 text-sm font-medium leading-relaxed ${isRead ? 'text-slate-500' : 'text-slate-800'}`}>
+          <p className="line-clamp-2 text-[14px] font-semibold leading-[1.55] text-[#202124]">
             {notification.message}
           </p>
         </div>
-        <span className="shrink-0 text-xs font-medium text-slate-400">
+        <span className="mt-0.5 shrink-0 text-[13px] font-semibold text-[#A1A1A1]">
           {formatNotificationTime(notification.createdAt)}
         </span>
       </div>
@@ -88,12 +135,12 @@ export default function NotificationPage() {
   }, [markAllRead]);
 
   return (
-    <Layout header={<Header title="알림" showBack />} className="bg-white">
-      <section className="min-h-[calc(100dvh-56px)] bg-white">
+    <Layout header={<NotificationHeader />} className="bg-white">
+      <section className="min-h-[calc(100dvh-72px)] bg-white">
         {isPending && (
-          <div className="space-y-4 px-5 py-5">
+          <div className="space-y-3 px-5 py-5">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+              <div key={index} className="h-[92px] animate-pulse rounded-xl bg-[#F3F7FC]" />
             ))}
           </div>
         )}
@@ -108,7 +155,7 @@ export default function NotificationPage() {
           </div>
         )}
         {data && data.length > 0 && (
-          <div>
+          <div className="pb-6">
             {data.map((notification) => (
               <NotificationListItem key={notification.id} notification={notification} />
             ))}
