@@ -1,5 +1,4 @@
 import { useToggleSave } from '@/shared/hooks/useToggleSave';
-import heartFilledIcon from '@/assets/icons/heart-filled.svg';
 
 interface HeartButtonProps {
   postingId: number;
@@ -25,14 +24,17 @@ export default function HeartButton({ postingId, isSaved }: HeartButtonProps) {
       aria-label={isSaved ? '북마크 해제' : '북마크 등록'}
     >
       {isSaved ? (
-        <span
+        <svg
+          viewBox="0 0 16 14"
           aria-hidden="true"
-          className="block h-[14px] w-4 bg-[#F95178] transition-all duration-300"
-          style={{
-            mask: `url(${heartFilledIcon}) center / contain no-repeat`,
-            WebkitMask: `url(${heartFilledIcon}) center / contain no-repeat`,
-          }}
-        />
+          className="h-[14px] w-4 transition-all duration-300"
+          fill="none"
+        >
+          <path
+            d="M8.00503 14L1.2151 7.55146C-2.47508 3.68234 2.94949 -3.74638 8.00503 2.26366C13.0606 -3.74638 18.4605 3.70813 14.795 7.55146L8.00503 14Z"
+            fill="#F95178"
+          />
+        </svg>
       ) : (
         <svg
           viewBox="0 0 16 14"
