@@ -7,7 +7,7 @@ import Carousel from '@/shared/components/Carousel';
 import EmptyState from '@/shared/components/EmptyState';
 import PostingCard from '@/shared/components/PostingCard';
 import Skeleton from '@/shared/components/Skeleton';
-import { Header, Layout, Tab, TabBar } from '@/shared/components';
+import { Header, Layout, Logo, Tab, TabBar } from '@/shared/components';
 import type { PostingType } from '@/types/posting';
 
 type SectionHeaderProps = {
@@ -56,25 +56,25 @@ function NotificationButton({ hasUnreadNotification }: { hasUnreadNotification: 
       type="button"
       aria-label="알림"
       onClick={() => navigate('/notifications')}
-      className="relative flex size-9 items-center justify-center rounded-full text-gray-800 transition-colors hover:bg-gray-100"
+      className="relative flex size-8 items-center justify-center rounded-full text-[#333333] transition-colors hover:bg-gray-100"
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5">
+      <svg viewBox="0 0 28 24" aria-hidden="true" className="h-6 w-7">
         <path
-          d="M6 17H18L16.8 15.4V11C16.8 8.2 15 6 12 6C9 6 7.2 8.2 7.2 11V15.4L6 17Z"
+          d="M7 17.5H21L19.6 15.7V11C19.6 7.7 17.45 5.2 14 5.2C10.55 5.2 8.4 7.7 8.4 11V15.7L7 17.5Z"
           fill="none"
           stroke="currentColor"
           strokeLinejoin="round"
-          strokeWidth="1.8"
+          strokeWidth="2"
         />
         <path
-          d="M10 18C10.4 19.2 11 20 12 20C13 20 13.6 19.2 14 18"
+          d="M11.7 18.7C12.15 20 12.85 20.8 14 20.8C15.15 20.8 15.85 20 16.3 18.7"
           fill="none"
           stroke="currentColor"
           strokeLinecap="round"
-          strokeWidth="1.8"
+          strokeWidth="2"
         />
       </svg>
-      {hasUnreadNotification && <span className="absolute right-2 top-2 size-2 rounded-full bg-red-500" />}
+      {hasUnreadNotification && <span className="absolute right-1.5 top-1 size-2 rounded-full bg-[#FF2F2F]" />}
     </button>
   );
 }
@@ -98,7 +98,8 @@ export default function HomePage() {
     <Layout
       header={
         <Header
-          title="FitMe."
+          leftSlot={<Logo />}
+          className="h-[72px] border-b-0 px-5 pt-3"
           rightSlot={<NotificationButton hasUnreadNotification={unreadNotificationCount > 0} />}
         />
       }
