@@ -7,6 +7,8 @@ interface EmptyStateProps {
   message: string;
   subMessage?: string;
   illustration?: 'heart-plus' | 'heart-wave' | 'bookmark' | 'none';
+  messageClassName?: string;
+  subMessageClassName?: string;
   cta?: {
     label: string;
     onClick: () => void;
@@ -17,6 +19,8 @@ export default function EmptyState({
   message,
   subMessage,
   illustration = 'none',
+  messageClassName = '',
+  subMessageClassName = '',
   cta,
 }: EmptyStateProps) {
   // SVG 일러스트 분기 렌더링 (에셋 폴더의 실물 아이콘 연동)
@@ -65,13 +69,15 @@ export default function EmptyState({
       {renderIllustration()}
 
       {/* 메인 메시지 */}
-      <h3 className="font-['Pretendard'] font-semibold text-slate-700 text-[14px] leading-snug">
+      <h3 className={`font-['Pretendard'] font-semibold text-slate-700 text-[14px] leading-snug ${messageClassName}`}>
         {message}
       </h3>
 
       {/* 서브 설명글 */}
       {subMessage && (
-        <p className="font-['Pretendard'] text-slate-400 text-[12px] leading-normal mt-1 max-w-[260px]">
+        <p
+          className={`font-['Pretendard'] text-slate-400 text-[12px] leading-normal mt-1 max-w-[260px] whitespace-pre-line ${subMessageClassName}`}
+        >
           {subMessage}
         </p>
       )}
