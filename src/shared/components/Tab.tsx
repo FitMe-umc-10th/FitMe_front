@@ -7,14 +7,11 @@ type TabProps<T extends string> = {
   tabs: TabItem<T>[];
   active: T;
   onChange: (value: T) => void;
-  variant?: 'equal' | 'content';
 };
 
-export function Tab<T extends string>({ tabs, active, onChange, variant = 'equal' }: TabProps<T>) {
-  const isContentVariant = variant === 'content';
-
+export function Tab<T extends string>({ tabs, active, onChange }: TabProps<T>) {
   return (
-    <div className={`flex border-b bg-white ${isContentVariant ? 'border-[#D9D9D9] pl-5' : 'border-[#EEF0F3]'}`}>
+    <div className="flex border-b border-[#EEF0F3] bg-white">
       {tabs.map((tab) => {
         const isActive = tab.value === active;
 
@@ -23,19 +20,13 @@ export function Tab<T extends string>({ tabs, active, onChange, variant = 'equal
             key={tab.value}
             type="button"
             onClick={() => onChange(tab.value)}
-            className={`relative h-[43px] text-[14px] font-semibold transition-colors ${
-              isContentVariant ? 'px-3' : 'flex-1'
-            } ${isActive ? 'text-[#1E1E1E]' : 'text-[#A5A5A5]'} ${
-              isContentVariant && tab.label.length > 2 ? 'min-w-[67px]' : ''
+            className={`relative h-11 flex-1 text-[14px] font-semibold transition-colors ${
+              isActive ? 'text-[#0059FF]' : 'text-[#A5A5A5]'
             }`}
           >
             {tab.label}
             {isActive && (
-              <span
-                className={`absolute bottom-0 h-0.5 bg-[#0059FF] ${
-                  isContentVariant ? 'inset-x-0' : 'inset-x-3 rounded-full'
-                }`}
-              />
+              <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-[#0059FF]" />
             )}
           </button>
         );
