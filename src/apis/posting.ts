@@ -86,6 +86,13 @@ export const getRecentViewedPostings = async (): Promise<Posting[]> => {
     .sort((a, b) => new Date(b.viewedAt ?? '').getTime() - new Date(a.viewedAt ?? '').getTime());
 };
 
+export const getSavedPostings = async (): Promise<Posting[]> => {
+  await new Promise((r) => setTimeout(r, 300));
+  const postings = applyMockSavedPostings();
+
+  return postings.filter((posting) => posting.isSaved);
+};
+
 export const getPostingById = async (postingId: number): Promise<Posting | null> => {
   await new Promise((r) => setTimeout(r, 300));
   const postings = applyMockSavedPostings();
