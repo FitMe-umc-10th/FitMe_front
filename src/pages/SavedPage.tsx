@@ -1,13 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getSavedPostings } from '@/apis/posting';
 import DayBadge from '@/shared/components/DayBadge';
 import Dropdown from '@/shared/components/Dropdown';
 import EmptyState from '@/shared/components/EmptyState';
-import HeartButton from '@/shared/components/HeartButton';
 import Skeleton from '@/shared/components/Skeleton';
 import { Layout, Tab, TabBar } from '@/shared/components';
+import { useToggleSave } from '@/shared/hooks/useToggleSave';
 import type { Posting, PostingType } from '@/types/posting';
 
 type SavedTab = PostingType | 'ALL';
@@ -35,6 +35,7 @@ const sortSavedPostings = (postings: Posting[], sort: SavedSortType) => {
 export default function SavedPage() {
   const [activeTab, setActiveTab] = useState<SavedTab>('ALL');
   const [sort, setSort] = useState<SavedSortType>('recent');
+  const [isFailureToastOpen, setIsFailureToastOpen] = useState(false);
   const { data: savedPostings = [], isPending, isError } = useQuery({
     queryKey: ['savedPostings'],
     queryFn: getSavedPostings,
@@ -53,6 +54,8 @@ export default function SavedPage() {
 
   return (
     <Layout tabBar={<TabBar />} className="bg-white">
+      {isFailureToastOpen && <SavedFailureToast onClose={() => setIsFailureToastOpen(false)} />}
+
       <header className="flex h-[105px] shrink-0 items-end justify-center bg-white pb-[18px]">
         <h1 className="text-[16px] font-bold text-[#262626]">저장</h1>
       </header>
@@ -95,7 +98,11 @@ export default function SavedPage() {
 
           <div className="flex flex-col gap-5">
             {filteredPostings.map((posting) => (
-              <SavedPostingCard key={posting.id} posting={posting} />
+              <SavedPostingCard
+                key={posting.id}
+                posting={posting}
+                onSaveFailure={() => setIsFailureToastOpen(true)}
+              />
             ))}
           </div>
         </section>
@@ -104,7 +111,13 @@ export default function SavedPage() {
   );
 }
 
-function SavedPostingCard({ posting }: { posting: Posting }) {
+function SavedPostingCard({
+  posting,
+  onSaveFailure,
+}: {
+  posting: Posting;
+  onSaveFailure: () => void;
+}) {
   const navigate = useNavigate();
 
   return (
@@ -123,7 +136,7 @@ function SavedPostingCard({ posting }: { posting: Posting }) {
 
       <div className="relative flex min-w-0 flex-col pt-[18px]">
         <div className="absolute right-0 top-0">
-          <HeartButton postingId={posting.id} isSaved={posting.isSaved} />
+          <SavedHeartButton postingId={posting.id} isSaved={posting.isSaved} onSaveFailure={onSaveFailure} />
         </div>
 
         <div className="mb-6">
@@ -151,5 +164,69 @@ function SavedPostingCard({ posting }: { posting: Posting }) {
         </div>
       </div>
     </article>
+  );
+}
+
+function SavedHeartButton({
+  postingId,
+  isSaved,
+  onSaveFailure,
+}: {
+  postingId: number;
+  isSaved: boolean;
+  onSaveFailure: () => void;
+}) {
+  const { mutate, isPending } = useToggleSave(postingId, {
+    showErrorToast: false,
+    onError: onSaveFailure,
+  });
+
+  const handleClick = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isPending) return;
+    mutate(isSaved);
+  };
+
+  return (
+    <button
+      type="button"
+      aria-label={isSaved ? '저장 해제' : '저장'}
+      disabled={isPending}
+      onClick={handleClick}
+      className="flex size-8 items-center justify-center rounded-full text-[#4A8DFF] transition-transform active:scale-90 disabled:opacity-50"
+    >
+      <svg viewBox="0 0 16 14" aria-hidden="true" className="h-[14px] w-4">
+        <path
+          d="M8.00503 14L1.2151 7.55146C-2.47508 3.68234 2.94949 -3.74638 8.00503 2.26366C13.0606 -3.74638 18.4605 3.70813 14.795 7.55146L8.00503 14Z"
+          fill="currentColor"
+        />
+      </svg>
+    </button>
+  );
+}
+
+function SavedFailureToast({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const timerId = window.setTimeout(onClose, 3000);
+    return () => window.clearTimeout(timerId);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+      role="status"
+      aria-live="polite"
+      onClick={onClose}
+    >
+      <div
+        className="flex h-[162px] w-full max-w-[362px] flex-col items-center justify-center rounded-[14px] bg-white px-6 text-center"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <p className="text-[18px] font-bold text-[#262626]">저장 해제에 실패했어요!</p>
+        <p className="mt-3 text-[14px] font-medium text-[#8F8F8F]">네트워크를 확인해주세요.</p>
+      </div>
+    </div>
   );
 }

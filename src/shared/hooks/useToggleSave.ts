@@ -34,9 +34,15 @@ const updateHomeFeedSavedState = (
   },
 });
 
-export const useToggleSave = (postingId: number) => {
+interface UseToggleSaveOptions {
+  showErrorToast?: boolean;
+  onError?: (currentSavedState: boolean) => void;
+}
+
+export const useToggleSave = (postingId: number, options: UseToggleSaveOptions = {}) => {
   const queryClient = useQueryClient();
   const showToast = useToastStore((state) => state.show);
+  const { showErrorToast = true, onError } = options;
 
   return useMutation({
     mutationFn: (isSaved: boolean) => toggleSave(postingId, isSaved),
@@ -128,7 +134,10 @@ export const useToggleSave = (postingId: number) => {
       }
 
       const actionText = currentSavedState ? '저장 해제' : '저장';
-      showToast(`${actionText}에 실패했어요! 네트워크를 확인해주세요.`, 'error');
+      if (showErrorToast) {
+        showToast(`${actionText}에 실패했어요! 네트워크를 확인해주세요.`, 'error');
+      }
+      onError?.(currentSavedState);
     },
     // 3. 작업 종료 후(성공/실패 무관) 최신 상태 동기화를 위해 캐시 무효화를 실행합니다.
     onSettled: () => {
