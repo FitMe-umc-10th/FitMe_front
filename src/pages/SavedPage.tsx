@@ -81,8 +81,8 @@ export default function SavedPage() {
             illustration="heart-wave"
             message="아직 저장한 공고가 없어요"
             subMessage={'마음에 드는 공고에 좋아요를 누르면\n여기에서 모아볼 수 있어요.'}
-            messageClassName="text-[#262626]"
-            subMessageClassName="text-[#262626]"
+            messageClassName="!text-[#262626]"
+            subMessageClassName="!text-[#262626]"
           />
         </section>
       )}
