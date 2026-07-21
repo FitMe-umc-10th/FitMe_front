@@ -28,24 +28,9 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [{ path: '/', element: <HomePage /> }],
   },
-  {
-    path: '/explore',
-    element: <ExplorePage />,
-  },
-  {
-    path: '/saved',
-    element: <SavedPage />,
-  },
-  {
-    path: '/notifications',
-    element: <NotificationPage />,
-  },
-  {
-    path: '/recent-postings',
-    element: <RecentViewedPage />,
-  },
-  {
-    path: '/postings/:postingId',
-    element: <PostingDetailPage />,
-  },
+  { path: '/explore', element: <ExplorePage /> },
+  { path: '/saved', element: <SavedPage /> },
+  { path: '/notifications', element: <NotificationPage /> },
+  { path: '/recent-postings', element: <RecentViewedPage /> },
+  { path: '/postings/:postingId', element: <PostingDetailPage /> },
 ]);
