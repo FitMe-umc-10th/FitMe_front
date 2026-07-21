@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useModalStore } from '@/store/modalStore';
 
 type ModalButton = {
   label: string;
@@ -68,5 +69,22 @@ export function Modal({ isOpen, onClose, title, description, buttons, children }
         </div>
       </div>
     </div>
+  );
+}
+
+export function GlobalModal() {
+  const modal = useModalStore((state) => state.modal);
+  const closeModal = useModalStore((state) => state.closeModal);
+
+  return (
+    <Modal
+      isOpen={modal.isOpen}
+      onClose={closeModal}
+      title={modal.title}
+      description={modal.description}
+      buttons={modal.buttons}
+    >
+      {modal.children}
+    </Modal>
   );
 }
