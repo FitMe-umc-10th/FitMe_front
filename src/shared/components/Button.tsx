@@ -1,6 +1,7 @@
 interface ButtonProps {
   variant?: 'primary' | 'secondary'; // 색상 종류
   size?: 'sm' | 'md' | 'lg'; // 크기
+  fullWidth?: boolean; // 가로 꽉 채우기
   disabled?: boolean; // 비활성화
   onClick?: () => void; // 클릭 시 실행할 함수
   children: React.ReactNode; // 버튼 안 글자 (<Button>로그인</Button>의 "로그인")
@@ -9,6 +10,7 @@ interface ButtonProps {
 export default function Button({
   variant = 'primary', // 기본값 = primary
   size = 'md',
+  fullWidth = false,
   disabled = false,
   onClick,
   children,
@@ -32,7 +34,7 @@ export default function Button({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`${base} ${variants[variant]} ${sizes[size]}`}
+      className={`${base} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''}`}
     >
       {children}
     </button>

@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 
 type HeaderProps = {
   title?: string;
+  leftSlot?: ReactNode;
   showBack?: boolean;
   onBack?: () => void;
   rightSlot?: ReactNode;
+  className?: string;
 };
 
-export function Header({ title, showBack = false, onBack, rightSlot }: HeaderProps) {
+export function Header({ title, leftSlot, showBack = false, onBack, rightSlot, className = '' }: HeaderProps) {
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -21,7 +23,9 @@ export function Header({ title, showBack = false, onBack, rightSlot }: HeaderPro
   };
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-gray-100 bg-white px-4">
+    <header
+      className={`sticky top-0 z-20 flex h-14 items-center justify-between border-b border-gray-100 bg-white px-4 ${className}`}
+    >
       <div className="flex min-w-0 flex-1 items-center gap-2">
         {showBack && (
           <button
@@ -42,6 +46,7 @@ export function Header({ title, showBack = false, onBack, rightSlot }: HeaderPro
             </svg>
           </button>
         )}
+        {leftSlot}
         {title && <h1 className="truncate text-lg font-semibold text-gray-950">{title}</h1>}
       </div>
       {rightSlot && <div className="flex shrink-0 items-center gap-2">{rightSlot}</div>}

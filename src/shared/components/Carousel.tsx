@@ -1,40 +1,93 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 
 interface CarouselProps {
   children: React.ReactNode;
   showIndicator?: boolean;
+  showProgress?: boolean;
   loop?: boolean;
+  storageKey?: string;
 }
 
-export default function Carousel({ children, showIndicator = false, loop = false }: CarouselProps) {
+export default function Carousel({
+  children,
+  showIndicator = false,
+  showProgress = false,
+  loop = false,
+  storageKey,
+}: CarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const childrenArray = React.Children.toArray(children).filter(Boolean);
   const count = childrenArray.length;
+  const indexStorageKey = storageKey ? `${storageKey}:index` : undefined;
+  const scrollStorageKey = storageKey ? `${storageKey}:scrollLeft` : undefined;
+
+  const getStoredIndex = useCallback(() => {
+    if (!indexStorageKey) return 0;
+
+    const storedIndex = Number(window.sessionStorage.getItem(indexStorageKey));
+    if (!Number.isInteger(storedIndex)) return 0;
+
+    return Math.min(Math.max(storedIndex, 0), Math.max(count - 1, 0));
+  }, [count, indexStorageKey]);
+
+  const getStoredScrollLeft = useCallback(() => {
+    if (!scrollStorageKey) return null;
+
+    const storedScrollLeft = Number(window.sessionStorage.getItem(scrollStorageKey));
+    if (!Number.isFinite(storedScrollLeft)) return null;
+
+    return Math.max(storedScrollLeft, 0);
+  }, [scrollStorageKey]);
+
+  const scrollToIndex = useCallback((targetIndex: number, behavior: ScrollBehavior = 'auto') => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const childrenElements = container.children;
+    const childIndex = loop && count > 1 ? targetIndex + 1 : targetIndex;
+    const targetChild = childrenElements[childIndex] as HTMLElement | undefined;
+    if (!targetChild) return;
+
+    const targetLeft = loop
+      ? targetChild.offsetLeft + targetChild.offsetWidth / 2 - container.clientWidth / 2
+      : targetChild.offsetLeft;
+
+    container.scrollTo({ left: targetLeft, behavior });
+    setCurrentIndex(targetIndex);
+  }, [count, loop]);
 
   // 무한 루프일 때 자식 배열 구성: [마지막 아이템, ...기본 아이템들, 첫 번째 아이템]
   const displayItems = loop && count > 1
     ? [childrenArray[count - 1], ...childrenArray, childrenArray[0]]
     : childrenArray;
 
-  // 컴포넌트 마운트 및 렌더링 시 무한 루프의 첫 실물 아이템(인덱스 1)으로 초기 스크롤 위치 조정
+  // 컴포넌트 마운트 및 렌더링 시 초기 스크롤 위치 조정
   useEffect(() => {
-    if (loop && count > 1) {
-      const timer = setTimeout(() => {
-        const container = containerRef.current;
-        if (!container) return;
+    if (count === 0) return;
 
-        const childrenElements = container.children;
-        const targetChild = childrenElements[1] as HTMLElement; // 첫 번째 실물 아이템
-        if (targetChild) {
-          const targetLeft = targetChild.offsetLeft + targetChild.offsetWidth / 2 - container.clientWidth / 2;
-          container.scrollLeft = targetLeft;
-          setCurrentIndex(0);
-        }
-      }, 50);
-      return () => clearTimeout(timer);
+    const timer = setTimeout(() => {
+      const storedScrollLeft = getStoredScrollLeft();
+
+      if (!loop && storedScrollLeft !== null && containerRef.current) {
+        containerRef.current.scrollTo({ left: storedScrollLeft, behavior: 'auto' });
+        setCurrentIndex(getStoredIndex());
+        return;
+      }
+
+      scrollToIndex(getStoredIndex());
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [count, getStoredIndex, getStoredScrollLeft, loop, scrollToIndex]);
+
+  const updateCurrentIndex = (nextIndex: number) => {
+    setCurrentIndex(nextIndex);
+
+    if (indexStorageKey) {
+      window.sessionStorage.setItem(indexStorageKey, String(nextIndex));
     }
-  }, [loop, count]);
+  };
 
   const handleScroll = () => {
     const container = containerRef.current;
@@ -42,6 +95,10 @@ export default function Carousel({ children, showIndicator = false, loop = false
 
     const { scrollLeft, clientWidth } = container;
     if (clientWidth === 0) return;
+
+    if (scrollStorageKey) {
+      window.sessionStorage.setItem(scrollStorageKey, String(scrollLeft));
+    }
 
     const childrenElements = container.children;
     if (childrenElements.length === 0) return;
@@ -65,9 +122,9 @@ export default function Carousel({ children, showIndicator = false, loop = false
       let realIndex = closestIndex - 1;
       if (realIndex < 0) realIndex = count - 1;
       if (realIndex >= count) realIndex = 0;
-      setCurrentIndex(realIndex);
+      updateCurrentIndex(realIndex);
     } else {
-      setCurrentIndex(closestIndex);
+      updateCurrentIndex(Math.min(closestIndex, count - 1));
     }
   };
 
@@ -76,7 +133,7 @@ export default function Carousel({ children, showIndicator = false, loop = false
     const container = containerRef.current;
     if (!container || !loop || count <= 1) return;
 
-    let scrollTimeout: NodeJS.Timeout;
+    let scrollTimeout: ReturnType<typeof window.setTimeout>;
 
     const handleScrollEnd = () => {
       const { scrollLeft, clientWidth } = container;
@@ -139,10 +196,10 @@ export default function Carousel({ children, showIndicator = false, loop = false
     };
   }, [loop, count]);
 
-  // 무한 루프 시 좌우 50px 패딩을 주어 인접 카드가 삐져나오도록 유도하고 중앙 스냅 지정
-  const paddingClass = loop ? 'px-[50px] py-3' : 'pb-1';
+  // 무한 루프 시 좌우 여백을 두어 인접 카드가 Figma 시안처럼 살짝 보이도록 맞춘다.
+  const paddingClass = loop ? 'px-[38px] py-3' : 'pb-1';
   const scrollPaddingStyle = loop
-    ? { scrollPaddingLeft: '50px', scrollPaddingRight: '50px' }
+    ? { scrollPaddingLeft: '38px', scrollPaddingRight: '38px' }
     : undefined;
 
   return (
@@ -163,8 +220,25 @@ export default function Carousel({ children, showIndicator = false, loop = false
 
       {/* 인디케이터 표시 (showIndicator가 true일 때만 노출, 인기 공고 카드 우측 상단 오버레이 위치로 조율) */}
       {showIndicator && count > 0 && (
-        <div className="absolute top-6 right-[70px] bg-black/25 backdrop-blur-sm text-white/90 text-[10px] px-2.5 py-0.5 rounded-full font-bold select-none z-10 pointer-events-none">
+        <div className="pointer-events-none absolute right-[54px] top-7 z-10 rounded-full bg-[#9FA4AA]/80 px-2.5 py-1 text-[11px] font-bold leading-none text-white/95 backdrop-blur-sm select-none">
           {currentIndex + 1} / {count}
+        </div>
+      )}
+
+      {showProgress && count > 0 && (
+        <div className="mt-2 flex items-center justify-center gap-2" aria-hidden="true">
+          {Array.from({ length: count }).map((_, index) => {
+            const isActive = index === currentIndex;
+
+            return (
+              <span
+                key={index}
+                className={`h-2 rounded-full transition-all duration-200 ${
+                  isActive ? 'w-9 bg-[#A8D2FF]' : 'w-2 bg-[#F0F0F0]'
+                }`}
+              />
+            );
+          })}
         </div>
       )}
     </div>
