@@ -1,12 +1,14 @@
-import emptySavedAnnounce from '@/assets/empty_saved_announce.svg';
-import emptyMatchedList from '@/assets/empty_matched_list.svg';
-import emptyBookmarkedListFlag from '@/assets/empty_Bookmarked_list_flag.svg';
-import emptyBookmarkedListDot from '@/assets/empty_Bookmarked_list_dot.svg';
+import emptyBookmarkedListDot from '@/assets/illustrations/empty-bookmarked-list-dot.svg';
+import emptyBookmarkedListFlag from '@/assets/illustrations/empty-bookmarked-list-flag.svg';
+import emptyMatchedList from '@/assets/illustrations/empty-matched-list.svg';
+import emptySavedAnnounce from '@/assets/illustrations/empty-saved-announce.svg';
 
 interface EmptyStateProps {
   message: string;
   subMessage?: string;
   illustration?: 'heart-plus' | 'heart-wave' | 'bookmark' | 'none';
+  messageClassName?: string;
+  subMessageClassName?: string;
   cta?: {
     label: string;
     onClick: () => void;
@@ -17,6 +19,8 @@ export default function EmptyState({
   message,
   subMessage,
   illustration = 'none',
+  messageClassName = '',
+  subMessageClassName = '',
   cta,
 }: EmptyStateProps) {
   // SVG 일러스트 분기 렌더링 (에셋 폴더의 실물 아이콘 연동)
@@ -65,13 +69,15 @@ export default function EmptyState({
       {renderIllustration()}
 
       {/* 메인 메시지 */}
-      <h3 className="font-['Pretendard'] font-semibold text-slate-700 text-[14px] leading-snug">
+      <h3 className={`font-['Pretendard'] font-semibold text-slate-700 text-[14px] leading-snug ${messageClassName}`}>
         {message}
       </h3>
 
       {/* 서브 설명글 */}
       {subMessage && (
-        <p className="font-['Pretendard'] text-slate-400 text-[12px] leading-normal mt-1 max-w-[260px]">
+        <p
+          className={`font-['Pretendard'] text-slate-400 text-[12px] leading-normal mt-1 max-w-[260px] whitespace-pre-line ${subMessageClassName}`}
+        >
           {subMessage}
         </p>
       )}

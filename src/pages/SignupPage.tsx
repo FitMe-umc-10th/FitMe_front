@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Input from '@/shared/components/Input';
 import Button from '@/shared/components/Button';
-import Logo from '@/shared/components/Logo';
+import { Logo } from '@/shared/components/Logo';
 import { useToastStore } from '@/store/toastStore';
 import { signup, sendEmailCode, verifyEmailCode } from '@/apis/auth';
 

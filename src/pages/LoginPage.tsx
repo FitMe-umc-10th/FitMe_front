@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import Logo from '@/shared/components/Logo';
+import { Logo } from '@/shared/components/Logo';
 
 export default function LoginPage() {
   const navigate = useNavigate();

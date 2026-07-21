@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Input from '@/shared/components/Input';
 import Button from '@/shared/components/Button';
-import Logo from '@/shared/components/Logo';
+import { Logo } from '@/shared/components/Logo';
 import { useAuthStore } from '@/store/authStore';
 import { useToastStore } from '@/store/toastStore';
 import { login } from '@/apis/auth';

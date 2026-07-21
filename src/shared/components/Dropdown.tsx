@@ -9,7 +9,7 @@ interface DropdownProps {
   options: Option[];
   value: string;
   onChange: (value: string) => void;
-  placeholder?: string; // 선택 전 안내 문구 (예: "거주지역을 선택하세요")
+  placeholder?: string; // 선택 전 안내 문구
   fullWidth?: boolean; // true면 가로 꽉 찬 박스 스타일 (온보딩용)
 }
 
@@ -23,10 +23,8 @@ export default function Dropdown({
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // 현재 선택된 옵션 찾기
   const selected = options.find((opt) => opt.value === value);
 
-  // 드롭다운 바깥을 클릭하면 닫기
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -34,43 +32,65 @@ export default function Dropdown({
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside); // 정리
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
-    // fullWidth면 가로 꽉 차게, 아니면 기존처럼 내용 너비만
     <div ref={ref} className={`relative ${fullWidth ? 'w-full' : 'inline-block'}`}>
-      {/* 현재 선택값 보여주는 버튼 */}
+      {/* 버튼: fullWidth면 온보딩 박스 스타일 / 아니면 정렬 디자인(시안) */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className={
           fullWidth
             ? 'flex w-full items-center justify-between rounded-lg border border-gray-300 px-4 py-3 text-left'
-            : 'flex items-center gap-1 text-sm text-gray-600'
+            : 'flex h-5 items-center gap-1 text-[13px] font-semibold text-[#262626]'
         }
       >
-        {/* 선택 전엔 placeholder를 회색으로 */}
         <span className={selected ? '' : 'text-gray-400'}>{selected?.label ?? placeholder}</span>
-        <span className="text-xs">▼</span>
+        {/* 화살표: fullWidth면 ▼ / 아니면 시안 SVG */}
+        {fullWidth ? (
+          <span className="text-xs">▼</span>
+        ) : (
+          <svg viewBox="0 0 8 5" aria-hidden="true" className="h-[5px] w-2">
+            <path
+              d="M0.4 0.5L4 4.5L7.6 0.5"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="0.8"
+            />
+          </svg>
+        )}
       </button>
 
-      {/* 열렸을 때만 목록 표시 */}
+      {/* 목록: fullWidth면 가로 꽉 / 아니면 정렬 디자인 */}
       {isOpen && (
         <ul
-          className={`absolute z-10 mt-1 max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg
-            ${fullWidth ? 'w-full' : 'right-0 w-32'}`}
+          className={
+            fullWidth
+              ? 'absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg'
+              : 'absolute right-0 z-10 mt-2 w-28 rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg'
+          }
         >
           {options.map((opt) => (
             <li key={opt.value}>
               <button
                 type="button"
                 onClick={() => {
-                  onChange(opt.value); // 부모에게 선택값 알림
-                  setIsOpen(false); // 선택하면 닫기
+                  onChange(opt.value);
+                  setIsOpen(false);
                 }}
-                className={`w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50
-                  ${opt.value === value ? 'font-bold text-blue-500' : 'text-gray-700'}`}
+                className={
+                  fullWidth
+                    ? `w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 ${
+                        opt.value === value ? 'font-bold text-blue-500' : 'text-gray-700'
+                      }`
+                    : `w-full px-3 py-2 text-left text-[13px] font-semibold hover:bg-[#F8FAFC] ${
+                        opt.value === value ? 'text-[#0059FF]' : 'text-[#595959]'
+                      }`
+                }
               >
                 {opt.label}
               </button>
