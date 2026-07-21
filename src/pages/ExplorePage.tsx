@@ -20,7 +20,8 @@ export default function ExplorePage() {
     queryFn: getDeadlinePostings,
   });
 
-  const filteredPostings = data?.filter((posting) => activeTab === 'ALL' || posting.type === activeTab) ?? [];
+  const filteredPostings =
+    data?.filter((posting) => activeTab === 'ALL' || posting.type === activeTab) ?? [];
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -31,7 +32,9 @@ export default function ExplorePage() {
       <section className="min-h-[calc(100dvh-120px)] px-5 py-5">
         <div className="mb-5">
           <h1 className="text-xl font-bold text-slate-900">마감 임박 공고</h1>
-          <p className="mt-1 text-sm font-medium text-slate-400">마감일이 가까운 순서로 확인해보세요.</p>
+          <p className="mt-1 text-sm font-medium text-slate-400">
+            마감일이 가까운 순서로 확인해보세요.
+          </p>
         </div>
 
         <div className="-mx-5 mb-5">
@@ -46,7 +49,10 @@ export default function ExplorePage() {
         )}
         {data && filteredPostings.length === 0 && (
           <div className="rounded-2xl bg-blue-50 py-10">
-            <EmptyState message="조건에 맞는 공고가 없어요." subMessage="다른 탭에서 공고를 확인해보세요." />
+            <EmptyState
+              message="조건에 맞는 공고가 없어요."
+              subMessage="다른 탭에서 공고를 확인해보세요."
+            />
           </div>
         )}
         {filteredPostings.length > 0 && (
