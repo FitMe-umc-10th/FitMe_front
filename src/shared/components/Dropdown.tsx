@@ -35,24 +35,15 @@ export default function Dropdown({ options, value, onChange }: DropdownProps) {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex h-5 items-center gap-1 text-[13px] font-semibold text-[#262626]"
+        className="flex items-center gap-1 text-sm text-gray-600"
       >
         {selected?.label ?? '선택'}
-        <svg viewBox="0 0 8 5" aria-hidden="true" className="h-[5px] w-2">
-          <path
-            d="M0.4 0.5L4 4.5L7.6 0.5"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="0.8"
-          />
-        </svg>
+        <span className="text-xs">▼</span>
       </button>
 
       {/* 열렸을 때만 목록 표시 */}
       {isOpen && (
-        <ul className="absolute right-0 z-10 mt-2 w-28 rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg">
+        <ul className="absolute right-0 z-10 mt-1 w-32 rounded-lg border border-gray-200 bg-white shadow-lg">
           {options.map((opt) => (
             <li key={opt.value}>
               <button
@@ -61,8 +52,8 @@ export default function Dropdown({ options, value, onChange }: DropdownProps) {
                   onChange(opt.value); // 부모에게 선택값 알림
                   setIsOpen(false); // 선택하면 닫기
                 }}
-                className={`w-full px-3 py-2 text-left text-[13px] font-semibold hover:bg-[#F8FAFC]
-                  ${opt.value === value ? 'text-[#0059FF]' : 'text-[#595959]'}`}
+                className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50
+                  ${opt.value === value ? 'font-bold text-blue-500' : 'text-gray-700'}`}
               >
                 {opt.label}
               </button>
