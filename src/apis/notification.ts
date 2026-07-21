@@ -1,59 +1,91 @@
-import type { Notification } from '@/types/notification';
+import { MOCK_NOTIFICATIONS } from '@/constants/mockData';
+import type { Notification, NotificationItem } from '@/types/notification';
 
-// 화면 전환 간에 수정 사항이 초기화되지 않고 유지될 수 있도록 메모리(로컬 변수)에 관리합니다.
-let currentNotifications: Notification[] = [
-  {
-    id: 1,
-    category: '마감 임박',
-    title: '대기업 브랜드 마케팅 공모전',
-    description: '마감일이 3일 남았습니다. 잊지 말고 지원하세요!',
-    createdAt: '2시간 전',
-    isRead: false,
-    postingId: 2,
-  },
-  {
-    id: 2,
-    category: '지원 관리',
-    title: '삼성재단 청년 장학금',
-    description: '홈페이지에서 지원을 마치셨나요? 상태를 변경해주세요.',
-    createdAt: '어제',
-    isRead: true,
-    postingId: 1,
-  },
-  {
-    id: 3,
-    category: '마감 임박',
-    title: '청년 사회혁신 챌린지',
-    description: '오늘이 마감일입니다! 마지막까지 화이팅!',
-    createdAt: '3일 전',
-    isRead: true,
-    postingId: 3,
-  },
-];
+const MOCK_READ_NOTIFICATIONS_KEY = 'fitme:mockReadNotifications';
 
-export const getNotifications = async (): Promise<Notification[]> => {
-  await new Promise((r) => setTimeout(r, 200)); // 200ms 네트워크 지연 시뮬레이션
-  return [...currentNotifications];
+type MockReadNotifications = Record<number, boolean>;
+
+const sortByCreatedAtDesc = (notifications: NotificationItem[]) =>
+  [...notifications].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+const readMockReadNotifications = (): MockReadNotifications => {
+  try {
+    const readNotifications = window.localStorage.getItem(MOCK_READ_NOTIFICATIONS_KEY);
+    if (!readNotifications) return {};
+
+    return JSON.parse(readNotifications) as MockReadNotifications;
+  } catch {
+    return {};
+  }
+};
+
+const writeAllMockReadNotifications = () => {
+  const readNotifications = MOCK_NOTIFICATIONS.reduce<MockReadNotifications>((acc, notification) => {
+    acc[notification.id] = true;
+    return acc;
+  }, {});
+
+  window.localStorage.setItem(MOCK_READ_NOTIFICATIONS_KEY, JSON.stringify(readNotifications));
+};
+
+const applyMockReadNotifications = () => {
+  const readNotifications = readMockReadNotifications();
+
+  MOCK_NOTIFICATIONS.forEach((notification) => {
+    if (readNotifications[notification.id]) {
+      notification.isRead = true;
+    }
+  });
+
+  return MOCK_NOTIFICATIONS;
+};
+
+const mapNotificationToBoth = (item: NotificationItem): Notification & NotificationItem => {
+  return {
+    ...item,
+    category: item.type === 'DEADLINE' ? '마감 임박' : '지원 관리',
+    description: item.message,
+  };
+};
+
+export const getNotifications = async (): Promise<any[]> => {
+  await new Promise((r) => setTimeout(r, 300));
+  return sortByCreatedAtDesc(applyMockReadNotifications()).map(mapNotificationToBoth);
+};
+
+export const getUnreadNotificationCount = async (): Promise<number> => {
+  await new Promise((r) => setTimeout(r, 150));
+  return applyMockReadNotifications().filter((notification) => !notification.isRead).length;
+};
+
+export const markAllNotificationsAsRead = async (): Promise<void> => {
+  await new Promise((r) => setTimeout(r, 200));
+  MOCK_NOTIFICATIONS.forEach((notification) => {
+    notification.isRead = true;
+  });
+  writeAllMockReadNotifications();
 };
 
 export const markAsRead = async (id: number): Promise<Notification> => {
-  await new Promise((r) => setTimeout(r, 100)); // 100ms 네트워크 지연 시뮬레이션
-  const index = currentNotifications.findIndex((n) => n.id === id);
-  if (index !== -1) {
-    currentNotifications[index] = {
-      ...currentNotifications[index],
-      isRead: true,
-    };
-    return currentNotifications[index];
+  await new Promise((r) => setTimeout(r, 100));
+  const notifications = applyMockReadNotifications();
+  const target = notifications.find((n) => n.id === id);
+  if (target) {
+    target.isRead = true;
+    const readNotifications = readMockReadNotifications();
+    readNotifications[id] = true;
+    window.localStorage.setItem(MOCK_READ_NOTIFICATIONS_KEY, JSON.stringify(readNotifications));
+    return mapNotificationToBoth(target);
   }
   throw new Error('Notification not found');
 };
 
 export const markAllAsRead = async (): Promise<Notification[]> => {
   await new Promise((r) => setTimeout(r, 150));
-  currentNotifications = currentNotifications.map((n) => ({
-    ...n,
-    isRead: true,
-  }));
-  return [...currentNotifications];
+  const notifications = applyMockReadNotifications();
+  notifications.forEach((notification) => {
+    notification.isRead = true;
+  });
+  writeAllMockReadNotifications();
+  return sortByCreatedAtDesc(notifications).map(mapNotificationToBoth);
 };

@@ -1,11 +1,13 @@
-import { useEffect } from 'react';
+import { type FormEvent, useEffect } from 'react';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 
 interface SearchBarProps {
   value: string;
-  onChange: (value: string) => void;
-  onSearch?: (keyword: string) => void;
-  onFocus?: () => void;
+  onChange: (value: string) => void; // 입력 즉시 반영 (UI용)
+  onSearch?: (keyword: string) => void; // 디바운스된 검색어로 실제 검색 (API용)
+  onSubmit?: (keyword: string) => void;
+  onFocus?: () => void; // 포커스 시 검색 오버레이 열기
+  autoFocus?: boolean;
   placeholder?: string;
 }
 
@@ -13,42 +15,58 @@ export default function SearchBar({
   value,
   onChange,
   onSearch,
+  onSubmit,
   onFocus,
+  autoFocus = false,
   placeholder = '원하는 장학금, 공모전을 찾아보세요',
 }: SearchBarProps) {
   const debouncedValue = useDebounce(value, 500); // 0.5초 지연된 값
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSubmit?.(value);
+  };
+
   // 디바운스된 값이 바뀔 때만 실제 검색 실행
   useEffect(() => {
     onSearch?.(debouncedValue);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedValue]);
 
   return (
-    <div className="relative w-full h-[48px]">
+    <form className="relative w-full" onSubmit={handleSubmit}>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={onFocus}
+        autoFocus={autoFocus}
         placeholder={placeholder}
-        className="w-full h-full rounded-[10px] border border-blue-500 bg-white pt-[10px] pb-[10px] pl-[15px] pr-[45px] outline-none font-['Pretendard'] font-medium text-[14px] leading-[1.4] text-slate-800 placeholder:text-slate-300 placeholder:font-['Pretendard'] placeholder:font-medium placeholder:text-[14px] placeholder:leading-[1.4]"
+        className="h-12 w-full rounded-[10px] border border-[#0059FF] bg-white pl-4 pr-12 text-[14px] font-medium text-[#262626] outline-none placeholder:text-[#A5A5A5]"
       />
-      {/* 20px x 20px 크기의 피그마 규격 돋보기 아이콘 */}
-      <span className="absolute right-[15px] top-1/2 -translate-y-1/2 flex items-center justify-center w-[20px] h-[20px] text-blue-500 pointer-events-none">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="w-[20px] h-[20px]"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
+      <button
+        type="submit"
+        aria-label="검색"
+        className="absolute right-4 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center text-[#0059FF]"
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true" className="size-5">
+          <path
+            d="M8.75 15.8333C12.662 15.8333 15.8333 12.662 15.8333 8.75C15.8333 4.83798 12.662 1.66667 8.75 1.66667C4.83798 1.66667 1.66667 4.83798 1.66667 8.75C1.66667 12.662 4.83798 15.8333 8.75 15.8333Z"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+          />
+          <path
+            d="M18.3333 18.3333L13.75 13.75"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+          />
         </svg>
-      </span>
-    </div>
+      </button>
+    </form>
   );
 }

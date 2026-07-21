@@ -1,58 +1,53 @@
 import { createBrowserRouter } from 'react-router-dom';
+import AuthLayout from '@/shared/layouts/AuthLayout';
+import ProtectedRoute from '@/routes/ProtectedRoute';
+import LoginPage from '@/pages/LoginPage';
+import EmailLoginPage from '@/pages/EmailLoginPage';
+import SignupPage from '@/pages/SignupPage';
+import OnboardingPage from '@/pages/OnboardingPage';
+import ExplorePage from '@/pages/ExplorePage';
 import HomePage from '@/pages/HomePage';
+import NotificationList from '@/features/notification/NotificationList';
+import PostingDetailPage from '@/pages/PostingDetailPage';
+import RecentViewedPage from '@/pages/RecentViewedPage';
+import SavedPage from '@/pages/SavedPage';
+
 import MyPageMain from '@/features/mypage/MyPageMain';
 import ProfileEdit from '@/features/mypage/ProfileEdit';
 import NotificationSettings from '@/features/mypage/NotificationSettings';
 import CustomerSupport from '@/features/mypage/CustomerSupport';
 import NoticeList from '@/features/mypage/NoticeList';
-import NotificationList from '@/features/notification/NotificationList';
-import ExplorePage from '@/pages/ExplorePage';
 import HistoryList from '@/features/history/HistoryList';
 import HistoryDetail from '@/features/history/HistoryDetail';
 
-// TODO: 화면 추가될 때마다 라우트 등록
-// 인증 페이지(/login, /signup, /onboarding)는 별도 레이아웃(GNB 없음)
-// 공통 레이아웃(GNB) 안에 / /explore /saved /history /my, 공유 /postings/:id
 export const router = createBrowserRouter([
+  // 인증 화면 (누구나 접근 가능)
   {
-    path: '/',
-    element: <HomePage />,
+    element: <AuthLayout />,
+    children: [
+      { path: '/login', element: <LoginPage /> },
+      { path: '/login/email', element: <EmailLoginPage /> },
+      { path: '/signup', element: <SignupPage /> },
+      { path: '/onboarding', element: <OnboardingPage /> },
+    ],
   },
+  // 보호된 화면 (로그인 + 온보딩 완료해야 접근)
   {
-    path: '/explore',
-    element: <ExplorePage />,
+    element: <ProtectedRoute />,
+    children: [{ path: '/', element: <HomePage /> }],
   },
-  {
-    path: '/my',
-    element: <MyPageMain />,
-  },
-  {
-    path: '/my/profile',
-    element: <ProfileEdit />,
-  },
-  {
-    path: '/my/notifications',
-    element: <NotificationSettings />,
-  },
-  {
-    path: '/my/support',
-    element: <CustomerSupport />,
-  },
-  {
-    path: '/my/notices',
-    element: <NoticeList />,
-  },
-  {
-    path: '/notifications',
-    element: <NotificationList />,
-  },
-  {
-    path: '/history',
-    element: <HistoryList />,
-  },
-  {
-    path: '/history/:id',
-    element: <HistoryDetail />,
-  },
-]);
+  { path: '/explore', element: <ExplorePage /> },
+  { path: '/saved', element: <SavedPage /> },
+  { path: '/notifications', element: <NotificationList /> },
+  { path: '/recent-postings', element: <RecentViewedPage /> },
+  { path: '/postings/:postingId', element: <PostingDetailPage /> },
 
+  // 마이페이지 및 이력 관련 경로 추가
+  { path: '/my', element: <MyPageMain /> },
+  { path: '/my/profile', element: <ProfileEdit /> },
+  { path: '/my/notifications', element: <NotificationSettings /> },
+  { path: '/my/support', element: <CustomerSupport /> },
+  { path: '/my/notices', element: <NoticeList /> },
+  { path: '/history', element: <HistoryList /> },
+  { path: '/history/:id', element: <HistoryDetail /> },
+]);
