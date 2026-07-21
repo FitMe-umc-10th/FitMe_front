@@ -7,10 +7,18 @@ import SignupPage from '@/pages/SignupPage';
 import OnboardingPage from '@/pages/OnboardingPage';
 import ExplorePage from '@/pages/ExplorePage';
 import HomePage from '@/pages/HomePage';
-import NotificationPage from '@/pages/NotificationPage';
+import NotificationList from '@/features/notification/NotificationList';
 import PostingDetailPage from '@/pages/PostingDetailPage';
 import RecentViewedPage from '@/pages/RecentViewedPage';
 import SavedPage from '@/pages/SavedPage';
+
+import MyPageMain from '@/features/mypage/MyPageMain';
+import ProfileEdit from '@/features/mypage/ProfileEdit';
+import NotificationSettings from '@/features/mypage/NotificationSettings';
+import CustomerSupport from '@/features/mypage/CustomerSupport';
+import NoticeList from '@/features/mypage/NoticeList';
+import HistoryList from '@/features/history/HistoryList';
+import HistoryDetail from '@/features/history/HistoryDetail';
 
 export const router = createBrowserRouter([
   // 인증 화면 (누구나 접근 가능)
@@ -30,7 +38,16 @@ export const router = createBrowserRouter([
   },
   { path: '/explore', element: <ExplorePage /> },
   { path: '/saved', element: <SavedPage /> },
-  { path: '/notifications', element: <NotificationPage /> },
+  { path: '/notifications', element: <NotificationList /> },
   { path: '/recent-postings', element: <RecentViewedPage /> },
   { path: '/postings/:postingId', element: <PostingDetailPage /> },
+
+  // 마이페이지 및 이력 관련 경로 추가
+  { path: '/my', element: <MyPageMain /> },
+  { path: '/my/profile', element: <ProfileEdit /> },
+  { path: '/my/notifications', element: <NotificationSettings /> },
+  { path: '/my/support', element: <CustomerSupport /> },
+  { path: '/my/notices', element: <NoticeList /> },
+  { path: '/history', element: <HistoryList /> },
+  { path: '/history/:id', element: <HistoryDetail /> },
 ]);

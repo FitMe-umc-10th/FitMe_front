@@ -9,8 +9,12 @@ export default function Chip({ label, selected, onToggle }: ChipProps) {
     <button
       type="button"
       onClick={onToggle}
-      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors
-        ${selected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+      className={`h-[32px] min-w-[60px] rounded-[100px] pt-[6px] pb-[6px] pl-[11.5px] pr-[11.5px] text-[12px] font-semibold transition-colors whitespace-nowrap cursor-pointer flex items-center justify-center
+        ${
+          selected
+            ? 'bg-blue-500 text-white'
+            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+        }`}
     >
       {label}
     </button>

@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Option {
-  label: string; // 화면에 보이는 글자 (예: "최신순")
-  value: string; // 실제 값 (예: "latest")
+  label: string;
+  value: string;
 }
 
 interface DropdownProps {

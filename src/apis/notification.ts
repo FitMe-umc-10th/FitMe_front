@@ -1,5 +1,5 @@
 import { MOCK_NOTIFICATIONS } from '@/constants/mockData';
-import type { NotificationItem } from '@/types/notification';
+import type { Notification, NotificationItem } from '@/types/notification';
 
 const MOCK_READ_NOTIFICATIONS_KEY = 'fitme:mockReadNotifications';
 
@@ -40,9 +40,17 @@ const applyMockReadNotifications = () => {
   return MOCK_NOTIFICATIONS;
 };
 
-export const getNotifications = async (): Promise<NotificationItem[]> => {
+const mapNotificationToBoth = (item: NotificationItem): Notification & NotificationItem => {
+  return {
+    ...item,
+    category: item.type === 'DEADLINE' ? '마감 임박' : '지원 관리',
+    description: item.message,
+  };
+};
+
+export const getNotifications = async (): Promise<any[]> => {
   await new Promise((r) => setTimeout(r, 300));
-  return sortByCreatedAtDesc(applyMockReadNotifications());
+  return sortByCreatedAtDesc(applyMockReadNotifications()).map(mapNotificationToBoth);
 };
 
 export const getUnreadNotificationCount = async (): Promise<number> => {
@@ -56,4 +64,28 @@ export const markAllNotificationsAsRead = async (): Promise<void> => {
     notification.isRead = true;
   });
   writeAllMockReadNotifications();
+};
+
+export const markAsRead = async (id: number): Promise<Notification> => {
+  await new Promise((r) => setTimeout(r, 100));
+  const notifications = applyMockReadNotifications();
+  const target = notifications.find((n) => n.id === id);
+  if (target) {
+    target.isRead = true;
+    const readNotifications = readMockReadNotifications();
+    readNotifications[id] = true;
+    window.localStorage.setItem(MOCK_READ_NOTIFICATIONS_KEY, JSON.stringify(readNotifications));
+    return mapNotificationToBoth(target);
+  }
+  throw new Error('Notification not found');
+};
+
+export const markAllAsRead = async (): Promise<Notification[]> => {
+  await new Promise((r) => setTimeout(r, 150));
+  const notifications = applyMockReadNotifications();
+  notifications.forEach((notification) => {
+    notification.isRead = true;
+  });
+  writeAllMockReadNotifications();
+  return sortByCreatedAtDesc(notifications).map(mapNotificationToBoth);
 };

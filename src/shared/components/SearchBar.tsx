@@ -30,7 +30,6 @@ export default function SearchBar({
   // 디바운스된 값이 바뀔 때만 실제 검색 실행
   useEffect(() => {
     onSearch?.(debouncedValue);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedValue]);
 
   return (

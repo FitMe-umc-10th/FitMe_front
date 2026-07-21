@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 import { useModalStore } from '@/store/modalStore';
 
 type ModalButton = {
@@ -13,7 +13,7 @@ type ModalProps = {
   title: string;
   description?: string;
   buttons?: ModalButton[];
-  children?: ReactNode;
+  children?: React.ReactNode;
 };
 
 const buttonClassByVariant: Record<NonNullable<ModalButton['variant']>, string> = {
@@ -23,13 +23,24 @@ const buttonClassByVariant: Record<NonNullable<ModalButton['variant']>, string> 
 };
 
 export function Modal({ isOpen, onClose, title, description, buttons, children }: ModalProps) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const modalButtons = buttons?.length ? buttons : [{ label: '확인', onClick: onClose }];
+  const modalButtons = buttons ?? [{ label: '확인', onClick: onClose, variant: 'primary' }];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6">
-      <section
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
@@ -56,7 +67,7 @@ export function Modal({ isOpen, onClose, title, description, buttons, children }
             );
           })}
         </div>
-      </section>
+      </div>
     </div>
   );
 }
