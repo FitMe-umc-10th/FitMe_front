@@ -34,20 +34,24 @@ export const router = createBrowserRouter([
   // 보호된 화면 (로그인 + 온보딩 완료해야 접근)
   {
     element: <ProtectedRoute />,
-    children: [{ path: '/', element: <HomePage /> }],
-  },
-  { path: '/explore', element: <ExplorePage /> },
-  { path: '/saved', element: <SavedPage /> },
-  { path: '/notifications', element: <NotificationList /> },
-  { path: '/recent-postings', element: <RecentViewedPage /> },
-  { path: '/postings/:postingId', element: <PostingDetailPage /> },
+    children: [
+      { path: '/', element: <HomePage /> },
+      { path: '/explore', element: <ExplorePage /> },
+      { path: '/saved', element: <SavedPage /> },
+      { path: '/notifications', element: <NotificationList /> },
+      { path: '/recent-postings', element: <RecentViewedPage /> },
+      { path: '/postings/:postingId', element: <PostingDetailPage /> },
 
-  // 마이페이지 및 이력 관련 경로 추가
-  { path: '/my', element: <MyPageMain /> },
-  { path: '/my/profile', element: <ProfileEdit /> },
-  { path: '/my/notifications', element: <NotificationSettings /> },
-  { path: '/my/support', element: <CustomerSupport /> },
-  { path: '/my/notices', element: <NoticeList /> },
-  { path: '/history', element: <HistoryList /> },
-  { path: '/history/:id', element: <HistoryDetail /> },
+      // 마이페이지
+      { path: '/my', element: <MyPageMain /> },
+      { path: '/my/profile', element: <ProfileEdit /> },
+      { path: '/my/notifications', element: <NotificationSettings /> },
+      { path: '/my/support', element: <CustomerSupport /> },
+      { path: '/my/notices', element: <NoticeList /> },
+
+      // 이력
+      { path: '/history', element: <HistoryList /> },
+      { path: '/history/:id', element: <HistoryDetail /> },
+    ],
+  },
 ]);
