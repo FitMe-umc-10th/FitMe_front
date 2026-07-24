@@ -5,6 +5,7 @@ import { getSavedPostings } from '@/apis/posting';
 import DayBadge from '@/shared/components/DayBadge';
 import Dropdown from '@/shared/components/Dropdown';
 import EmptyState from '@/shared/components/EmptyState';
+import PostingThumbnail from '@/shared/components/PostingThumbnail';
 import Skeleton from '@/shared/components/Skeleton';
 import { Layout, Tab, TabBar } from '@/shared/components';
 import { useToggleSave } from '@/shared/hooks/useToggleSave';
@@ -126,12 +127,7 @@ function SavedPostingCard({
       className="grid h-[124px] cursor-pointer grid-cols-[174px_1fr] gap-3 bg-white"
     >
       <div className="h-[100px] overflow-hidden rounded-[10px] bg-[#E6EEF8]">
-        <img
-          src={posting.posterUrl}
-          alt={posting.title}
-          className="h-full w-full object-cover"
-          loading="lazy"
-        />
+        <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
       </div>
 
       <div className="relative flex min-w-0 flex-col pt-[18px]">

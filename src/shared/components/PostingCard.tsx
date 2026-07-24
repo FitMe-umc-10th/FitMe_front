@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import DayBadge from '@/shared/components/DayBadge';
 import HeartButton from '@/shared/components/HeartButton';
+import PostingThumbnail from '@/shared/components/PostingThumbnail';
 import type { Posting } from '@/types/posting';
 
 interface PostingCardProps {
@@ -27,12 +28,7 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
         className="flex h-[196px] w-[154px] cursor-pointer select-none flex-col overflow-hidden rounded-2xl border border-[#EEF0F3] bg-white shadow-[0_4px_14px_rgba(15,23,42,0.07)] transition-all duration-200 hover:shadow-[0_6px_18px_rgba(15,23,42,0.1)]"
       >
         <div className="relative h-[104px] w-full flex-shrink-0 border-b border-[#EEF0F3] bg-[#E6EEF8]">
-          <img
-            src={posting.posterUrl}
-            alt={posting.title}
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
+          <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col justify-between px-3 pb-3 pt-2">
@@ -70,12 +66,7 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
         className="relative flex h-[239px] w-[292px] cursor-pointer select-none flex-col justify-end overflow-hidden rounded-[18px] border border-[#EEF0F3] bg-[#D9F0FF] px-5 pb-5 pt-4 shadow-[0_8px_18px_rgba(15,23,42,0.12)] transition-all duration-200 hover:shadow-[0_10px_22px_rgba(15,23,42,0.14)]"
       >
         <div className="absolute inset-0 -z-10 h-full w-full">
-          <img
-            src={posting.posterUrl}
-            alt={posting.title}
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
+          <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
           <div className="absolute inset-0 bg-gradient-to-t from-white/45 via-white/5 to-transparent" />
         </div>
 
@@ -120,12 +111,7 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
       className="flex h-[128px] w-full cursor-pointer select-none items-stretch overflow-hidden rounded-2xl border border-[#EEF0F3] bg-white shadow-[0_3px_12px_rgba(15,23,42,0.05)] transition-all duration-200 hover:shadow-[0_5px_16px_rgba(15,23,42,0.08)]"
     >
       <div className="relative w-[154px] flex-shrink-0 border-r border-[#EEF0F3] bg-[#E6EEF8]">
-        <img
-          src={posting.posterUrl}
-          alt={posting.title}
-          className="h-full w-full object-cover"
-          loading="lazy"
-        />
+        <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col px-3 py-4">

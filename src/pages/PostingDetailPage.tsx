@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getPostingById } from '@/apis/posting';
 import DayBadge from '@/shared/components/DayBadge';
+import PostingThumbnail from '@/shared/components/PostingThumbnail';
 import Skeleton from '@/shared/components/Skeleton';
 import { useToggleSave } from '@/shared/hooks/useToggleSave';
 import { Layout } from '@/shared/components';
@@ -399,7 +400,7 @@ export default function PostingDetailPage() {
         {data && (
           <article>
             <div className="h-[190px] w-full bg-[#E8EEF5]">
-              <img src={data.posterUrl} alt={data.title} className="h-full w-full object-cover" />
+              <PostingThumbnail src={data.posterUrl} alt={data.title} />
             </div>
 
             <div className="space-y-4 px-5 py-5">
