@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getSavedPostings } from '@/apis/posting';
+import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import DayBadge from '@/shared/components/DayBadge';
 import Dropdown from '@/shared/components/Dropdown';
 import EmptyState from '@/shared/components/EmptyState';
@@ -39,7 +40,7 @@ export default function SavedPage() {
   const [sort, setSort] = useState<SavedSortType>('deadline');
   const [isFailureToastOpen, setIsFailureToastOpen] = useState(false);
   const { data: savedPostings = [], isPending, isError, refetch } = useQuery({
-    queryKey: ['savedPostings'],
+    queryKey: postingQueryKeys.saved,
     queryFn: getSavedPostings,
   });
 

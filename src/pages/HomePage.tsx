@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getUnreadNotificationCount } from '@/apis/notification';
 import { getHomePostingFeed } from '@/apis/posting';
+import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import Carousel from '@/shared/components/Carousel';
 import EmptyState from '@/shared/components/EmptyState';
 import PostingCard from '@/shared/components/PostingCard';
@@ -84,7 +85,7 @@ export default function HomePage() {
   const [activeDeadlineTab, setActiveDeadlineTab] = useState<PostingType>('SCHOLARSHIP');
 
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['homePostingFeed'],
+    queryKey: postingQueryKeys.home,
     queryFn: getHomePostingFeed,
   });
   const { data: unreadNotificationCount = 0 } = useQuery({

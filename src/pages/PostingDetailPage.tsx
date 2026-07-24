@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getPostingById } from '@/apis/posting';
+import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import DayBadge from '@/shared/components/DayBadge';
 import ErrorState from '@/shared/components/ErrorState';
 import PostingThumbnail from '@/shared/components/PostingThumbnail';
@@ -354,7 +355,7 @@ export default function PostingDetailPage() {
   const closeModal = useModalStore((state) => state.closeModal);
 
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['posting', parsedPostingId],
+    queryKey: postingQueryKeys.detail(parsedPostingId),
     queryFn: () => getPostingById(parsedPostingId),
     enabled: isValidPostingId,
   });

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getRecentViewedPostings } from '@/apis/posting';
+import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import EmptyState from '@/shared/components/EmptyState';
 import ErrorState from '@/shared/components/ErrorState';
 import PostingCard from '@/shared/components/PostingCard';
@@ -8,7 +9,7 @@ import { Header, Layout } from '@/shared/components';
 
 export default function RecentViewedPage() {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['recentViewedPostings'],
+    queryKey: postingQueryKeys.recentViewed,
     queryFn: getRecentViewedPostings,
   });
 
