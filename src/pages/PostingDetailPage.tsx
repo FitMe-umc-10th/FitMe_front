@@ -264,6 +264,44 @@ function DetailInfoContent({ activeTab }: { activeTab: DetailTab }) {
   );
 }
 
+function DetailUnavailableState({
+  title,
+  description,
+  onGoHome,
+}: {
+  title: string;
+  description: string;
+  onGoHome: () => void;
+}) {
+  return (
+    <div className="mx-5 mt-5 flex min-h-[360px] flex-col items-center justify-center rounded-2xl bg-[#F8FAFC] px-6 text-center">
+      <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-[#EEF6FF] text-[#0059FF]">
+        <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7">
+          <path
+            d="M9.5 9.5H9.51M14.5 9.5H14.51M8.5 15C9.45 14.2 10.55 13.8 12 13.8C13.45 13.8 14.55 14.2 15.5 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+          />
+        </svg>
+      </div>
+      <h2 className="text-[17px] font-extrabold text-[#262626]">{title}</h2>
+      <p className="mt-2 whitespace-pre-line text-[13px] font-medium leading-[1.6] text-[#8F8F8F]">
+        {description}
+      </p>
+      <button
+        type="button"
+        onClick={onGoHome}
+        className="mt-6 h-11 rounded-[10px] bg-[#0059FF] px-6 text-[14px] font-bold text-white transition-colors hover:bg-[#004CE0]"
+      >
+        홈으로 가기
+      </button>
+    </div>
+  );
+}
+
 function DetailSaveButton({ posting }: { posting: Posting }) {
   const { mutate, isPending } = useToggleSave(posting.id);
   const isSaved = posting.isSaved;
@@ -307,7 +345,9 @@ function DetailSaveButton({ posting }: { posting: Posting }) {
 
 export default function PostingDetailPage() {
   const { postingId } = useParams();
+  const navigate = useNavigate();
   const parsedPostingId = Number(postingId);
+  const isValidPostingId = Number.isFinite(parsedPostingId);
   const [activeTab, setActiveTab] = useState<DetailTab>('period');
   const [isWaitingForApplyReturn, setIsWaitingForApplyReturn] = useState(false);
   const openModal = useModalStore((state) => state.openModal);
@@ -316,7 +356,7 @@ export default function PostingDetailPage() {
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['posting', parsedPostingId],
     queryFn: () => getPostingById(parsedPostingId),
-    enabled: Number.isFinite(parsedPostingId),
+    enabled: isValidPostingId,
   });
 
   const openApplyCompleteModal = useCallback((posting: Posting) => {
@@ -388,20 +428,29 @@ export default function PostingDetailPage() {
     <Layout header={<DetailHeader />} className="bg-white">
       <section className="min-h-[calc(100dvh-56px)] pb-[112px]">
         {isPending && <Skeleton variant="list" count={2} />}
-        {(isError || !Number.isFinite(parsedPostingId)) && (
+        {!isValidPostingId && (
+          <DetailUnavailableState
+            title="잘못된 공고 주소입니다."
+            description="공고 주소를 다시 확인해주세요."
+            onGoHome={() => navigate('/')}
+          />
+        )}
+        {isError && (
           <div className="mx-5 mt-5">
             <ErrorState
               message="공고 정보를 불러오지 못했습니다."
-              onRetry={Number.isFinite(parsedPostingId) ? () => {
+              onRetry={() => {
                 void refetch();
-              } : undefined}
+              }}
             />
           </div>
         )}
         {data === null && (
-          <p className="mx-5 mt-5 rounded-2xl bg-slate-50 px-4 py-5 text-sm font-medium text-slate-500">
-            존재하지 않는 공고예요.
-          </p>
+          <DetailUnavailableState
+            title="공고를 찾을 수 없습니다."
+            description={'삭제되었거나 더 이상 제공되지 않는 공고입니다.\n다른 공고를 확인해주세요.'}
+            onGoHome={() => navigate('/')}
+          />
         )}
         {data && (
           <article>
