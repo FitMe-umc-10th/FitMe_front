@@ -5,7 +5,7 @@ import { Layout, Header } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
 import { getHistoryDetail, updateHistoryMemo } from '@/apis/history';
 
-import type { UserApplication } from '@/types/history';
+import type { UserApplicationDetail } from '@/types/history';
 
 type DetailTabType = 'PERIOD' | 'BENEFITS' | 'ELIGIBILITY';
 
@@ -26,7 +26,7 @@ export default function HistoryDetail() {
     data: historyItem,
     isLoading,
     isError,
-  } = useQuery<UserApplication>({
+  } = useQuery<UserApplicationDetail>({
     queryKey: ['historyDetail', historyId],
     queryFn: () => getHistoryDetail(historyId),
     enabled: !isNaN(historyId),

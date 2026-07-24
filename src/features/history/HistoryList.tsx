@@ -7,7 +7,7 @@ import { useModalStore } from '@/store/modalStore';
 import { useToastStore } from '@/store/toastStore';
 import { getHistoryList, updateHistoryStatus } from '@/apis/history';
 
-import type { UserApplication, HistoryStatus } from '@/types/history';
+import type { UserApplicationListItem, HistoryStatus } from '@/types/history';
 
 type TabType = 'IN_PROGRESS' | 'FINAL_PASSED';
 
@@ -24,7 +24,7 @@ export default function HistoryList() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 이력 데이터 조회
-  const { data: histories = [], isLoading } = useQuery<UserApplication[]>({
+  const { data: histories = [], isLoading } = useQuery<UserApplicationListItem[]>({
     queryKey: ['historyList'],
     queryFn: getHistoryList,
   });
@@ -153,10 +153,10 @@ export default function HistoryList() {
             >
               {/* 상단: 공고 포스터 영역 */}
               <div className="w-[173px] h-[102px] rounded-t-[16px] overflow-hidden relative bg-slate-50 flex-shrink-0 z-0">
-                {item.post.applicationUrl ? (
+                {item.posterImageUrl ? (
                   <img
-                    src={item.post.applicationUrl}
-                    alt={item.post.title}
+                    src={item.posterImageUrl}
+                    alt={item.title}
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
@@ -172,7 +172,7 @@ export default function HistoryList() {
                 {/* 상단: 제목 레이아웃 (w-148.14, h-38.55) */}
                 <div className="w-[148.14px] h-[38.55px] flex flex-col gap-[2px] min-w-0">
                   <h3 className="font-bold text-slate-800 text-[12px] leading-[1.3] tracking-[-0.24px] truncate group-hover:text-blue-600 transition-colors">
-                    {item.post.title || '제목 정보 없음'}
+                    {item.title || '제목 정보 없음'}
                   </h3>
                   <div className="flex items-center gap-[4px] text-[10px] text-slate-400 font-medium h-[15px] truncate">
                     <svg
@@ -187,7 +187,7 @@ export default function HistoryList() {
                     >
                       <path d="M3 9l9-6 9 6M5 9h14M6 9v11M18 9v11M4 20h16M10 20v-6h4v6" />
                     </svg>
-                    <span className="truncate">{item.post.organizer || '기관 정보 없음'}</span>
+                    <span className="truncate">{item.organizer || '기관 정보 없음'}</span>
                   </div>
                 </div>
 

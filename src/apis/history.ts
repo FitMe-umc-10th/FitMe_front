@@ -1,18 +1,33 @@
 import type { ApiResponse } from '@/types/common';
-import type { UserApplication, HistoryStatus } from '@/types/history';
+import type {
+  UserApplicationListItem,
+  HistoryStatus,
+  UserApplicationDetail,
+} from '@/types/history';
 import { axiosInstance } from './axiosInstance';
 
-// 이력 전체 가져오기 (각 이력마다 연관 공고 Join)
-export const getHistoryList = async (): Promise<UserApplication[]> => {
-  const { data } = await axiosInstance.get<ApiResponse<UserApplication[]>>(
+// 이력 전체 가져오기
+export const getHistoryList = async (): Promise<UserApplicationListItem[]> => {
+  const { data } = await axiosInstance.get<
+    ApiResponse<{ userApplications: UserApplicationListItem[] }>
+  >('/api/v1/user-applications');
+  return data.result.userApplications;
+};
+
+// 이력 생성
+export const createHistory = async (postId: number) => {
+  const { data } = await axiosInstance.post<ApiResponse<UserApplicationListItem>>(
     '/api/v1/user-applications',
+    {
+      postId,
+    },
   );
   return data.result;
 };
 
 // 특정 이력 상세 정보 가져오기
 export const getHistoryDetail = async (userApplicationsId: number) => {
-  const { data } = await axiosInstance.get<ApiResponse<UserApplication>>(
+  const { data } = await axiosInstance.get<ApiResponse<UserApplicationDetail>>(
     `/api/v1/user-applications/${userApplicationsId}`,
   );
   return data.result;
@@ -20,8 +35,8 @@ export const getHistoryDetail = async (userApplicationsId: number) => {
 
 // 이력 상태 변경 API (이력 상태)
 export const updateHistoryStatus = async (userApplicationsId: number, status: HistoryStatus) => {
-  const { data } = await axiosInstance.patch<ApiResponse<UserApplication>>(
-    `/api/v1/user-applications/${userApplicationsId}`,
+  const { data } = await axiosInstance.patch<ApiResponse<UserApplicationDetail>>(
+    `/api/v1/user-applications/${userApplicationsId}/status`,
     {
       status,
     },
@@ -31,11 +46,19 @@ export const updateHistoryStatus = async (userApplicationsId: number, status: Hi
 
 // 이력 메모 업데이트 API
 export const updateHistoryMemo = async (userApplicationsId: number, memo: string) => {
-  const { data } = await axiosInstance.patch<ApiResponse<UserApplication>>(
-    `/api/v1/user-applications/${userApplicationsId}`,
+  const { data } = await axiosInstance.patch<ApiResponse<UserApplicationDetail>>(
+    `/api/v1/user-applications/${userApplicationsId}/memo`,
     {
       memo,
     },
+  );
+  return data.result;
+};
+
+// 이력 삭제
+export const deleteHistory = async (userApplicationsId: number) => {
+  const { data } = await axiosInstance.delete<ApiResponse<{ userApplicationId: number }>>(
+    `/api/v1/user-applications/${userApplicationsId}`,
   );
   return data.result;
 };
