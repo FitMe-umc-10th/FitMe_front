@@ -20,8 +20,8 @@ const savedTabs: { label: string; value: SavedTab }[] = [
 ];
 
 const savedSortOptions = [
-  { label: '최근 저장순', value: 'recent' },
   { label: '마감임박순', value: 'deadline' },
+  { label: '최근 저장순', value: 'recent' },
 ];
 
 const sortSavedPostings = (postings: Posting[], sort: SavedSortType) => {
@@ -34,7 +34,7 @@ const sortSavedPostings = (postings: Posting[], sort: SavedSortType) => {
 
 export default function SavedPage() {
   const [activeTab, setActiveTab] = useState<SavedTab>('ALL');
-  const [sort, setSort] = useState<SavedSortType>('recent');
+  const [sort, setSort] = useState<SavedSortType>('deadline');
   const [isFailureToastOpen, setIsFailureToastOpen] = useState(false);
   const { data: savedPostings = [], isPending, isError } = useQuery({
     queryKey: ['savedPostings'],
