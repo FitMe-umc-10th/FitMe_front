@@ -23,9 +23,11 @@ export function Tab<T extends string>({ tabs, active, onChange, variant = 'equal
             key={tab.value}
             type="button"
             onClick={() => onChange(tab.value)}
-            className={`relative h-[43px] text-[14px] font-semibold transition-colors ${
+            className={`relative h-[43px] font-semibold transition-colors ${
               isContentVariant ? 'px-3' : 'flex-1'
-            } ${isActive ? 'text-[#1E1E1E]' : 'text-[#A5A5A5]'} ${
+            } ${isContentVariant ? 'text-[18px] leading-[1.4]' : 'text-[14px]'} ${
+              isActive ? 'text-[#1E1E1E]' : 'text-[#A5A5A5]'
+            } ${
               isContentVariant && tab.label.length > 2 ? 'min-w-[67px]' : ''
             }`}
           >
