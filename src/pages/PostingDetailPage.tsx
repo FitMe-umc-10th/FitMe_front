@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getPostingById } from '@/apis/posting';
 import DayBadge from '@/shared/components/DayBadge';
+import ErrorState from '@/shared/components/ErrorState';
 import PostingThumbnail from '@/shared/components/PostingThumbnail';
 import Skeleton from '@/shared/components/Skeleton';
 import { useToggleSave } from '@/shared/hooks/useToggleSave';
@@ -312,7 +313,7 @@ export default function PostingDetailPage() {
   const openModal = useModalStore((state) => state.openModal);
   const closeModal = useModalStore((state) => state.closeModal);
 
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['posting', parsedPostingId],
     queryFn: () => getPostingById(parsedPostingId),
     enabled: Number.isFinite(parsedPostingId),
@@ -388,9 +389,14 @@ export default function PostingDetailPage() {
       <section className="min-h-[calc(100dvh-56px)] pb-[112px]">
         {isPending && <Skeleton variant="list" count={2} />}
         {(isError || !Number.isFinite(parsedPostingId)) && (
-          <p className="mx-5 mt-5 rounded-2xl bg-red-50 px-4 py-5 text-sm font-medium text-red-500">
-            공고 정보를 불러오지 못했어요.
-          </p>
+          <div className="mx-5 mt-5">
+            <ErrorState
+              message="공고 정보를 불러오지 못했습니다."
+              onRetry={Number.isFinite(parsedPostingId) ? () => {
+                void refetch();
+              } : undefined}
+            />
+          </div>
         )}
         {data === null && (
           <p className="mx-5 mt-5 rounded-2xl bg-slate-50 px-4 py-5 text-sm font-medium text-slate-500">

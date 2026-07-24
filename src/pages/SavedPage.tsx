@@ -5,6 +5,7 @@ import { getSavedPostings } from '@/apis/posting';
 import DayBadge from '@/shared/components/DayBadge';
 import Dropdown from '@/shared/components/Dropdown';
 import EmptyState from '@/shared/components/EmptyState';
+import ErrorState from '@/shared/components/ErrorState';
 import PostingThumbnail from '@/shared/components/PostingThumbnail';
 import Skeleton from '@/shared/components/Skeleton';
 import { Layout, Tab, TabBar } from '@/shared/components';
@@ -37,7 +38,7 @@ export default function SavedPage() {
   const [activeTab, setActiveTab] = useState<SavedTab>('ALL');
   const [sort, setSort] = useState<SavedSortType>('deadline');
   const [isFailureToastOpen, setIsFailureToastOpen] = useState(false);
-  const { data: savedPostings = [], isPending, isError } = useQuery({
+  const { data: savedPostings = [], isPending, isError, refetch } = useQuery({
     queryKey: ['savedPostings'],
     queryFn: getSavedPostings,
   });
@@ -73,9 +74,12 @@ export default function SavedPage() {
 
       {isError && (
         <section className="px-5 pt-5">
-          <p className="rounded-2xl bg-red-50 px-4 py-5 text-sm font-medium text-red-500">
-            저장한 공고를 불러오지 못했어요.
-          </p>
+          <ErrorState
+            message="저장한 공고를 불러오지 못했습니다."
+            onRetry={() => {
+              void refetch();
+            }}
+          />
         </section>
       )}
 

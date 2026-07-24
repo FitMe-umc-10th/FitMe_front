@@ -7,7 +7,7 @@ import Carousel from '@/shared/components/Carousel';
 import EmptyState from '@/shared/components/EmptyState';
 import PostingCard from '@/shared/components/PostingCard';
 import Skeleton from '@/shared/components/Skeleton';
-import { Header, Layout, Logo, Tab, TabBar } from '@/shared/components';
+import { ErrorState, Header, Layout, Logo, Tab, TabBar } from '@/shared/components';
 import type { PostingType } from '@/types/posting';
 
 type SectionHeaderProps = {
@@ -83,7 +83,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [activeDeadlineTab, setActiveDeadlineTab] = useState<PostingType>('SCHOLARSHIP');
 
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['homePostingFeed'],
     queryFn: getHomePostingFeed,
   });
@@ -107,14 +107,18 @@ export default function HomePage() {
       className="bg-white"
     >
       <div className="space-y-8 px-5 pb-6 pt-4">
+        {isError && (
+          <ErrorState
+            message="홈 공고를 불러오지 못했습니다."
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        )}
+
         <section className="space-y-2">
           <SectionHeader title="실시간 인기 공고" />
           {isPending && <Skeleton variant="popular" count={2} />}
-          {isError && (
-            <p className="rounded-2xl bg-red-50 px-4 py-5 text-sm font-medium text-red-500">
-              인기 공고를 불러오지 못했어요.
-            </p>
-          )}
           {data && (
             <Carousel showIndicator showProgress loop storageKey="home-popular-carousel-index">
               {data.popularPostings.map((posting) => (
