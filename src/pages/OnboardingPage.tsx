@@ -59,12 +59,21 @@ export default function OnboardingPage() {
           : true;
 
   const handleFinish = async () => {
-    // 온보딩에서 수집한 조건들을 서버에 저장 (지금은 mock)
-    await saveOnboarding({ residence, university, gpa, income, interests });
-    setOnboarded(true); // authStore 온보딩 완료 표시 → Protected Route가 홈 허용
-    navigate('/'); // 홈으로
+    try {
+      await saveOnboarding({
+        region: residence, // residence → region
+        university,
+        gpa: Number(gpa), // 문자열 → 숫자
+        incomeLevel: income, // income → incomeLevel
+        interests,
+        customInterests: customInterest.trim() ? [customInterest.trim()] : [], // 직접입력 → 배열
+      });
+      setOnboarded(true);
+      navigate('/');
+    } catch {
+      // 에러 처리 (토스트 등)
+    }
   };
-
   const labelClass = 'mb-1.5 block font-semibold';
 
   return (

@@ -22,7 +22,7 @@ export default function EmailLoginPage() {
   const handleLogin = async () => {
     try {
       // auth.ts의 login 함수 호출 (지금은 mock 토큰 반환)
-      const { accessToken } = await login({ email, password });
+      const { accessToken } = await login({ email, password, keepLogin });
       setAccessToken(accessToken); // authStore에 토큰 저장 → 로그인 상태
       navigate('/'); // 홈으로 (Protected Route가 온보딩 여부 보고 분기)
     } catch {
