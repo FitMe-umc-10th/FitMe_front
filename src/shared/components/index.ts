@@ -4,4 +4,5 @@ export { Layout } from './Layout';
 export { ProgressBar } from './ProgressBar';
 export { Tab } from './Tab';
 export { TabBar } from './TabBar';
-export { ToastViewport } from './Toast';
+export { Toast, ToastViewport } from './Toast';
+export { default as ToastContainer } from './ToastContainer';

@@ -1,30 +1,48 @@
-import { useEffect } from 'react';
-import { useToastStore } from '@/store/toastStore';
+import { useToastStore, type Toast as ToastType } from '@/store/toastStore';
 
-export function ToastViewport() {
-  const toast = useToastStore((state) => state.toast);
-  const hideToast = useToastStore((state) => state.hideToast);
+interface ToastItemProps {
+  toast: ToastType;
+  onClose?: (id: string) => void;
+}
 
-  useEffect(() => {
-    if (!toast) return;
-
-    const timerId = window.setTimeout(hideToast, 3000);
-    return () => window.clearTimeout(timerId);
-  }, [hideToast, toast]);
-
-  if (!toast) return null;
-
-  const typeClass =
-    toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-500 text-white';
-
+export function Toast({ toast, onClose }: ToastItemProps) {
   return (
-    <div className="fixed inset-x-0 bottom-20 z-50 flex justify-center px-4">
-      <div
-        role="status"
-        className={`max-w-[342px] rounded-xl px-4 py-3 text-center text-sm font-medium shadow-lg ${typeClass}`}
+    <div
+      onClick={() => onClose?.(toast.id)}
+      className={`flex items-center justify-between rounded-xl px-4 py-3 shadow-lg text-sm font-medium transition-all duration-300 transform scale-100 hover:scale-[1.02] cursor-pointer animate-fade-in-up ${
+        toast.type === 'error'
+          ? 'bg-red-500 text-white'
+          : 'bg-slate-900/95 text-white backdrop-blur-sm'
+      }`}
+    >
+      <span>{toast.message}</span>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose?.(toast.id);
+        }}
+        className="ml-2 text-white/70 hover:text-white focus:outline-none"
       >
-        {toast.message}
-      </div>
+        &times;
+      </button>
     </div>
   );
 }
+
+export function ToastViewport() {
+  const toasts = useToastStore((state) => state.toasts);
+  const remove = useToastStore((state) => state.remove);
+
+  if (toasts.length === 0) return null;
+
+  return (
+    <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 flex-col gap-2 w-full max-w-xs px-4">
+      {toasts.map((item) => (
+        <Toast key={item.id} toast={item} onClose={remove} />
+      ))}
+    </div>
+  );
+}
+
+export default ToastViewport;
