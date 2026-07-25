@@ -71,11 +71,16 @@ export const mapApiPostingToPosting = (posting: ApiPostingSummary): Posting => (
   isMatched: posting.isMatched ?? undefined,
 });
 
-export const mapApiSavedPostingToPosting = (posting: ApiSavedPosting): Posting => ({
-  ...mapApiPostingToPosting(posting),
-  isSaved: true,
-  createdAt: posting.savedAt ?? posting.createdAt ?? undefined,
-});
+export const mapApiSavedPostingToPosting = (posting: ApiSavedPosting): Posting => {
+  const mappedPosting = mapApiPostingToPosting(posting);
+
+  return {
+    ...mappedPosting,
+    savedId: posting.savedId,
+    isSaved: true,
+    createdAt: posting.savedAt ?? posting.createdAt ?? undefined,
+  };
+};
 
 export const mapApiPostingList = (postings: ApiPostingSummary[]): Posting[] =>
   postings.map(mapApiPostingToPosting);

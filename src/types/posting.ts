@@ -2,6 +2,7 @@ export type PostingType = 'SCHOLARSHIP' | 'CONTEST';
 
 export interface Posting {
   id: number;
+  savedId?: number;
   type: PostingType;
   title: string;
   organization: string;
@@ -21,4 +22,21 @@ export interface HomePostingFeed {
   popularPostings: Posting[];
   recentViewedPostings: Posting[];
   deadlinePostings: Record<PostingType, Posting[]>;
+}
+
+export type PostingCategoryFilter = PostingType | 'ALL';
+export type PostingSort = 'RECENT' | 'DEADLINE';
+
+export interface CursorPageParams {
+  cursor?: string;
+  size?: number;
+}
+
+export interface GetSavedPostingsParams extends CursorPageParams {
+  category?: PostingCategoryFilter;
+  sort?: PostingSort;
+}
+
+export interface GetHomePostingListParams {
+  size?: number;
 }
