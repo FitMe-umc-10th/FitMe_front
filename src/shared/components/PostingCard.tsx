@@ -41,18 +41,7 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
           <h3 className="truncate text-[13px] font-bold leading-[1.35] text-[#1F2937]">{posting.title}</h3>
 
           <div className="flex items-center gap-1 text-[10px] text-[#A1A1A1]">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-3 w-3 flex-shrink-0"
-            >
-              <path d="M3 9l9-6 9 6M5 9h14M6 9v11M18 9v11M4 20h16M10 20v-6h4v6" />
-            </svg>
+            <img src={organizationIcon} alt="" aria-hidden="true" className="size-3 shrink-0" />
             <span className="truncate">{posting.organization}</span>
           </div>
         </div>
@@ -82,18 +71,7 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
             </h3>
 
             <div className="flex items-center gap-1 text-[12px] text-[#6B7280]">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-3.5 w-3.5 flex-shrink-0"
-              >
-                <path d="M3 9l9-6 9 6M5 9h14M6 9v11M18 9v11M4 20h16M10 20v-6h4v6" />
-              </svg>
+              <img src={organizationIcon} alt="" aria-hidden="true" className="size-3.5 shrink-0" />
               <span className="truncate">{posting.organization}</span>
             </div>
           </div>

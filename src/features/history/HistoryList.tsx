@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, Header, TabBar, Tab } from '@/shared/components';
+import organizationIcon from '@/assets/icons/organization.svg';
 import EmptyState from '@/shared/components/EmptyState';
 import { useModalStore } from '@/store/modalStore';
 import { useToastStore } from '@/store/toastStore';
@@ -165,18 +166,7 @@ export default function HistoryList() {
                     {item.posting?.title || '제목 정보 없음'}
                   </h3>
                   <div className="flex items-center gap-[4px] text-[10px] text-slate-400 font-medium h-[15px] truncate">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-3.5 h-3.5 flex-shrink-0 text-slate-400"
-                    >
-                      <path d="M3 9l9-6 9 6M5 9h14M6 9v11M18 9v11M4 20h16M10 20v-6h4v6" />
-                    </svg>
+                    <img src={organizationIcon} alt="" aria-hidden="true" className="size-3.5 shrink-0" />
                     <span className="truncate">{item.posting?.organization || '기관 정보 없음'}</span>
                   </div>
                 </div>
