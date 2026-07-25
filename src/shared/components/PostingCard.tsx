@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import organizationIcon from '@/assets/icons/organization.svg';
 import DayBadge from '@/shared/components/DayBadge';
 import HeartButton from '@/shared/components/HeartButton';
 import PostingThumbnail from '@/shared/components/PostingThumbnail';
@@ -108,35 +109,27 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
   return (
     <div
       onClick={handleClick}
-      className="flex h-[128px] w-full cursor-pointer select-none items-stretch overflow-hidden rounded-2xl border border-[#EEF0F3] bg-white shadow-[0_3px_12px_rgba(15,23,42,0.05)] transition-all duration-200 hover:shadow-[0_5px_16px_rgba(15,23,42,0.08)]"
+      className="grid h-[128px] cursor-pointer select-none grid-cols-[176px_187px] gap-0 bg-white transition-all duration-200"
     >
-      <div className="relative w-[154px] flex-shrink-0 border-r border-[#EEF0F3] bg-[#E6EEF8]">
+      <div className="h-[128px] overflow-hidden rounded-l-[16px] bg-[#E6EEF8]">
         <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col px-3 py-4">
-        <div className="mb-2 flex h-6 w-full items-center justify-between">
+      <div className="relative h-[128px] w-[187px] min-w-0 bg-white px-3 py-5">
+        <div className="absolute left-3 top-[22px]">
           <DayBadge deadline={posting.deadline} />
+        </div>
+
+        <div className="absolute right-3 top-[22px]">
           <HeartButton postingId={posting.id} isSaved={posting.isSaved} />
         </div>
 
-        <h3 className="mb-1 line-clamp-2 min-h-[40px] text-[14px] font-bold leading-[1.4] text-[#1F2937]">
+        <h3 className="absolute left-3 right-3 top-[67.14px] truncate text-[14px] font-bold leading-[19px] text-[#262626]">
           {posting.title}
         </h3>
 
-        <div className="mt-auto flex h-[15px] items-center gap-1 text-[11px] text-[#A1A1A1]">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-3.5 h-3.5 flex-shrink-0"
-          >
-            <path d="M3 9l9-6 9 6M5 9h14M6 9v11M18 9v11M4 20h16M10 20v-6h4v6" />
-          </svg>
+        <div className="absolute left-3 right-3 top-[92.86px] flex items-center gap-[3px] text-[11px] font-medium leading-none text-[#A5A5A5]">
+          <img src={organizationIcon} alt="" aria-hidden="true" className="size-[13px] shrink-0" />
           <span className="truncate">{posting.organization}</span>
         </div>
       </div>

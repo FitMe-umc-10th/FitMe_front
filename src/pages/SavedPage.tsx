@@ -120,7 +120,7 @@ function SavedPostingCard({
       onClick={() => navigate(`/postings/${posting.id}`)}
       className="grid h-[128px] cursor-pointer grid-cols-[176px_187px] gap-0 bg-white"
     >
-      <div className="h-[128px] overflow-hidden rounded-[16px] bg-[#E6EEF8]">
+      <div className="h-[128px] overflow-hidden rounded-l-[16px] bg-[#E6EEF8]">
         <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
       </div>
 

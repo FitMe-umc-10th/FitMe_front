@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getUnreadNotificationCount } from '@/apis/notification';
 import { getHomePostingFeed } from '@/apis/posting';
 import { postingQueryKeys } from '@/apis/postingQueryKeys';
+import notificationBellIcon from '@/assets/icons/notification-bell.svg';
 import Carousel from '@/shared/components/Carousel';
 import EmptyState from '@/shared/components/EmptyState';
 import PostingCard from '@/shared/components/PostingCard';
@@ -59,23 +60,8 @@ function NotificationButton({ hasUnreadNotification }: { hasUnreadNotification: 
       onClick={() => navigate('/notifications')}
       className="relative flex size-8 items-center justify-center rounded-full text-[#333333] transition-colors hover:bg-gray-100"
     >
-      <svg viewBox="0 0 28 24" aria-hidden="true" className="h-6 w-7">
-        <path
-          d="M7 17.5H21L19.6 15.7V11C19.6 7.7 17.45 5.2 14 5.2C10.55 5.2 8.4 7.7 8.4 11V15.7L7 17.5Z"
-          fill="none"
-          stroke="currentColor"
-          strokeLinejoin="round"
-          strokeWidth="2"
-        />
-        <path
-          d="M11.7 18.7C12.15 20 12.85 20.8 14 20.8C15.15 20.8 15.85 20 16.3 18.7"
-          fill="none"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeWidth="2"
-        />
-      </svg>
-      {hasUnreadNotification && <span className="absolute right-1.5 top-1 size-2 rounded-full bg-[#FF2F2F]" />}
+      <img src={notificationBellIcon} alt="" aria-hidden="true" className="size-[26px]" />
+      {hasUnreadNotification && <span className="absolute right-[3px] top-[3px] size-2 rounded-full bg-[#FF2F2F]" />}
     </button>
   );
 }
