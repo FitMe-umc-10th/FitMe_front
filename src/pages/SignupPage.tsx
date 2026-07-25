@@ -73,17 +73,23 @@ export default function SignupPage() {
     }
   };
 
-  // 최종 가입
   const onSubmit = async (data: SignupForm) => {
-    // 폼 데이터에서 필요한 값만 뽑아 회원가입 요청
-    await signup({
-      name: data.name,
-      birth: data.birth,
-      email: data.email,
-      password: data.password,
-    });
-    toast.success('회원가입이 완료되었어요!');
-    navigate('/login'); // 가입 후 로그인 화면으로
+    try {
+      await signup({
+        name: data.name,
+        birth: data.birth.replace(/\./g, '-'), // "2026.07.22" → "2026-07-22"
+        email: data.email,
+        verificationCode: code, // 인증번호 (별도 state)
+        password: data.password,
+        passwordConfirm: data.passwordConfirm,
+        privacyPolicyAgreed: data.agree,
+      });
+      toast.success('회원가입이 완료되었어요!');
+      navigate('/login');
+    } catch (error) {
+      // 409(이메일 중복), 400(유효성) 등 에러 처리
+      toast.error('회원가입에 실패했어요. 다시 확인해주세요.');
+    }
   };
 
   const labelClass = 'mb-1.5 block font-semibold text-gray-900';
