@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getPostingById } from '@/apis/posting';
 import { postingQueryKeys } from '@/apis/postingQueryKeys';
+import organizationIcon from '@/assets/icons/organization.svg';
 import DayBadge from '@/shared/components/DayBadge';
 import ErrorState from '@/shared/components/ErrorState';
 import PostingThumbnail from '@/shared/components/PostingThumbnail';
@@ -125,21 +126,6 @@ function DetailHeader() {
   );
 }
 
-function OrganizationIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3.5 shrink-0">
-      <path
-        d="M3 9l9-6 9 6M5 9h14M6 9v11M18 9v11M4 20h16M10 20v-6h4v6"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
-
 function MetricIcon({ type }: { type: 'view' | 'heart' }) {
   if (type === 'view') {
     return (
@@ -194,7 +180,7 @@ function DetailInfoTabs({
   onChange: (tab: DetailTab) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 border-b border-[#EEF0F3] text-center text-[14px] font-semibold text-[#1E1E1E]">
+    <div className="grid grid-cols-3 text-center text-[14px] font-semibold">
       {DETAIL_TABS.map((tab) => {
         const isActive = activeTab === tab.value;
 
@@ -203,12 +189,13 @@ function DetailInfoTabs({
             key={tab.value}
             type="button"
             onClick={() => onChange(tab.value)}
-            className="relative h-[38px]"
+            className={`h-[38px] border-b px-7 py-2 leading-[22px] ${
+              isActive
+                ? 'border-[#0059FF] text-[#1E1E1E]'
+                : 'border-[#D9D9D9] text-[#A5A5A5]'
+            }`}
           >
             {tab.label}
-            {isActive && (
-              <span className="absolute inset-x-0 bottom-0 h-[1.5px] rounded-full bg-[#0059FF]" />
-            )}
           </button>
         );
       })}
@@ -220,16 +207,16 @@ function DetailInfoContent({ activeTab }: { activeTab: DetailTab }) {
   if (activeTab === 'benefit') {
     return (
       <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">대상</dt>
+        <div className="space-y-1">
+          <dt className="font-bold text-[#0059FF]">대상</dt>
           <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.target}</dd>
         </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">최우수상</dt>
+        <div className="space-y-1">
+          <dt className="font-bold text-[#0059FF]">최우수상</dt>
           <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.grandPrize}</dd>
         </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">입상자 전원</dt>
+        <div className="space-y-1">
+          <dt className="font-bold text-[#0059FF]">입상자 전원</dt>
           <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.support}</dd>
         </div>
       </dl>
@@ -239,12 +226,12 @@ function DetailInfoContent({ activeTab }: { activeTab: DetailTab }) {
   if (activeTab === 'eligibility') {
     return (
       <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">학력</dt>
+        <div className="space-y-1">
+          <dt className="font-bold text-[#0059FF]">학력</dt>
           <dd className="font-semibold text-[#333333]">{DETAIL_INFO.eligibility.education}</dd>
         </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">인원 규모</dt>
+        <div className="space-y-1">
+          <dt className="font-bold text-[#0059FF]">인원 규모</dt>
           <dd className="font-semibold text-[#333333]">{DETAIL_INFO.eligibility.headcount}</dd>
         </div>
       </dl>
@@ -469,7 +456,7 @@ export default function PostingDetailPage() {
                 <h2 className="text-[18px] font-extrabold leading-[1.45] text-[#202124]">{data.title}</h2>
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-1 text-[12px] font-medium text-[#A1A1A1]">
-                    <OrganizationIcon />
+                    <img src={organizationIcon} alt="" aria-hidden="true" className="size-[13px] shrink-0" />
                     <span className="truncate">{data.organization}</span>
                   </div>
                   <div className="flex shrink-0 items-center gap-3 text-[12px] font-medium text-[#8C8C8C]">
@@ -486,7 +473,7 @@ export default function PostingDetailPage() {
               </div>
 
               <section className="min-h-[116px] rounded-2xl border border-[#B2D4FF] bg-gradient-to-b from-[#E2EFFF] to-white px-4 py-4">
-                <h3 className="mb-2 text-[13px] font-extrabold text-[#247BFF]">AI 공고전 정보 요약</h3>
+                <h3 className="mb-2 text-[13px] font-extrabold text-[#247BFF]">AI 공모전 정보 요약</h3>
                 <p className="text-[12px] font-medium leading-[1.75] text-[#404040]">{DETAIL_SUMMARY}</p>
               </section>
 
@@ -496,7 +483,7 @@ export default function PostingDetailPage() {
               </section>
             </div>
 
-            <div className="fixed bottom-0 left-1/2 z-30 flex w-full max-w-[390px] -translate-x-1/2 items-center gap-3 border-t border-[#EEF0F3] bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+14px)] pt-3">
+            <div className="fixed bottom-0 left-1/2 z-30 flex w-full max-w-[390px] -translate-x-1/2 items-center gap-3 bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+14px)] pt-3">
               <DetailSaveButton posting={data} />
               <button
                 type="button"
