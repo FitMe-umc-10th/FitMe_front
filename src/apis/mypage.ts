@@ -1,8 +1,7 @@
-// import type { Notice, FAQ } from '@/types/profile';
-
 import { axiosInstance } from './axiosInstance';
 import type { ApiResponse } from '@/types/common';
 import type { MyPageDTO, ProfileDetailDTO, ProfileSettingsDTO } from '@/types/profile';
+import type { NotificationSettingDTO } from '@/types/notificationSetting';
 
 export const getUserProfile = async (): Promise<MyPageDTO> => {
   const { data } = await axiosInstance.get<ApiResponse<MyPageDTO>>('/api/v1/mypage');
@@ -23,21 +22,17 @@ export const getUserProfileDetail = async (): Promise<ProfileSettingsDTO> => {
   return data.result;
 };
 
-// export const getNotices = async (): Promise<Notice[]> => {
-//   await new Promise((r) => setTimeout(r, 200));
-//   return MOCK_NOTICES;
-// };
+export const getNotificationSettings = async (): Promise<NotificationSettingDTO> => {
+  const { data } = await axiosInstance.get<ApiResponse<NotificationSettingDTO>>(
+    '/api/v1/mypage/notification-settings',
+  );
+  return data.result;
+};
 
-// export const getFAQs = async (): Promise<FAQ[]> => {
-//   await new Promise((r) => setTimeout(r, 200));
-//   return MOCK_FAQS;
-// };
-
-// export const submitInquiry = async (inquiry: {
-//   title: string;
-//   content: string;
-// }): Promise<boolean> => {
-//   await new Promise((r) => setTimeout(r, 500));
-//   console.log('[Mock API] 1:1 문의 접수 완료:', inquiry);
-//   return true;
-// };
+export const updateNotificationSettings = async (settings: NotificationSettingDTO) => {
+  const { data } = await axiosInstance.patch<ApiResponse<NotificationSettingDTO>>(
+    '/api/v1/mypage/notification-settings',
+    settings,
+  );
+  return data.result;
+};
