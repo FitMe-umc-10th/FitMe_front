@@ -15,6 +15,21 @@ export interface Posting {
   savedCount?: number; // upstream
   viewedAt?: string;
   isMatched?: boolean;
+  aiSummary?: string;
+  applyUrl?: string;
+  period?: {
+    date?: string;
+    method?: string;
+  };
+  benefit?: {
+    target?: string;
+    grandPrize?: string;
+    support?: string;
+  };
+  eligibility?: {
+    education?: string;
+    headcount?: string;
+  };
 }
 
 export interface HomePostingFeed {
