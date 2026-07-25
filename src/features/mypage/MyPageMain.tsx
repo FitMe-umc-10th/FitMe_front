@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { getProfile, getNotices } from '@/apis/mypage';
+import { getUserProfile } from '@/apis/mypage';
+import { getAnnouncements, getAnnouncementDetail } from '@/apis/announcements';
 import { Layout, TabBar } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
 import exclamationBorder from '@/assets/exclamation_mark_border.svg';
@@ -19,13 +20,13 @@ export default function MyPageMain() {
   // 1. 유저 프로필 데이터 조회
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
-    queryFn: getProfile,
+    queryFn: getUserProfile,
   });
 
   // 2. 공지사항 조회 (새 공지사항 N 배지 표시용)
   const { data: notices } = useQuery({
     queryKey: ['notices'],
-    queryFn: getNotices,
+    queryFn: getAnnouncements,
   });
 
   const hasNewNotice = notices?.some((notice) => notice.isNew) ?? false;
@@ -83,7 +84,7 @@ export default function MyPageMain() {
         <section className="relative w-full h-[377px] bg-slate-950 text-white px-5 py-6 flex flex-col justify-between overflow-hidden">
           {/* 선명한 배경 이미지 (opacity: 0.5, 블러 없음) */}
           <div
-            style={{ backgroundImage: `url(${profile.profileImageUrl})`, opacity: 0.5 }}
+            style={{ backgroundImage: `url(${profile.profile.profileImageUrl})`, opacity: 0.5 }}
             className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none"
           />
 
@@ -98,9 +99,12 @@ export default function MyPageMain() {
           {/* 하단: 유저 정보 및 수정 버튼 */}
           <div className="relative z-10 flex items-end justify-between">
             <div className="space-y-1.5">
-              <h3 className="text-2xl font-medium tracking-tight text-white">{profile.name}</h3>
+              <h3 className="text-2xl font-medium tracking-tight text-white">
+                {profile.profile.name}
+              </h3>
               <p className="text-sm font-medium text-slate-300">
-                {profile.university} | {profile.grade}
+                {/* 임시로 22학번으로 표시 */}
+                {profile.profile.universityName} | 22학번
               </p>
             </div>
             <div>
@@ -126,7 +130,7 @@ export default function MyPageMain() {
               <div className="flex flex-col items-center justify-center w-[38px] h-[48px] gap-[7px] text-center">
                 <p className="text-xs font-medium text-gray-400 whitespace-nowrap">지원 완료</p>
                 <p className="text-base font-bold text-gray-800 leading-none">
-                  {profile.activitySummary.completedCount}회
+                  {profile.activitySummary.completedApplicationCount}회
                 </p>
               </div>
 
@@ -137,7 +141,7 @@ export default function MyPageMain() {
               <div className="flex flex-col items-center justify-center w-[65px] h-[48px] gap-[7px] text-center">
                 <p className="text-xs font-medium text-gray-400 whitespace-nowrap">누적 장학금</p>
                 <p className="text-base font-bold text-blue-600 leading-none">
-                  {formatScholarship(profile.activitySummary.accumulatedScholarship)}
+                  {formatScholarship(profile.activitySummary.totalScholarshipAmount || 0)}
                 </p>
               </div>
 
@@ -148,7 +152,7 @@ export default function MyPageMain() {
               <div className="flex flex-col items-center justify-center w-[38px] h-[48px] gap-[7px] text-center">
                 <p className="text-xs font-medium text-gray-400 whitespace-nowrap">결과 대기</p>
                 <p className="text-base font-bold text-gray-800 leading-none">
-                  {profile.activitySummary.pendingCount}건
+                  {profile.activitySummary.pendingResultCount}건
                 </p>
               </div>
             </div>
@@ -321,13 +325,13 @@ export default function MyPageMain() {
               </h2>
               {/* 타이틀 밑 gap 16px */}
               <p className="mt-[16px] text-[16px] font-normal leading-[140%] tracking-[-2%] text-gray-400 text-center whitespace-pre-line">
-                {`지금 탈퇴하시면 ${profile?.name}님이 모은\n아래 데이터가 영구적으로 삭제됩니다.`}
+                {`지금 탈퇴하시면 ${profile?.profile.name}님이 모은\n아래 데이터가 영구적으로 삭제됩니다.`}
               </p>
             </div>
 
             {/* 삭제 예정 데이터 박스 (w-238, h-42, 패딩 상하 10px 좌우 50px, gap 16px) */}
             <div className="w-[238px] h-[42px] py-[10px] px-[50px] whitespace-nowrap rounded-[8px] bg-[#f0f6ff] text-blue-600 flex items-center justify-center select-none border border-blue-100/30 text-[16px] font-semibold leading-[140%] tracking-normal text-center mt-[16px] mx-auto">
-              누적 장학금 {formatScholarship(profile?.activitySummary.accumulatedScholarship || 0)}
+              누적 장학금 {formatScholarship(profile?.activitySummary?.totalScholarshipAmount || 0)}
             </div>
 
             {/* 박스 밑 gap 24px 및 버튼 두께 font-medium 보정 */}

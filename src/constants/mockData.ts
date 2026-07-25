@@ -1,5 +1,5 @@
 import type { Posting } from '@/types/posting';
-import type { UserProfile, Notice, FAQ } from '@/types/mypage';
+import type { UserProfile, Notice, FAQ } from '@/types/profile';
 import type { NotificationItem } from '@/types/notification';
 
 // UI 개발용 가짜 데이터. 백엔드 API 나오면 apis/posting.ts 에서 교체.
