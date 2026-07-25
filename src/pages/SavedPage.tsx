@@ -13,7 +13,7 @@ import PostingThumbnail from '@/shared/components/PostingThumbnail';
 import Skeleton from '@/shared/components/Skeleton';
 import { Layout, Tab, TabBar } from '@/shared/components';
 import { useToggleSave } from '@/shared/hooks/useToggleSave';
-import type { GetSavedPostingsParams, Posting, PostingCategoryFilter, PostingSort, PostingType } from '@/types/posting';
+import type { GetSavedPostingsParams, Posting, PostingCategoryFilter, PostingSort } from '@/types/posting';
 
 type SavedTab = PostingCategoryFilter;
 type SavedSortType = PostingSort;

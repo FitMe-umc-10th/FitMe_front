@@ -68,7 +68,14 @@ const applyMockSavedPostings = () => {
 };
 
 const sortByDeadlineAsc = (postings: Posting[]) =>
-  [...postings].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+  [...postings].sort((a, b) => {
+    const deadlineA = new Date(a.deadline).getTime();
+    const deadlineB = new Date(b.deadline).getTime();
+    const safeDeadlineA = Number.isNaN(deadlineA) ? Number.POSITIVE_INFINITY : deadlineA;
+    const safeDeadlineB = Number.isNaN(deadlineB) ? Number.POSITIVE_INFINITY : deadlineB;
+
+    return safeDeadlineA - safeDeadlineB;
+  });
 
 const sortBySavedCountDesc = (postings: Posting[]) =>
   [...postings].sort((a, b) => (b.savedCount ?? 0) - (a.savedCount ?? 0));
@@ -141,6 +148,9 @@ export const getExplorePostings = async ({
     filtered.sort((a, b) => {
       const daysA = getDDayDays(a.deadline);
       const daysB = getDDayDays(b.deadline);
+      if (daysA === null && daysB === null) return 0;
+      if (daysA === null) return 1;
+      if (daysB === null) return -1;
       const isClosedA = daysA < 0;
       const isClosedB = daysB < 0;
 

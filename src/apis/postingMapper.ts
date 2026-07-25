@@ -3,8 +3,8 @@ import type { HomePostingFeed, Posting, PostingType } from '@/types/posting';
 export interface ApiPostingSummary {
   postId: number;
   type: PostingType;
-  title: string;
-  organization: string;
+  title?: string | null;
+  organization?: string | null;
   thumbnailUrl?: string | null;
   deadlineDate?: string | null;
   deadlineLabel?: string | null;
@@ -57,8 +57,8 @@ const getDeadlineFromLabel = (deadlineLabel?: string | null) => {
 export const mapApiPostingToPosting = (posting: ApiPostingSummary): Posting => ({
   id: posting.postId,
   type: posting.type,
-  title: posting.title,
-  organization: posting.organization,
+  title: posting.title?.trim() || '제목 없는 공고',
+  organization: posting.organization?.trim() || '기관 정보 없음',
   deadline: posting.deadlineDate ?? getDeadlineFromLabel(posting.deadlineLabel),
   posterUrl: posting.thumbnailUrl ?? '',
   isSaved: posting.saved ?? false,
