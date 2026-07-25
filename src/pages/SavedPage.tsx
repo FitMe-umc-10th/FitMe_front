@@ -43,7 +43,7 @@ export default function SavedPage() {
   const [isFailureToastOpen, setIsFailureToastOpen] = useState(false);
   const { data: savedPostings = [], isPending, isError, refetch } = useQuery({
     queryKey: postingQueryKeys.saved,
-    queryFn: getSavedPostings,
+    queryFn: () => getSavedPostings(),
   });
 
   const filteredPostings = useMemo(() => {

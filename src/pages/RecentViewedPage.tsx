@@ -10,7 +10,7 @@ import { Header, Layout } from '@/shared/components';
 export default function RecentViewedPage() {
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: postingQueryKeys.recentViewed,
-    queryFn: getRecentViewedPostings,
+    queryFn: () => getRecentViewedPostings(),
   });
 
   return (
