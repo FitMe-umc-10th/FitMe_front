@@ -45,12 +45,22 @@ export interface OnboardingRequest {
   customInterests: string[]; // 직접입력
 }
 
-// ===== 로그인 =====
+// ===== 로그인 (백엔드 API 아직 없음 → 임시 mock) =====
 export async function login(body: LoginRequest): Promise<LoginResponse> {
-  const { data } = await axiosInstance.post('/api/auth/login', body);
-  return data.result; // 응답이 { isSuccess, code, message, result } 라서 result만 꺼냄
-}
+  // TODO: 백엔드 로그인 API 나오면 아래 2줄 주석 해제하고 mock 삭제
+  // const { data } = await axiosInstance.post('/api/auth/login', body);
+  // return data.result;
 
+  // --- 임시 mock (로그인 API 나올 때까지) ---
+  console.log('로그인 요청(mock):', body);
+  return {
+    accessToken: 'mock-access-token',
+    refreshToken: 'mock-refresh-token',
+    tokenType: 'Bearer',
+    expiresIn: 3600,
+    member: { memberId: 1, email: body.email, name: '테스트' },
+  };
+}
 // 회원가입
 export async function signup(body: SignupRequest): Promise<void> {
   await axiosInstance.post('/api/auth/signup', body);

@@ -61,18 +61,19 @@ export default function OnboardingPage() {
   const handleFinish = async () => {
     try {
       await saveOnboarding({
-        region: residence, // residence → region
+        region: residence,
         university,
-        gpa: Number(gpa), // 문자열 → 숫자
-        incomeLevel: income, // income → incomeLevel
+        gpa: Number(gpa),
+        incomeLevel: income,
         interests,
-        customInterests: customInterest.trim() ? [customInterest.trim()] : [], // 직접입력 → 배열
+        customInterests: customInterest.trim() ? [customInterest.trim()] : [],
       });
-      setOnboarded(true);
-      navigate('/');
-    } catch {
-      // 에러 처리 (토스트 등)
+    } catch (e) {
+      console.warn('온보딩 API 실패 (CORS 미해결):', e);
     }
+    // API 실패해도 일단 홈으로 (CORS 열리기 전 임시)
+    setOnboarded(true);
+    navigate('/');
   };
   const labelClass = 'mb-1.5 block font-semibold';
 
