@@ -8,6 +8,7 @@ import { useToastStore } from '@/store/toastStore';
 import exclamationBorder from '@/assets/exclamation_mark_border.svg';
 import exclamationStick from '@/assets/exclamation_mark_stick.svg';
 import exclamationDot from '@/assets/exclamation_mark_dot.svg';
+import { requestWithdrawal } from '@/apis/withdrawal';
 
 export default function MyPageMain() {
   const navigate = useNavigate();
@@ -347,6 +348,7 @@ export default function MyPageMain() {
                 type="button"
                 onClick={() => {
                   setIsWithdrawalOpen(false);
+                  requestWithdrawal();
                   toast.error('회원 탈퇴가 완료되었습니다.');
                 }}
                 className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
