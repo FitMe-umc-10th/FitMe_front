@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getSavedPostings } from '@/apis/posting';
@@ -13,10 +13,10 @@ import PostingThumbnail from '@/shared/components/PostingThumbnail';
 import Skeleton from '@/shared/components/Skeleton';
 import { Layout, Tab, TabBar } from '@/shared/components';
 import { useToggleSave } from '@/shared/hooks/useToggleSave';
-import type { Posting, PostingType } from '@/types/posting';
+import type { GetSavedPostingsParams, Posting, PostingCategoryFilter, PostingSort, PostingType } from '@/types/posting';
 
-type SavedTab = PostingType | 'ALL';
-type SavedSortType = 'recent' | 'deadline';
+type SavedTab = PostingCategoryFilter;
+type SavedSortType = PostingSort;
 
 const savedTabs: { label: string; value: SavedTab }[] = [
   { label: '전체', value: 'ALL' },
@@ -25,37 +25,24 @@ const savedTabs: { label: string; value: SavedTab }[] = [
 ];
 
 const savedSortOptions = [
-  { label: '마감임박순', value: 'deadline' },
-  { label: '최근 저장순', value: 'recent' },
+  { label: '마감임박순', value: 'DEADLINE' },
+  { label: '최근 저장순', value: 'RECENT' },
 ];
-
-const sortSavedPostings = (postings: Posting[], sort: SavedSortType) => {
-  if (sort === 'deadline') {
-    return [...postings].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
-  }
-
-  return [...postings].sort((a, b) => b.id - a.id);
-};
 
 export default function SavedPage() {
   const [activeTab, setActiveTab] = useState<SavedTab>('ALL');
-  const [sort, setSort] = useState<SavedSortType>('deadline');
+  const [sort, setSort] = useState<SavedSortType>('DEADLINE');
   const [isFailureToastOpen, setIsFailureToastOpen] = useState(false);
+  const savedPostingsParams: GetSavedPostingsParams = {
+    category: activeTab,
+    sort,
+  };
   const { data: savedPostings = [], isPending, isError, refetch } = useQuery({
-    queryKey: postingQueryKeys.saved,
-    queryFn: () => getSavedPostings(),
+    queryKey: postingQueryKeys.savedList(savedPostingsParams),
+    queryFn: () => getSavedPostings(savedPostingsParams),
   });
 
-  const filteredPostings = useMemo(() => {
-    const filtered =
-      activeTab === 'ALL'
-        ? savedPostings
-        : savedPostings.filter((posting) => posting.type === activeTab);
-
-    return sortSavedPostings(filtered, sort);
-  }, [activeTab, savedPostings, sort]);
-
-  const isEmpty = !isPending && !isError && filteredPostings.length === 0;
+  const isEmpty = !isPending && !isError && savedPostings.length === 0;
 
   return (
     <Layout tabBar={<TabBar />} className="bg-white">
@@ -98,14 +85,14 @@ export default function SavedPage() {
         </section>
       )}
 
-      {!isPending && !isError && filteredPostings.length > 0 && (
+      {!isPending && !isError && savedPostings.length > 0 && (
         <section className="px-5 pb-6 pt-4">
           <div className="mb-[13px] flex justify-start">
             <Dropdown options={savedSortOptions} value={sort} onChange={(value) => setSort(value as SavedSortType)} />
           </div>
 
           <div className="flex flex-col gap-[20px]">
-            {filteredPostings.map((posting) => (
+            {savedPostings.map((posting) => (
               <SavedPostingCard
                 key={posting.id}
                 posting={posting}
