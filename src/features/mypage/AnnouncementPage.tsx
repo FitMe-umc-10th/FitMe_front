@@ -1,20 +1,26 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { getNotices } from '@/apis/mypage';
+import { getAnnouncements, getAnnouncementDetail } from '@/apis/announcements';
 import { Layout } from '@/shared/components';
 
 export default function NoticeList() {
   const navigate = useNavigate();
 
+  // 클릭 시 아코디언 형태로 본문이 펼쳐지도록 로컬 상태 관리 (타입 number로 매핑)
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
   // 1. 공지사항 데이터 조회
   const { data: notices, isLoading } = useQuery({
     queryKey: ['notices'],
-    queryFn: getNotices,
+    queryFn: getAnnouncements,
   });
 
-  // 클릭 시 아코디언 형태로 본문이 펼쳐지도록 로컬 상태 관리 (타입 number로 매핑)
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const { data: noticeDetail } = useQuery({
+    queryKey: ['noticeDetail', expandedId],
+    queryFn: () => getAnnouncementDetail(expandedId as number),
+    enabled: !!expandedId,
+  });
 
   const handleToggle = (id: number) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -73,26 +79,23 @@ export default function NoticeList() {
         {notices && notices.length > 0 ? (
           <div className="flex flex-col bg-white">
             {notices.map((notice) => {
-              const isExpanded = expandedId === notice.id;
-              const isHighlighted = notice.isNew; // New 공지사항은 연한 블루 배경 및 배지 적용
+              const isExpanded = expandedId === notice.announcementId;
 
               return (
-                <div key={notice.id} className="w-full flex flex-col">
+                <div key={notice.announcementId} className="w-full flex flex-col">
                   {/* 헤더 영역 (클릭 시 토글) */}
                   <button
                     type="button"
-                    onClick={() => handleToggle(notice.id)}
+                    onClick={() => handleToggle(notice.announcementId)}
                     className={`w-full h-[75px] px-[20px] py-[24px] flex items-center justify-between transition-colors focus:outline-none ${
-                      isHighlighted ? 'bg-[#f0f6ff]/70' : 'bg-white border-b border-gray-100/80'
+                      notice.isNew ? 'bg-[#f0f6ff]/70' : 'bg-white border-b border-gray-100/80'
                     }`}
                   >
                     <div className="flex items-center gap-[8px] min-w-0">
                       {/* 안내 배지 (w-45 h-27, 8px gap) */}
                       <span
                         className={`w-[45px] h-[27px] rounded-[8px] text-[12px] font-semibold leading-[160%] tracking-[-0.24px] flex items-center justify-center shrink-0 ${
-                          isHighlighted
-                            ? 'bg-[#e6f0ff] text-[#0066ff]'
-                            : 'bg-gray-100 text-gray-500'
+                          notice.isNew ? 'bg-[#e6f0ff] text-[#0066ff]' : 'bg-gray-100 text-gray-500'
                         }`}
                       >
                         안내
@@ -113,10 +116,10 @@ export default function NoticeList() {
                   {isExpanded && (
                     <div
                       className={`px-[20px] py-[24px] text-[14px] leading-[150%] text-gray-600 whitespace-pre-wrap border-b border-gray-100/80 animate-fade-in-up ${
-                        isHighlighted ? 'bg-[#f0f6ff]/40' : 'bg-slate-50/50'
+                        notice.isNew ? 'bg-[#f0f6ff]/40' : 'bg-slate-50/50'
                       }`}
                     >
-                      {notice.content}
+                      {noticeDetail?.content || '공지사항 내용을 불러오는 중입니다...'}
                     </div>
                   )}
                 </div>
