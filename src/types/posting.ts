@@ -11,7 +11,7 @@ export interface Posting {
   organizer?: string;
 
   // 일자 및 D-Day 관련
-  deadline?: string;        // ISO 날짜 (D-Day 계산용)
+  deadline?: string; // ISO 날짜 (D-Day 계산용)
   applyStartAt?: string;
   applyEndAt?: string;
   createdAt?: string;
@@ -19,7 +19,7 @@ export interface Posting {
 
   // 이미지 및 상태 정보
   posterUrl?: string;
-  isSaved?: boolean;
+  isSaved: boolean;
   isMatched?: boolean;
   category?: string;
 
