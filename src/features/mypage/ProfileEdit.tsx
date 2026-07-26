@@ -1,19 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { getProfile, updateProfile } from '@/apis/mypage';
+import { getUserProfileDetail, updateUserProfile } from '@/apis/mypage';
 import { Layout } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
 
 const AVAILABLE_FIELDS = [
-  '마케팅',
-  '기획/아이디어',
-  '디자인',
-  'IT/개발',
-  '어학',
-  '이학',
-  '공학',
-  '예체능',
+  { id: 1, name: '마케팅' },
+  { id: 2, name: '기획/아이디어' },
+  { id: 3, name: '디자인' },
+  { id: 4, name: 'IT/개발' },
+  { id: 5, name: '어학' },
+  { id: 6, name: '이학' },
+  { id: 7, name: '공학' },
+  { id: 8, name: '예체능' },
 ];
 const AVAILABLE_REGIONS = [
   '서울특별시 전체',
@@ -34,16 +34,15 @@ export default function ProfileEdit() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // 1. 기존 유저 정보 패치
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ['profile'],
-    queryFn: getProfile,
+  const { data: profileDetail, isLoading } = useQuery({
+    queryKey: ['profileDetail'],
+    queryFn: getUserProfileDetail,
   });
 
   // 2. 로컬 폼 상태 관리
-  const [name, setName] = useState('');
   const [gpa, setGpa] = useState<number | string>('');
   const [incomeBracket, setIncomeBracket] = useState<number>(8);
-  const [fields, setFields] = useState<string[]>([]);
+  const [interests, setInterests] = useState<number[]>([]);
   const [region, setRegion] = useState('');
   const [profileImg, setProfileImg] = useState('');
 
@@ -55,23 +54,34 @@ export default function ProfileEdit() {
     null,
   );
 
-  // 데이터 로드 완료 시 로컬 상태 초기화
   useEffect(() => {
-    if (profile) {
-      setName(profile.name);
-      setGpa(profile.gpa);
-      setIncomeBracket(profile.incomeBracket);
-      setFields(profile.fieldsOfInterest);
-      setRegion(profile.activityRegion);
-      setProfileImg(profile.profileImageUrl);
+    if (profileDetail) {
+      setGpa(profileDetail.gpa);
+      setIncomeBracket(profileDetail.incomeBracket);
+      setInterests(profileDetail.interests.map((interest) => interest.interestId));
+      setRegion(profileDetail.region);
+      setProfileImg(profileDetail.profileImageUrl);
     }
-  }, [profile]);
+  }, [profileDetail]);
+
+  // 데이터 로드 완료 시 로컬 상태 초기화
+  // useEffect(() => {
+  //   if (profile) {
+  //     setName(profile.name);
+  //     setGpa(profile.gpa);
+  //     setIncomeBracket(profile.incomeBracket);
+  //     setFields(profile.fieldsOfInterest);
+  //     setRegion(profile.activityRegion);
+  //     setProfileImg(profile.profileImageUrl);
+  //   }
+  // }, [profile]);
 
   // 3. 프로필 저장 Mutation
   const { mutate: saveProfile, isPending: isSaving } = useMutation({
-    mutationFn: updateProfile,
+    mutationFn: updateUserProfile,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['profileDetail'] });
+      queryClient.invalidateQueries({ queryKey: ['profileSetting'] });
       toast.success('프로필이 성공적으로 저장되었습니다.');
       navigate('/my');
     },
@@ -81,9 +91,9 @@ export default function ProfileEdit() {
   });
 
   // 관심 직무 토글 핸들러
-  const handleToggleField = (field: string) => {
-    setFields((prev) =>
-      prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field],
+  const handleToggleField = (field: { id: number; name: string }) => {
+    setInterests((prev) =>
+      prev.includes(field.id) ? prev.filter((f) => f !== field.id) : [...prev, field.id],
     );
   };
 
@@ -121,11 +131,10 @@ export default function ProfileEdit() {
     }
 
     saveProfile({
-      name,
       gpa: gpaNum,
       incomeBracket,
-      fieldsOfInterest: fields,
-      activityRegion: region,
+      interests: interests,
+      region: region,
       profileImageUrl: profileImg,
     });
   };
@@ -223,9 +232,11 @@ export default function ProfileEdit() {
                 </svg>
               </button>
             </div>
-            <h2 className="mt-[12px] text-lg font-semibold text-gray-800 leading-tight">{name}</h2>
+            <h2 className="mt-[12px] text-lg font-semibold text-gray-800 leading-tight">
+              {profileDetail?.name}
+            </h2>
             <p className="mt-[10px] text-xs font-medium text-gray-400 leading-none">
-              동국대학교 서울캠퍼스 | 22학번
+              {profileDetail?.universityName} | 22학번
             </p>
           </div>
 
@@ -298,10 +309,10 @@ export default function ProfileEdit() {
               {/* 선택 칩 세트 (12px 마진 탑 - 가로 스와이프 스크롤 연동) */}
               <div className="flex flex-row gap-2 mt-[6px] w-full max-w-[362px] mx-auto overflow-x-auto whitespace-nowrap scrollbar-none py-1">
                 {AVAILABLE_FIELDS.map((field) => {
-                  const selected = fields.includes(field);
+                  const selected = interests.includes(field.id);
                   return (
                     <button
-                      key={field}
+                      key={field.id}
                       type="button"
                       onClick={() => handleToggleField(field)}
                       className={`h-[36px] px-[12px] py-[8px] rounded-full text-xs font-medium flex items-center justify-center shrink-0 transition-all ${
@@ -310,7 +321,7 @@ export default function ProfileEdit() {
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
-                      {field}
+                      {field.name}
                     </button>
                   );
                 })}

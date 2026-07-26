@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { getProfile, updateProfile } from '@/apis/mypage';
+import { getNotificationSettings, updateNotificationSettings } from '@/apis/mypage';
 import { Layout, Switch } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
 
@@ -11,26 +11,26 @@ export default function NotificationSettings() {
   const queryClient = useQueryClient();
 
   // 1. 유저 정보 조회
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ['profile'],
-    queryFn: getProfile,
+  const { data: notificationSettings, isLoading } = useQuery({
+    queryKey: ['notificationSettings'],
+    queryFn: getNotificationSettings,
   });
 
   // 이메일 수신 주소 로컬 입력 상태 및 편집 상태 관리
   const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
+  const [emailInput, setEmailInput] = useState(notificationSettings?.notificationEmail || '');
 
   useEffect(() => {
-    if (profile) {
-      setEmailInput(profile.notificationSettings.email);
+    if (notificationSettings) {
+      setEmailInput(notificationSettings.notificationEmail);
     }
-  }, [profile]);
+  }, [notificationSettings]);
 
   // 2. 알림 설정 수정 Mutation
   const { mutate: updateSettings } = useMutation({
-    mutationFn: updateProfile,
-    onSuccess: (updatedProfile) => {
-      queryClient.setQueryData(['profile'], updatedProfile);
+    mutationFn: updateNotificationSettings,
+    onSuccess: (updatedNotificationSettings) => {
+      queryClient.setQueryData(['notificationSettings'], updatedNotificationSettings);
       toast.success('알림 설정이 성공적으로 저장되었습니다.');
     },
     onError: () => {
@@ -39,23 +39,23 @@ export default function NotificationSettings() {
   });
 
   // 토글 스위치 클릭 시 실시간 API 저장 핸들러
-  const handleToggle = (key: 'appPushEnabled' | 'customRecommendationEnabled' | 'deadlineReminderEnabled') => {
-    if (!profile) return;
+  const handleToggle = (key: 'pushEnabled' | 'recommendedEnabled' | 'reminderEnabled') => {
+    if (!notificationSettings) return;
 
-    const currentVal = profile.notificationSettings[key];
+    const currentVal = notificationSettings[key];
     const newSettings = {
-      ...profile.notificationSettings,
+      ...notificationSettings,
       [key]: !currentVal,
     };
 
     updateSettings({
-      notificationSettings: newSettings,
+      ...newSettings,
     });
   };
 
   // 이메일 저장 버튼 핸들러
   const handleSaveEmail = () => {
-    if (!profile) return;
+    if (!notificationSettings) return;
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailInput)) {
@@ -64,17 +64,17 @@ export default function NotificationSettings() {
     }
 
     const newSettings = {
-      ...profile.notificationSettings,
-      email: emailInput,
+      ...notificationSettings,
+      notificationEmail: emailInput,
     };
 
     updateSettings({
-      notificationSettings: newSettings,
+      ...newSettings,
     });
     setIsEditingEmail(false);
   };
 
-  if (isLoading || !profile) {
+  if (isLoading || !notificationSettings) {
     return (
       <Layout
         header={
@@ -93,8 +93,6 @@ export default function NotificationSettings() {
       </Layout>
     );
   }
-
-  const { notificationSettings: settings } = profile;
 
   return (
     <Layout
@@ -130,7 +128,7 @@ export default function NotificationSettings() {
           <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800 font-pretendard select-none">
             알람 수신 이메일
           </h2>
-          
+
           {/* 타이틀과 설명 사이의 4px 간격 */}
           <p className="mt-[4px] text-[12px] font-medium leading-[160%] tracking-normal text-gray-400 font-pretendard select-none">
             맞춤 공고 및 마감일 리마인드 메일을 받을 주소입니다.
@@ -152,7 +150,7 @@ export default function NotificationSettings() {
                   <button
                     type="button"
                     onClick={() => {
-                      setEmailInput(profile.notificationSettings.email);
+                      setEmailInput(notificationSettings.notificationEmail);
                       setIsEditingEmail(false);
                     }}
                     className="h-[33px] px-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-[12px] text-gray-500 hover:bg-gray-100 transition-colors"
@@ -171,7 +169,7 @@ export default function NotificationSettings() {
             ) : (
               <>
                 <span className="text-[14px] font-normal leading-[140%] tracking-[-0.24px] text-gray-800 font-pretendard truncate pr-4">
-                  {settings.email}
+                  {notificationSettings?.notificationEmail || '이메일을 등록해주세요.'}
                 </span>
                 <button
                   type="button"
@@ -196,8 +194,8 @@ export default function NotificationSettings() {
                 </span>
               </div>
               <Switch
-                checked={settings.appPushEnabled}
-                onChange={() => handleToggle('appPushEnabled')}
+                checked={notificationSettings?.pushEnabled}
+                onChange={() => handleToggle('pushEnabled')}
               />
             </li>
 
@@ -212,8 +210,8 @@ export default function NotificationSettings() {
                 </p>
               </div>
               <Switch
-                checked={settings.customRecommendationEnabled}
-                onChange={() => handleToggle('customRecommendationEnabled')}
+                checked={notificationSettings?.recommendedEnabled}
+                onChange={() => handleToggle('recommendedEnabled')}
               />
             </li>
 
@@ -228,8 +226,8 @@ export default function NotificationSettings() {
                 </p>
               </div>
               <Switch
-                checked={settings.deadlineReminderEnabled}
-                onChange={() => handleToggle('deadlineReminderEnabled')}
+                checked={notificationSettings?.reminderEnabled}
+                onChange={() => handleToggle('reminderEnabled')}
               />
             </li>
           </ul>
