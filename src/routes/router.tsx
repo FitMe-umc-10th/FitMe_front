@@ -16,7 +16,7 @@ import MyPageMain from '@/features/mypage/MyPageMain';
 import ProfileEdit from '@/features/mypage/ProfileEdit';
 import NotificationSettings from '@/features/mypage/NotificationSettings';
 import CustomerSupport from '@/features/mypage/CustomerSupport';
-import NoticeList from '@/features/mypage/NoticeList';
+import NoticeList from '@/features/mypage/AnnouncementPage';
 import HistoryList from '@/features/history/HistoryList';
 import HistoryDetail from '@/features/history/HistoryDetail';
 
