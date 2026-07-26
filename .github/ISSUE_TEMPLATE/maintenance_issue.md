@@ -1,3 +1,11 @@
+---
+name: 🛠️ Maintenance/Task
+about: 리팩토링, 환경 설정, 기타 코드 정비 작업을 기록합니다.
+title: '[CHORE] '
+labels: chore
+assignees: ''
+---
+
 ## #️⃣ 작업 내용
 
 > 수행해야 할 작업 내용을 간략하게 설명해주세요.

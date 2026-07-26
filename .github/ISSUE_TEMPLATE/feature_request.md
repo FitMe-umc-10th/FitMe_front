@@ -1,3 +1,11 @@
+---
+name: ✨ Feature Request
+about: 새로운 기능 또는 기존 기능 개선을 제안합니다.
+title: '[FEAT] '
+labels: enhancement
+assignees: ''
+---
+
 ## #️⃣ 요청 유형
 
 > 해당되는 항목을 선택해주세요.
