@@ -1,10 +1,5 @@
-import type {
-  GetHomePostingListParams,
-  GetSavedPostingsParams,
-  HomePostingFeed,
-  Posting,
-  PostingType,
-} from '@/types/posting';
+import type { HomePostingFeed, Posting, PostingType } from '@/types/posting';
+import { axiosInstance } from '@/apis/axiosInstance';
 import { MOCK_POSTINGS } from '@/constants/mockData';
 import { getDDayDays } from '@/shared/utils/date';
 
@@ -29,10 +24,96 @@ const DEFAULT_HOME_POSTING_SIZE = 5;
 
 type MockSavedPostings = Record<number, boolean>;
 
-const waitMockNetwork = (delayMs = MOCK_NETWORK_DELAY_MS) =>
-  new Promise((resolve) => {
-    window.setTimeout(resolve, delayMs);
-  });
+type ApiPostingType = PostingType | 'SCHOLARSHIP' | 'CONTEST' | string;
+
+interface ApiPosting {
+  id?: number;
+  postId?: number;
+  announcementId?: number;
+  type?: ApiPostingType;
+  postType?: ApiPostingType;
+  announcementType?: ApiPostingType;
+  title?: string;
+  name?: string;
+  organizer?: string;
+  organization?: string;
+  organizationName?: string;
+  deadline?: string;
+  deadlineDate?: string;
+  endDate?: string;
+  posterUrl?: string;
+  imageUrl?: string;
+  thumbnailUrl?: string;
+  posterImageUrl?: string;
+  isSaved?: boolean;
+  saved?: boolean;
+  category?: string;
+  createdAt?: string;
+  viewCount?: number;
+  views?: number;
+  savedCount?: number;
+  viewedAt?: string;
+  recentViewedAt?: string;
+  isMatched?: boolean;
+  matched?: boolean;
+}
+
+const unwrapApiData = <T>(payload: unknown): T => {
+  if (payload && typeof payload === 'object') {
+    const record = payload as Record<string, unknown>;
+
+    if ('result' in record) return record.result as T;
+    if ('data' in record) return record.data as T;
+    if ('content' in record) return record.content as T;
+  }
+
+  return payload as T;
+};
+
+const normalizeApiList = (payload: unknown): ApiPosting[] => {
+  const unwrapped = unwrapApiData<unknown>(payload);
+
+  if (Array.isArray(unwrapped)) return unwrapped as ApiPosting[];
+
+  if (unwrapped && typeof unwrapped === 'object') {
+    const record = unwrapped as Record<string, unknown>;
+
+    if (Array.isArray(record.content)) return record.content as ApiPosting[];
+    if (Array.isArray(record.posts)) return record.posts as ApiPosting[];
+    if (Array.isArray(record.postings)) return record.postings as ApiPosting[];
+    if (Array.isArray(record.items)) return record.items as ApiPosting[];
+    if (Array.isArray(record.list)) return record.list as ApiPosting[];
+  }
+
+  return [];
+};
+
+const normalizePostingType = (type?: ApiPostingType): PostingType => {
+  if (type === 'CONTEST') return 'CONTEST';
+  return 'SCHOLARSHIP';
+};
+
+const mapApiPostingToPosting = (posting: ApiPosting): Posting => ({
+  id: posting.postId ?? posting.id ?? posting.announcementId ?? 0,
+  type: normalizePostingType(posting.type ?? posting.postType ?? posting.announcementType),
+  title: posting.title ?? posting.name ?? '제목 정보 없음',
+  organization: posting.organizer ?? posting.organization ?? posting.organizationName ?? '기관 정보 없음',
+  deadline: posting.deadline ?? posting.deadlineDate ?? posting.endDate ?? '',
+  posterUrl: posting.posterUrl ?? posting.imageUrl ?? posting.thumbnailUrl ?? posting.posterImageUrl ?? '',
+  isSaved: posting.isSaved ?? posting.saved ?? false,
+  category: posting.category,
+  createdAt: posting.createdAt,
+  views: posting.views ?? posting.viewCount ?? 0,
+  viewCount: posting.viewCount ?? posting.views ?? 0,
+  savedCount: posting.savedCount ?? 0,
+  viewedAt: posting.viewedAt ?? posting.recentViewedAt,
+  isMatched: posting.isMatched ?? posting.matched,
+});
+
+const getApiPostings = async (url: string, params?: Record<string, unknown>): Promise<Posting[]> => {
+  const { data } = await axiosInstance.get(url, { params });
+  return normalizeApiList(data).map(mapApiPostingToPosting);
+};
 
 const readMockSavedPostings = (): MockSavedPostings => {
   try {
@@ -76,36 +157,6 @@ const sortByDeadlineAsc = (postings: Posting[]) =>
 
     return safeDeadlineA - safeDeadlineB;
   });
-
-const sortBySavedCountDesc = (postings: Posting[]) =>
-  [...postings].sort((a, b) => (b.savedCount ?? 0) - (a.savedCount ?? 0));
-
-const getMatchedDeadlinePostings = (postings: Posting[], type: PostingType) => {
-  const matchedPostings = postings.filter((posting) => posting.type === type && posting.isMatched);
-
-  if (matchedPostings.length > 0) {
-    return sortByDeadlineAsc(matchedPostings);
-  }
-
-  return sortBySavedCountDesc(postings).slice(0, 5);
-};
-
-const filterByPostingType = (postings: Posting[], type?: PostingType | 'ALL') => {
-  if (!type || type === 'ALL') return postings;
-  return postings.filter((posting) => posting.type === type);
-};
-
-const sortSavedPostings = (postings: Posting[], sort?: GetSavedPostingsParams['sort']) => {
-  if (sort === 'DEADLINE') {
-    return sortByDeadlineAsc(postings);
-  }
-
-  return [...postings].sort((a, b) => {
-    const savedIdA = a.savedId ?? a.id;
-    const savedIdB = b.savedId ?? b.id;
-    return savedIdB - savedIdA;
-  });
-};
 
 // === 탐색/검색 화면 전용 페이지네이션 및 필터링 Mock API ===
 export const getExplorePostings = async ({
@@ -189,15 +240,31 @@ export const getPostings = async (): Promise<Posting[]> => {
   return applyMockSavedPostings();
 };
 
-export const getPopularPostings = async ({
-  size = DEFAULT_HOME_POSTING_SIZE,
-}: GetHomePostingListParams = {}): Promise<Posting[]> => {
-  await waitMockNetwork();
-  const postings = applyMockSavedPostings();
+export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
+  const [popularPostings, recentViewedPostings, scholarshipDeadlinePostings, contestDeadlinePostings] =
+    await Promise.all([
+      getApiPostings('/api/v1/post/popular', { size: 8 }),
+      getApiPostings('/api/v1/post/recent-views', { size: 5 }),
+      getApiPostings('/api/v1/post/closing-soon', {
+        type: 'SCHOLARSHIP',
+        sort: 'FIT',
+        size: 5,
+      }),
+      getApiPostings('/api/v1/post/closing-soon', {
+        type: 'CONTEST',
+        sort: 'FIT',
+        size: 5,
+      }),
+    ]);
 
-  return [...postings]
-    .sort((a, b) => (b.viewCount ?? b.views ?? 0) - (a.viewCount ?? a.views ?? 0))
-    .slice(0, size);
+  return {
+    popularPostings,
+    recentViewedPostings,
+    deadlinePostings: {
+      SCHOLARSHIP: scholarshipDeadlinePostings,
+      CONTEST: contestDeadlinePostings,
+    },
+  };
 };
 
 export const getRecentViewedPostings = async ({
