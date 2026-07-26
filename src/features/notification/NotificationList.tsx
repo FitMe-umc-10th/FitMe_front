@@ -1,11 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/shared/components';
 import { getDeadlineNotifications } from '@/apis/deadlineNotification';
 
 export default function NotificationList() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   // 1. 알림 데이터 조회
   const { data: notifications, isLoading } = useQuery({

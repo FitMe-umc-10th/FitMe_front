@@ -1,6 +1,6 @@
 import type { Posting } from '@/types/posting';
 import type { UserProfile, Notice, FAQ } from '@/types/profile';
-import type { NotificationItem } from '@/types/notification';
+import type { NotificationDTO } from '@/types/deadlineNotification';
 
 // UI 개발용 가짜 데이터. 백엔드 API 나오면 apis/posting.ts 에서 교체.
 export const MOCK_POSTINGS: Posting[] = [
@@ -294,32 +294,38 @@ export const MOCK_FAQS: FAQ[] = [
   },
 ];
 
-export const MOCK_NOTIFICATIONS: NotificationItem[] = [
+export const MOCK_NOTIFICATIONS: NotificationDTO[] = [
   {
-    id: 1,
+    notificationId: 1,
     type: 'DEADLINE',
-    title: '[마감 임박] 대기업 브랜드 마케팅 공모전',
+    categoryPrefix: '마감 임박',
+    title: '대기업 브랜드 마케팅 공모전',
     message: '마감일이 3일 남았습니다. 잊지 말고 지원하세요!',
     createdAt: '2026-07-12T09:30:00+09:00',
-    postingId: 5,
+    displayTime: '3시간 전',
     isRead: false,
+    postId: 5,
   },
   {
-    id: 2,
+    notificationId: 2,
     type: 'APPLICATION',
-    title: '[지원 관리] 삼성재단 청년 장학금',
+    categoryPrefix: '지원 관리',
+    title: '삼성재단 청년 장학금',
     message: '홈페이지에서 지원을 마치셨나요? 상태를 변경해주세요.',
     createdAt: '2026-07-11T18:20:00+09:00',
-    postingId: 1,
+    displayTime: '어제',
     isRead: false,
+    postId: 1,
   },
   {
-    id: 3,
+    notificationId: 3,
     type: 'DEADLINE',
-    title: '[마감 임박] 청년 사회혁신 챌린지',
+    categoryPrefix: '마감 임박',
+    title: '청년 사회혁신 챌린지',
     message: '오늘이 마감일입니다! 마지막까지 화이팅!',
     createdAt: '2026-07-09T13:00:00+09:00',
-    postingId: 4,
+    displayTime: '3일 전',
     isRead: true,
+    postId: 4,
   },
 ];

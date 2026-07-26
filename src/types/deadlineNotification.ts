@@ -1,4 +1,4 @@
-interface NotificationDTO {
+export interface NotificationDTO {
   notificationId: number;
   type: string;
   categoryPrefix: string;

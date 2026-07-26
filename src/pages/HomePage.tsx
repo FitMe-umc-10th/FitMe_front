@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getUnreadNotificationCount } from '@/apis/notification';
+import { getDeadlineNotifications } from '@/apis/deadlineNotification';
 import { getHomePostingFeed } from '@/apis/posting';
 import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import notificationBellIcon from '@/assets/icons/notification-bell.svg';
@@ -61,7 +61,9 @@ function NotificationButton({ hasUnreadNotification }: { hasUnreadNotification: 
       className="relative flex size-8 items-center justify-center rounded-full text-[#333333] transition-colors hover:bg-gray-100"
     >
       <img src={notificationBellIcon} alt="" aria-hidden="true" className="size-[26px]" />
-      {hasUnreadNotification && <span className="absolute right-[3px] top-[3px] size-2 rounded-full bg-[#FF2F2F]" />}
+      {hasUnreadNotification && (
+        <span className="absolute right-[3px] top-[3px] size-2 rounded-full bg-[#FF2F2F]" />
+      )}
     </button>
   );
 }
@@ -74,10 +76,12 @@ export default function HomePage() {
     queryKey: postingQueryKeys.home,
     queryFn: getHomePostingFeed,
   });
-  const { data: unreadNotificationCount = 0 } = useQuery({
-    queryKey: ['notifications', 'unreadCount'],
-    queryFn: getUnreadNotificationCount,
+  const { data: deadlineNotifications } = useQuery({
+    queryKey: ['deadlineNotifications'],
+    queryFn: getDeadlineNotifications,
   });
+  const unreadNotificationCount =
+    deadlineNotifications?.notifications.filter((n) => !n.isRead).length ?? 0;
 
   const deadlinePostings = data?.deadlinePostings[activeDeadlineTab] ?? [];
 
@@ -116,7 +120,10 @@ export default function HomePage() {
         </section>
 
         <section className="-mx-5 space-y-4 bg-[#EEF6FF] px-5 py-5">
-          <SectionHeader title="현수님의 최근 조회 목록" onAction={() => navigate('/recent-postings')} />
+          <SectionHeader
+            title="현수님의 최근 조회 목록"
+            onAction={() => navigate('/recent-postings')}
+          />
           {isPending && <Skeleton variant="card" count={2} />}
           {data && data.recentViewedPostings.length > 0 && (
             <Carousel storageKey="home-recent-carousel-index">
