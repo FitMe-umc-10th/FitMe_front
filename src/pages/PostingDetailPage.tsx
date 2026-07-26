@@ -2,7 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getPostingById } from '@/apis/posting';
+import { postingQueryKeys } from '@/apis/postingQueryKeys';
+import organizationIcon from '@/assets/icons/organization.svg';
 import DayBadge from '@/shared/components/DayBadge';
+import ErrorState from '@/shared/components/ErrorState';
+import PostingThumbnail from '@/shared/components/PostingThumbnail';
 import Skeleton from '@/shared/components/Skeleton';
 import { useToggleSave } from '@/shared/hooks/useToggleSave';
 import { Layout } from '@/shared/components';
@@ -122,21 +126,6 @@ function DetailHeader() {
   );
 }
 
-function OrganizationIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3.5 shrink-0">
-      <path
-        d="M3 9l9-6 9 6M5 9h14M6 9v11M18 9v11M4 20h16M10 20v-6h4v6"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
-
 function MetricIcon({ type }: { type: 'view' | 'heart' }) {
   if (type === 'view') {
     return (
@@ -191,7 +180,7 @@ function DetailInfoTabs({
   onChange: (tab: DetailTab) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 border-b border-[#EEF0F3] text-center text-[14px] font-semibold text-[#1E1E1E]">
+    <div className="grid grid-cols-3 text-center text-[14px] font-semibold">
       {DETAIL_TABS.map((tab) => {
         const isActive = activeTab === tab.value;
 
@@ -200,12 +189,13 @@ function DetailInfoTabs({
             key={tab.value}
             type="button"
             onClick={() => onChange(tab.value)}
-            className="relative h-[38px]"
+            className={`h-[38px] border-b px-7 py-2 leading-[22px] ${
+              isActive
+                ? 'border-[#0059FF] text-[#1E1E1E]'
+                : 'border-[#D9D9D9] text-[#A5A5A5]'
+            }`}
           >
             {tab.label}
-            {isActive && (
-              <span className="absolute inset-x-0 bottom-0 h-[1.5px] rounded-full bg-[#0059FF]" />
-            )}
           </button>
         );
       })}
@@ -217,16 +207,16 @@ function DetailInfoContent({ activeTab }: { activeTab: DetailTab }) {
   if (activeTab === 'benefit') {
     return (
       <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">대상</dt>
+        <div className="space-y-1">
+          <dt className="font-bold text-[#0059FF]">대상</dt>
           <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.target}</dd>
         </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">최우수상</dt>
+        <div className="space-y-1">
+          <dt className="font-bold text-[#0059FF]">최우수상</dt>
           <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.grandPrize}</dd>
         </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">입상자 전원</dt>
+        <div className="space-y-1">
+          <dt className="font-bold text-[#0059FF]">입상자 전원</dt>
           <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.support}</dd>
         </div>
       </dl>
@@ -236,12 +226,12 @@ function DetailInfoContent({ activeTab }: { activeTab: DetailTab }) {
   if (activeTab === 'eligibility') {
     return (
       <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">학력</dt>
+        <div className="space-y-1">
+          <dt className="font-bold text-[#0059FF]">학력</dt>
           <dd className="font-semibold text-[#333333]">{DETAIL_INFO.eligibility.education}</dd>
         </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">인원 규모</dt>
+        <div className="space-y-1">
+          <dt className="font-bold text-[#0059FF]">인원 규모</dt>
           <dd className="font-semibold text-[#333333]">{DETAIL_INFO.eligibility.headcount}</dd>
         </div>
       </dl>
@@ -259,6 +249,44 @@ function DetailInfoContent({ activeTab }: { activeTab: DetailTab }) {
         <dd className="font-semibold text-[#333333]">{DETAIL_INFO.period.method}</dd>
       </div>
     </dl>
+  );
+}
+
+function DetailUnavailableState({
+  title,
+  description,
+  onGoHome,
+}: {
+  title: string;
+  description: string;
+  onGoHome: () => void;
+}) {
+  return (
+    <div className="mx-5 mt-5 flex min-h-[360px] flex-col items-center justify-center rounded-2xl bg-[#F8FAFC] px-6 text-center">
+      <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-[#EEF6FF] text-[#0059FF]">
+        <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7">
+          <path
+            d="M9.5 9.5H9.51M14.5 9.5H14.51M8.5 15C9.45 14.2 10.55 13.8 12 13.8C13.45 13.8 14.55 14.2 15.5 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+          />
+        </svg>
+      </div>
+      <h2 className="text-[17px] font-extrabold text-[#262626]">{title}</h2>
+      <p className="mt-2 whitespace-pre-line text-[13px] font-medium leading-[1.6] text-[#8F8F8F]">
+        {description}
+      </p>
+      <button
+        type="button"
+        onClick={onGoHome}
+        className="mt-6 h-11 rounded-[10px] bg-[#0059FF] px-6 text-[14px] font-bold text-white transition-colors hover:bg-[#004CE0]"
+      >
+        홈으로 가기
+      </button>
+    </div>
   );
 }
 
@@ -305,16 +333,18 @@ function DetailSaveButton({ posting }: { posting: Posting }) {
 
 export default function PostingDetailPage() {
   const { postingId } = useParams();
+  const navigate = useNavigate();
   const parsedPostingId = Number(postingId);
+  const isValidPostingId = Number.isFinite(parsedPostingId);
   const [activeTab, setActiveTab] = useState<DetailTab>('period');
   const [isWaitingForApplyReturn, setIsWaitingForApplyReturn] = useState(false);
   const openModal = useModalStore((state) => state.openModal);
   const closeModal = useModalStore((state) => state.closeModal);
 
-  const { data, isPending, isError } = useQuery({
-    queryKey: ['posting', parsedPostingId],
+  const { data, isPending, isError, refetch } = useQuery({
+    queryKey: postingQueryKeys.detail(parsedPostingId),
     queryFn: () => getPostingById(parsedPostingId),
-    enabled: Number.isFinite(parsedPostingId),
+    enabled: isValidPostingId,
   });
 
   const openApplyCompleteModal = useCallback((posting: Posting) => {
@@ -386,20 +416,34 @@ export default function PostingDetailPage() {
     <Layout header={<DetailHeader />} className="bg-white">
       <section className="min-h-[calc(100dvh-56px)] pb-[112px]">
         {isPending && <Skeleton variant="list" count={2} />}
-        {(isError || !Number.isFinite(parsedPostingId)) && (
-          <p className="mx-5 mt-5 rounded-2xl bg-red-50 px-4 py-5 text-sm font-medium text-red-500">
-            공고 정보를 불러오지 못했어요.
-          </p>
+        {!isValidPostingId && (
+          <DetailUnavailableState
+            title="잘못된 공고 주소입니다."
+            description="공고 주소를 다시 확인해주세요."
+            onGoHome={() => navigate('/')}
+          />
+        )}
+        {isError && (
+          <div className="mx-5 mt-5">
+            <ErrorState
+              message="공고 정보를 불러오지 못했습니다."
+              onRetry={() => {
+                void refetch();
+              }}
+            />
+          </div>
         )}
         {data === null && (
-          <p className="mx-5 mt-5 rounded-2xl bg-slate-50 px-4 py-5 text-sm font-medium text-slate-500">
-            존재하지 않는 공고예요.
-          </p>
+          <DetailUnavailableState
+            title="공고를 찾을 수 없습니다."
+            description={'삭제되었거나 더 이상 제공되지 않는 공고입니다.\n다른 공고를 확인해주세요.'}
+            onGoHome={() => navigate('/')}
+          />
         )}
         {data && (
           <article>
             <div className="h-[190px] w-full bg-[#E8EEF5]">
-              <img src={data.posterUrl} alt={data.title} className="h-full w-full object-cover" />
+              <PostingThumbnail src={data.posterUrl} alt={data.title} />
             </div>
 
             <div className="space-y-4 px-5 py-5">
@@ -412,7 +456,7 @@ export default function PostingDetailPage() {
                 <h2 className="text-[18px] font-extrabold leading-[1.45] text-[#202124]">{data.title}</h2>
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-1 text-[12px] font-medium text-[#A1A1A1]">
-                    <OrganizationIcon />
+                    <img src={organizationIcon} alt="" aria-hidden="true" className="size-[13px] shrink-0" />
                     <span className="truncate">{data.organization}</span>
                   </div>
                   <div className="flex shrink-0 items-center gap-3 text-[12px] font-medium text-[#8C8C8C]">
@@ -429,7 +473,7 @@ export default function PostingDetailPage() {
               </div>
 
               <section className="min-h-[116px] rounded-2xl border border-[#B2D4FF] bg-gradient-to-b from-[#E2EFFF] to-white px-4 py-4">
-                <h3 className="mb-2 text-[13px] font-extrabold text-[#247BFF]">AI 공고전 정보 요약</h3>
+                <h3 className="mb-2 text-[13px] font-extrabold text-[#247BFF]">AI 공모전 정보 요약</h3>
                 <p className="text-[12px] font-medium leading-[1.75] text-[#404040]">{DETAIL_SUMMARY}</p>
               </section>
 
@@ -439,7 +483,7 @@ export default function PostingDetailPage() {
               </section>
             </div>
 
-            <div className="fixed bottom-0 left-1/2 z-30 flex w-full max-w-[390px] -translate-x-1/2 items-center gap-3 border-t border-[#EEF0F3] bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+14px)] pt-3">
+            <div className="fixed bottom-0 left-1/2 z-30 flex w-full max-w-[390px] -translate-x-1/2 items-center gap-3 bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+14px)] pt-3">
               <DetailSaveButton posting={data} />
               <button
                 type="button"

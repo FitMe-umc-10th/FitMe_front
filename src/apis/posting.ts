@@ -1,4 +1,10 @@
-import type { HomePostingFeed, Posting, PostingType } from '@/types/posting';
+import type {
+  GetHomePostingListParams,
+  GetSavedPostingsParams,
+  HomePostingFeed,
+  Posting,
+  PostingType,
+} from '@/types/posting';
 import { MOCK_POSTINGS } from '@/constants/mockData';
 import { getDDayDays } from '@/shared/utils/date';
 
@@ -18,8 +24,15 @@ export interface ExplorePostingsResponse {
 }
 
 const MOCK_SAVED_POSTINGS_KEY = 'fitme:mockSavedPostings';
+const MOCK_NETWORK_DELAY_MS = 300;
+const DEFAULT_HOME_POSTING_SIZE = 5;
 
 type MockSavedPostings = Record<number, boolean>;
+
+const waitMockNetwork = (delayMs = MOCK_NETWORK_DELAY_MS) =>
+  new Promise((resolve) => {
+    window.setTimeout(resolve, delayMs);
+  });
 
 const readMockSavedPostings = (): MockSavedPostings => {
   try {
@@ -48,13 +61,21 @@ const applyMockSavedPostings = () => {
     if (typeof savedState === 'boolean') {
       posting.isSaved = savedState;
     }
+    posting.savedId = posting.isSaved ? posting.savedId ?? posting.id : undefined;
   });
 
   return MOCK_POSTINGS;
 };
 
 const sortByDeadlineAsc = (postings: Posting[]) =>
-  [...postings].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+  [...postings].sort((a, b) => {
+    const deadlineA = new Date(a.deadline).getTime();
+    const deadlineB = new Date(b.deadline).getTime();
+    const safeDeadlineA = Number.isNaN(deadlineA) ? Number.POSITIVE_INFINITY : deadlineA;
+    const safeDeadlineB = Number.isNaN(deadlineB) ? Number.POSITIVE_INFINITY : deadlineB;
+
+    return safeDeadlineA - safeDeadlineB;
+  });
 
 const sortBySavedCountDesc = (postings: Posting[]) =>
   [...postings].sort((a, b) => (b.savedCount ?? 0) - (a.savedCount ?? 0));
@@ -69,6 +90,23 @@ const getMatchedDeadlinePostings = (postings: Posting[], type: PostingType) => {
   return sortBySavedCountDesc(postings).slice(0, 5);
 };
 
+const filterByPostingType = (postings: Posting[], type?: PostingType | 'ALL') => {
+  if (!type || type === 'ALL') return postings;
+  return postings.filter((posting) => posting.type === type);
+};
+
+const sortSavedPostings = (postings: Posting[], sort?: GetSavedPostingsParams['sort']) => {
+  if (sort === 'DEADLINE') {
+    return sortByDeadlineAsc(postings);
+  }
+
+  return [...postings].sort((a, b) => {
+    const savedIdA = a.savedId ?? a.id;
+    const savedIdB = b.savedId ?? b.id;
+    return savedIdB - savedIdA;
+  });
+};
+
 // === 탐색/검색 화면 전용 페이지네이션 및 필터링 Mock API ===
 export const getExplorePostings = async ({
   keyword,
@@ -78,7 +116,7 @@ export const getExplorePostings = async ({
   page,
   limit,
 }: GetExplorePostingsParams): Promise<ExplorePostingsResponse> => {
-  await new Promise((r) => setTimeout(r, 400)); // 400ms 네트워크 지연 흉내
+  await waitMockNetwork(400); // 400ms 네트워크 지연 흉내
 
   let filtered = [...applyMockSavedPostings()];
 
@@ -110,6 +148,9 @@ export const getExplorePostings = async ({
     filtered.sort((a, b) => {
       const daysA = getDDayDays(a.deadline);
       const daysB = getDDayDays(b.deadline);
+      if (daysA === null && daysB === null) return 0;
+      if (daysA === null) return 1;
+      if (daysB === null) return -1;
       const isClosedA = daysA < 0;
       const isClosedB = daysB < 0;
 
@@ -144,59 +185,89 @@ export const getExplorePostings = async ({
 };
 
 export const getPostings = async (): Promise<Posting[]> => {
-  await new Promise((r) => setTimeout(r, 300)); // 네트워크 흉내
+  await waitMockNetwork(); // 네트워크 흉내
   return applyMockSavedPostings();
 };
 
-export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
-  await new Promise((r) => setTimeout(r, 300));
+export const getPopularPostings = async ({
+  size = DEFAULT_HOME_POSTING_SIZE,
+}: GetHomePostingListParams = {}): Promise<Posting[]> => {
+  await waitMockNetwork();
   const postings = applyMockSavedPostings();
 
+  return [...postings]
+    .sort((a, b) => (b.viewCount ?? b.views ?? 0) - (a.viewCount ?? a.views ?? 0))
+    .slice(0, size);
+};
+
+export const getRecentViewedPostings = async ({
+  size,
+}: GetHomePostingListParams = {}): Promise<Posting[]> => {
+  await waitMockNetwork();
+  const postings = applyMockSavedPostings();
+  const recentViewedPostings = postings
+    .filter((posting) => posting.viewedAt)
+    .sort((a, b) => new Date(b.viewedAt ?? '').getTime() - new Date(a.viewedAt ?? '').getTime());
+
+  return typeof size === 'number' ? recentViewedPostings.slice(0, size) : recentViewedPostings;
+};
+
+export const getClosingSoonPostings = async (type: PostingType): Promise<Posting[]> => {
+  await waitMockNetwork();
+  const postings = applyMockSavedPostings();
+
+  return getMatchedDeadlinePostings(postings, type);
+};
+
+export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
+  const [popularPostings, recentViewedPostings, scholarshipDeadlinePostings, contestDeadlinePostings] =
+    await Promise.all([
+      getPopularPostings({ size: DEFAULT_HOME_POSTING_SIZE }),
+      getRecentViewedPostings({ size: DEFAULT_HOME_POSTING_SIZE }),
+      getClosingSoonPostings('SCHOLARSHIP'),
+      getClosingSoonPostings('CONTEST'),
+    ]);
+
   return {
-    popularPostings: [...postings].sort((a, b) => (b.viewCount ?? b.views ?? 0) - (a.viewCount ?? a.views ?? 0)).slice(0, 5),
-    recentViewedPostings: postings
-      .filter((posting) => posting.viewedAt)
-      .sort((a, b) => new Date(b.viewedAt ?? '').getTime() - new Date(a.viewedAt ?? '').getTime())
-      .slice(0, 5),
+    popularPostings,
+    recentViewedPostings,
     deadlinePostings: {
-      SCHOLARSHIP: getMatchedDeadlinePostings(postings, 'SCHOLARSHIP'),
-      CONTEST: getMatchedDeadlinePostings(postings, 'CONTEST'),
+      SCHOLARSHIP: scholarshipDeadlinePostings,
+      CONTEST: contestDeadlinePostings,
     },
   };
 };
 
-export const getRecentViewedPostings = async (): Promise<Posting[]> => {
-  await new Promise((r) => setTimeout(r, 300));
+export const getSavedPostings = async ({
+  category = 'ALL',
+  sort = 'DEADLINE',
+}: GetSavedPostingsParams = {}): Promise<Posting[]> => {
+  await waitMockNetwork();
   const postings = applyMockSavedPostings();
+  const savedPostings = filterByPostingType(
+    postings.filter((posting) => posting.isSaved),
+    category,
+  );
 
-  return postings
-    .filter((posting) => posting.viewedAt)
-    .sort((a, b) => new Date(b.viewedAt ?? '').getTime() - new Date(a.viewedAt ?? '').getTime());
-};
-
-export const getSavedPostings = async (): Promise<Posting[]> => {
-  await new Promise((r) => setTimeout(r, 300));
-  const postings = applyMockSavedPostings();
-
-  return postings.filter((posting) => posting.isSaved);
+  return sortSavedPostings(savedPostings, sort);
 };
 
 export const getPostingById = async (postingId: number): Promise<Posting | null> => {
-  await new Promise((r) => setTimeout(r, 300));
+  await waitMockNetwork();
   const postings = applyMockSavedPostings();
 
   return postings.find((posting) => posting.id === postingId) ?? null;
 };
 
 export const getDeadlinePostings = async (): Promise<Posting[]> => {
-  await new Promise((r) => setTimeout(r, 300));
+  await waitMockNetwork();
   const postings = applyMockSavedPostings();
 
   return sortByDeadlineAsc(postings);
 };
 
 export const toggleSave = async (postingId: number, isSaved: boolean): Promise<boolean> => {
-  await new Promise((r) => setTimeout(r, 300)); // 네트워크 흉내
+  await waitMockNetwork(); // 네트워크 흉내
 
   // 10% 확률로 실패 시나리오
   if (Math.random() < 0.1) {
@@ -209,6 +280,7 @@ export const toggleSave = async (postingId: number, isSaved: boolean): Promise<b
 
   if (target) {
     target.isSaved = nextSavedState;
+    target.savedId = nextSavedState ? target.savedId ?? postingId : undefined;
     target.savedCount = Math.max(0, (target.savedCount ?? 0) + (nextSavedState ? 1 : -1));
     writeMockSavedPosting(postingId, nextSavedState);
   }

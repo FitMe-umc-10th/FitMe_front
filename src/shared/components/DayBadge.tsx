@@ -1,7 +1,7 @@
 import { calculateDDay } from '@/shared/utils/date';
 
 interface DayBadgeProps {
-  deadline: string;
+  deadline?: string | null;
   variant?: 'default' | 'glass';
 }
 

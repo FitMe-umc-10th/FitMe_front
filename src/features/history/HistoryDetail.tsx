@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, Header } from '@/shared/components';
+import organizationIcon from '@/assets/icons/organization.svg';
 import { useToastStore } from '@/store/toastStore';
 import { getHistoryDetail, updateHistoryMemo } from '@/apis/history';
 
@@ -187,18 +188,7 @@ export default function HistoryDetail() {
           <div className="flex items-center justify-between">
             {/* 기관명 */}
             <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="w-4 h-4 text-slate-400"
-              >
-                <path d="M3 9l9-6 9 6M5 9h14M6 9v11M18 9v11M4 20h16M10 20v-6h4v6" />
-              </svg>
+              <img src={organizationIcon} alt="" aria-hidden="true" className="size-4 shrink-0" />
               <span>{post?.organizer}</span>
             </div>
 
