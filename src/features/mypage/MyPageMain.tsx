@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getUserProfile } from '@/apis/mypage';
-import { getAnnouncements, getAnnouncementDetail } from '@/apis/announcements';
+import { getAnnouncements } from '@/apis/announcements';
 import { Layout, TabBar } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
 import exclamationBorder from '@/assets/exclamation_mark_border.svg';
