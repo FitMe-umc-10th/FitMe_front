@@ -5,12 +5,6 @@ export interface Posting {
   savedId?: number;
   type: PostingType;
   title: string;
-  
-export interface Posting {
-  id: number;
-  savedId?: number;
-  type: PostingType;
-  title: string;
 
   // 기관 / 주최 정보
   organization?: string;

@@ -1,5 +1,11 @@
 import axios from 'axios';
-import type { HomePostingFeed, Posting, PostingType } from '@/types/posting';
+import type {
+  GetHomePostingListParams,
+  GetSavedPostingsParams,
+  HomePostingFeed,
+  Posting,
+  PostingType,
+} from '@/types/posting';
 import { axiosInstance } from '@/apis/axiosInstance';
 import { MOCK_POSTINGS } from '@/constants/mockData';
 import { getDDayDays } from '@/shared/utils/date';
@@ -81,6 +87,11 @@ interface ApiPostingDetail {
   headcount?: string;
   personnel?: string;
 }
+
+const waitMockNetwork = (delayMs = MOCK_NETWORK_DELAY_MS) =>
+  new Promise((resolve) => {
+    window.setTimeout(resolve, delayMs);
+  });
 
 const unwrapApiData = <T>(payload: unknown): T => {
   if (payload && typeof payload === 'object') {
@@ -186,13 +197,40 @@ const applyMockSavedPostings = () => {
 
 const sortByDeadlineAsc = (postings: Posting[]) =>
   [...postings].sort((a, b) => {
-    const deadlineA = new Date(a.deadline).getTime();
-    const deadlineB = new Date(b.deadline).getTime();
+    const deadlineA = new Date(a.deadline ?? '').getTime();
+    const deadlineB = new Date(b.deadline ?? '').getTime();
     const safeDeadlineA = Number.isNaN(deadlineA) ? Number.POSITIVE_INFINITY : deadlineA;
     const safeDeadlineB = Number.isNaN(deadlineB) ? Number.POSITIVE_INFINITY : deadlineB;
 
     return safeDeadlineA - safeDeadlineB;
   });
+
+const getMatchedDeadlinePostings = (postings: Posting[], type: PostingType) => {
+  const matchedPostings = postings.filter((posting) => posting.type === type && posting.isMatched);
+
+  if (matchedPostings.length > 0) {
+    return sortByDeadlineAsc(matchedPostings);
+  }
+
+  return [...postings].sort((a, b) => (b.savedCount ?? 0) - (a.savedCount ?? 0)).slice(0, 5);
+};
+
+const filterByPostingType = (postings: Posting[], type?: PostingType | 'ALL') => {
+  if (!type || type === 'ALL') return postings;
+  return postings.filter((posting) => posting.type === type);
+};
+
+const sortSavedPostings = (postings: Posting[], sort?: GetSavedPostingsParams['sort']) => {
+  if (sort === 'DEADLINE') {
+    return sortByDeadlineAsc(postings);
+  }
+
+  return [...postings].sort((a, b) => {
+    const savedIdA = a.savedId ?? a.id;
+    const savedIdB = b.savedId ?? b.id;
+    return savedIdB - savedIdA;
+  });
+};
 
 // === 탐색/검색 화면 전용 페이지네이션 및 필터링 Mock API ===
 export const getExplorePostings = async ({
@@ -225,7 +263,7 @@ export const getExplorePostings = async ({
     filtered = filtered.filter(
       (p) =>
         p.title.toLowerCase().includes(query) ||
-        p.organization.toLowerCase().includes(query)
+        (p.organization ?? '').toLowerCase().includes(query)
     );
   }
 
@@ -276,31 +314,15 @@ export const getPostings = async (): Promise<Posting[]> => {
   return applyMockSavedPostings();
 };
 
-export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
-  const [popularPostings, recentViewedPostings, scholarshipDeadlinePostings, contestDeadlinePostings] =
-    await Promise.all([
-      getApiPostings('/api/v1/post/popular', { size: 8 }),
-      getApiPostings('/api/v1/post/recent-views', { size: 5 }),
-      getApiPostings('/api/v1/post/closing-soon', {
-        type: 'SCHOLARSHIP',
-        sort: 'FIT',
-        size: 5,
-      }),
-      getApiPostings('/api/v1/post/closing-soon', {
-        type: 'CONTEST',
-        sort: 'FIT',
-        size: 5,
-      }),
-    ]);
+export const getPopularPostings = async ({
+  size = DEFAULT_HOME_POSTING_SIZE,
+}: GetHomePostingListParams = {}): Promise<Posting[]> => {
+  await waitMockNetwork();
+  const postings = applyMockSavedPostings();
 
-  return {
-    popularPostings,
-    recentViewedPostings,
-    deadlinePostings: {
-      SCHOLARSHIP: scholarshipDeadlinePostings,
-      CONTEST: contestDeadlinePostings,
-    },
-  };
+  return [...postings]
+    .sort((a, b) => (b.viewCount ?? b.views ?? 0) - (a.viewCount ?? a.views ?? 0))
+    .slice(0, size);
 };
 
 export const getRecentViewedPostings = async ({
@@ -315,6 +337,12 @@ export const getRecentViewedPostings = async ({
   return typeof size === 'number' ? recentViewedPostings.slice(0, size) : recentViewedPostings;
 };
 
+/**
+ * [MOCK API] 마감 임박 공고 목록 조회 (프론트 Mock 전용)
+ * TODO: 실제 백엔드 API 연동 시 아래 주석 코드로 교체하세요:
+ * const { data } = await axiosInstance.get('/api/v1/post/closing-soon', { params: { type, sort: 'FIT', size: 5 } });
+ * return data;
+ */
 export const getClosingSoonPostings = async (type: PostingType): Promise<Posting[]> => {
   await waitMockNetwork();
   const postings = applyMockSavedPostings();
@@ -322,6 +350,10 @@ export const getClosingSoonPostings = async (type: PostingType): Promise<Posting
   return getMatchedDeadlinePostings(postings, type);
 };
 
+/**
+ * [MOCK API] 홈 피드 공고 데이터 통합 조회
+ * TODO: 실제 백엔드 API 연동 시 GET /api/v1/post/popular, /api/v1/post/recent-views, /api/v1/post/closing-soon 통신으로 전환하세요.
+ */
 export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
   const [popularPostings, recentViewedPostings, scholarshipDeadlinePostings, contestDeadlinePostings] =
     await Promise.all([
