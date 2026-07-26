@@ -1,8 +1,10 @@
 export { GlobalModal, Modal } from './Modal';
 export { Header } from './Header';
 export { Layout } from './Layout';
+export { Logo } from './Logo';
 export { ProgressBar } from './ProgressBar';
 export { Tab } from './Tab';
 export { TabBar } from './TabBar';
-export { Toast, ToastViewport } from './Toast';
-export { default as ToastContainer } from './ToastContainer';
+export { Switch } from './Switch';
+export { Accordion } from './Accordion';
+export { default as ErrorState } from './ErrorState';

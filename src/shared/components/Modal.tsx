@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 import { useModalStore } from '@/store/modalStore';
 
 type ModalButton = {
@@ -13,34 +13,45 @@ type ModalProps = {
   title: string;
   description?: string;
   buttons?: ModalButton[];
-  children?: ReactNode;
+  children?: React.ReactNode;
 };
 
 const buttonClassByVariant: Record<NonNullable<ModalButton['variant']>, string> = {
-  primary: 'bg-blue-600 text-white',
-  secondary: 'bg-gray-100 text-gray-700',
+  primary: 'bg-[#4A90E2] text-white',
+  secondary: 'bg-[#F0F0F0] text-[#808080]',
   danger: 'bg-red-500 text-white',
 };
 
 export function Modal({ isOpen, onClose, title, description, buttons, children }: ModalProps) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const modalButtons = buttons?.length ? buttons : [{ label: '확인', onClick: onClose }];
+  const modalButtons = buttons ?? [{ label: '확인', onClick: onClose, variant: 'primary' }];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6">
-      <section
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="w-full max-w-[342px] rounded-2xl bg-white p-5 shadow-xl"
+        className="flex h-[182px] w-full max-w-[328px] flex-col rounded-[18px] bg-white px-[18px] pb-5 pt-[38px] text-center shadow-xl"
       >
-        <h2 id="modal-title" className="text-lg font-semibold text-gray-950">
+        <h2 id="modal-title" className="text-[15px] font-extrabold leading-[21px] text-[#1E1E1E]">
           {title}
         </h2>
-        {description && <p className="mt-2 text-sm leading-6 text-gray-500">{description}</p>}
+        {description && <p className="mt-[7px] whitespace-pre-line text-[11px] font-medium leading-[17px] text-[#8C8C8C]">{description}</p>}
         {children && <div className="mt-4">{children}</div>}
-        <div className="mt-6 flex gap-2">
+        <div className="mt-auto flex justify-center gap-2">
           {modalButtons.map((button) => {
             const variant = button.variant ?? 'primary';
 
@@ -49,14 +60,14 @@ export function Modal({ isOpen, onClose, title, description, buttons, children }
                 key={button.label}
                 type="button"
                 onClick={button.onClick ?? onClose}
-                className={`h-12 flex-1 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 ${buttonClassByVariant[variant]}`}
+                className={`h-[44px] w-[141px] rounded-[7.28px] text-[13px] font-extrabold transition-opacity hover:opacity-90 ${buttonClassByVariant[variant]}`}
               >
                 {button.label}
               </button>
             );
           })}
         </div>
-      </section>
+      </div>
     </div>
   );
 }
