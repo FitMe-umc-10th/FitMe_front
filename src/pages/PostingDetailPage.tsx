@@ -203,21 +203,35 @@ function DetailInfoTabs({
   );
 }
 
-function DetailInfoContent({ activeTab }: { activeTab: DetailTab }) {
+function DetailInfoContent({ activeTab, posting }: { activeTab: DetailTab; posting: Posting }) {
+  const period = {
+    date: posting.period?.date || DETAIL_INFO.period.date,
+    method: posting.period?.method || DETAIL_INFO.period.method,
+  };
+  const benefit = {
+    target: posting.benefit?.target || DETAIL_INFO.benefit.target,
+    grandPrize: posting.benefit?.grandPrize || DETAIL_INFO.benefit.grandPrize,
+    support: posting.benefit?.support || DETAIL_INFO.benefit.support,
+  };
+  const eligibility = {
+    education: posting.eligibility?.education || DETAIL_INFO.eligibility.education,
+    headcount: posting.eligibility?.headcount || DETAIL_INFO.eligibility.headcount,
+  };
+
   if (activeTab === 'benefit') {
     return (
       <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="space-y-1">
-          <dt className="font-bold text-[#0059FF]">대상</dt>
-          <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.target}</dd>
+        <div className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">대상</dt>
+          <dd className="font-semibold text-[#333333]">{benefit.target}</dd>
         </div>
-        <div className="space-y-1">
-          <dt className="font-bold text-[#0059FF]">최우수상</dt>
-          <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.grandPrize}</dd>
+        <div className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">최우수상</dt>
+          <dd className="font-semibold text-[#333333]">{benefit.grandPrize}</dd>
         </div>
-        <div className="space-y-1">
-          <dt className="font-bold text-[#0059FF]">입상자 전원</dt>
-          <dd className="font-semibold text-[#333333]">{DETAIL_INFO.benefit.support}</dd>
+        <div className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">입상자 전원</dt>
+          <dd className="font-semibold text-[#333333]">{benefit.support}</dd>
         </div>
       </dl>
     );
@@ -226,13 +240,13 @@ function DetailInfoContent({ activeTab }: { activeTab: DetailTab }) {
   if (activeTab === 'eligibility') {
     return (
       <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="space-y-1">
-          <dt className="font-bold text-[#0059FF]">학력</dt>
-          <dd className="font-semibold text-[#333333]">{DETAIL_INFO.eligibility.education}</dd>
+        <div className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">학력</dt>
+          <dd className="font-semibold text-[#333333]">{eligibility.education}</dd>
         </div>
-        <div className="space-y-1">
-          <dt className="font-bold text-[#0059FF]">인원 규모</dt>
-          <dd className="font-semibold text-[#333333]">{DETAIL_INFO.eligibility.headcount}</dd>
+        <div className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">인원 규모</dt>
+          <dd className="font-semibold text-[#333333]">{eligibility.headcount}</dd>
         </div>
       </dl>
     );
@@ -242,11 +256,11 @@ function DetailInfoContent({ activeTab }: { activeTab: DetailTab }) {
     <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
       <div className="grid grid-cols-[74px_1fr] gap-2">
         <dt className="font-bold text-[#4C96FF]">일시</dt>
-        <dd className="font-semibold text-[#333333]">{DETAIL_INFO.period.date}</dd>
+        <dd className="font-semibold text-[#333333]">{period.date}</dd>
       </div>
       <div className="grid grid-cols-[74px_1fr] gap-2">
         <dt className="font-bold text-[#4C96FF]">접수 방법</dt>
-        <dd className="font-semibold text-[#333333]">{DETAIL_INFO.period.method}</dd>
+        <dd className="font-semibold text-[#333333]">{period.method}</dd>
       </div>
     </dl>
   );
@@ -370,6 +384,8 @@ export default function PostingDetailPage() {
   }, [closeModal, openModal]);
 
   const handleApplyClick = (posting: Posting) => {
+    const applyUrl = posting.applyUrl || MOCK_OFFICIAL_APPLY_URL;
+
     openModal({
       title: '공식 홈페이지로 이동하시겠어요?',
       description: "지원을 완료하신 후, 핏미에 돌아와\n진행 상태를 꼭 '결과 대기 중'으로 변경해주세요!",
@@ -386,7 +402,7 @@ export default function PostingDetailPage() {
             writeMockApplicationHistory(posting.id, '-');
             closeModal();
             setIsWaitingForApplyReturn(true);
-            window.open(MOCK_OFFICIAL_APPLY_URL, '_blank', 'noopener,noreferrer');
+            window.open(applyUrl, '_blank', 'noopener,noreferrer');
           },
         },
       ],
@@ -474,12 +490,14 @@ export default function PostingDetailPage() {
 
               <section className="min-h-[116px] rounded-2xl border border-[#B2D4FF] bg-gradient-to-b from-[#E2EFFF] to-white px-4 py-4">
                 <h3 className="mb-2 text-[13px] font-extrabold text-[#247BFF]">AI 공모전 정보 요약</h3>
-                <p className="text-[12px] font-medium leading-[1.75] text-[#404040]">{DETAIL_SUMMARY}</p>
+                <p className="text-[12px] font-medium leading-[1.75] text-[#404040]">
+                  {data.aiSummary || DETAIL_SUMMARY}
+                </p>
               </section>
 
               <section className="pt-1">
                 <DetailInfoTabs activeTab={activeTab} onChange={setActiveTab} />
-                <DetailInfoContent activeTab={activeTab} />
+                <DetailInfoContent activeTab={activeTab} posting={data} />
               </section>
             </div>
 
