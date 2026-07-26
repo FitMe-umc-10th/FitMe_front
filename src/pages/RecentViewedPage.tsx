@@ -1,14 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { getRecentViewedPostings } from '@/apis/posting';
+import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import EmptyState from '@/shared/components/EmptyState';
+import ErrorState from '@/shared/components/ErrorState';
 import PostingCard from '@/shared/components/PostingCard';
 import Skeleton from '@/shared/components/Skeleton';
 import { Header, Layout } from '@/shared/components';
 
 export default function RecentViewedPage() {
-  const { data, isPending, isError } = useQuery({
-    queryKey: ['recentViewedPostings'],
-    queryFn: getRecentViewedPostings,
+  const { data, isPending, isError, refetch } = useQuery({
+    queryKey: postingQueryKeys.recentViewed,
+    queryFn: () => getRecentViewedPostings(),
   });
 
   return (
@@ -21,9 +23,12 @@ export default function RecentViewedPage() {
 
         {isPending && <Skeleton variant="list" count={4} />}
         {isError && (
-          <p className="rounded-2xl bg-red-50 px-4 py-5 text-sm font-medium text-red-500">
-            최근 조회 목록을 불러오지 못했어요.
-          </p>
+          <ErrorState
+            message="최근 조회 목록을 불러오지 못했습니다."
+            onRetry={() => {
+              void refetch();
+            }}
+          />
         )}
         {data && data.length === 0 && (
           <div className="rounded-2xl bg-blue-50 py-10">

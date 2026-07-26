@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { getFAQs, submitInquiry, getProfile } from '@/apis/mypage';
 import { Layout } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
+import { getFAQs } from '@/apis/faqs';
+import { submitInquiry } from '@/apis/inquiries';
 
 export default function CustomerSupport() {
   const navigate = useNavigate();
@@ -15,24 +16,10 @@ export default function CustomerSupport() {
     queryFn: getFAQs,
   });
 
-  const { data: profile } = useQuery({
-    queryKey: ['profile'],
-    queryFn: getProfile,
-  });
-
   // 1:1 문의 모달 상태 및 폼 필드 상태
+  const [replyEmail, setReplyEmail] = useState('');
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
-  const [email, setEmail] = useState('');
-  const [inquiryContent, setInquiryContent] = useState('');
-
-  // 프로필 데이터 로드 시 이메일 기본값 설정
-  useEffect(() => {
-    if (profile?.notificationSettings?.email) {
-      setEmail(profile.notificationSettings.email);
-    } else {
-      setEmail('contact@fitme.com');
-    }
-  }, [profile]);
+  const [content, setContent] = useState('');
 
   // FAQ 아코디언 개별 제어를 위한 로컬 상태
   const [expandedFaqId, setExpandedFaqId] = useState<number | null>(null);
@@ -46,7 +33,8 @@ export default function CustomerSupport() {
     mutationFn: submitInquiry,
     onSuccess: () => {
       toast.success('1:1 문의가 성공적으로 접수되었습니다.');
-      setInquiryContent('');
+      setReplyEmail('');
+      setContent('');
       setIsInquiryOpen(false);
     },
     onError: () => {
@@ -56,18 +44,18 @@ export default function CustomerSupport() {
 
   // 제출 실행 핸들러
   const handleInquirySubmit = () => {
-    if (!email.trim()) {
+    if (!replyEmail.trim()) {
       toast.error('답변 받을 이메일을 입력해 주세요.');
       return;
     }
-    if (!inquiryContent.trim()) {
+    if (!content.trim()) {
       toast.error('상세 문의 내용을 입력해 주세요.');
       return;
     }
 
     sendInquiry({
-      title: email, // API 스펙 호환을 위해 이메일을 title 필드로 전송
-      content: inquiryContent,
+      replyEmail,
+      content,
     });
   };
 
@@ -131,19 +119,19 @@ export default function CustomerSupport() {
           </div>
 
           {/* 질문 리스트 영역 */}
-          {faqs && faqs.length > 0 ? (
+          {faqs && faqs.faqs.length > 0 ? (
             <div className="flex flex-col bg-white mt-[12px]">
-              {faqs.map((faq) => {
-                const isExpanded = expandedFaqId === faq.id;
+              {faqs.faqs.map((faq) => {
+                const isExpanded = expandedFaqId === faq.faqId;
                 return (
                   <div
-                    key={faq.id}
+                    key={faq.faqId}
                     className="w-full max-w-[402px] mx-auto flex flex-col border-b border-gray-100/80"
                   >
                     {/* 질문 버튼 (h-80, pt-28 pb-28, px-20) */}
                     <button
                       type="button"
-                      onClick={() => handleFaqToggle(faq.id)}
+                      onClick={() => handleFaqToggle(faq.faqId)}
                       className="w-full h-[80px] pt-[28px] pr-[20px] pb-[28px] pl-[20px] flex items-center justify-between text-left focus:outline-none transition-colors hover:bg-gray-50/30"
                     >
                       {/* 질문 텍스트 스택 (w-255 h-22, gap-16) */}
@@ -251,8 +239,8 @@ export default function CustomerSupport() {
               {/* 2. 이메일 입력 상자 (w-283 h-40, mt-15) */}
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={replyEmail}
+                onChange={(e) => setReplyEmail(e.target.value)}
                 placeholder="contact@fitme.com"
                 disabled={isSubmitting}
                 className="w-[283px] h-[40px] mt-[15px] pt-[10px] pr-[15px] pb-[10px] pl-[15px] rounded-[8px] border border-gray-200 bg-white text-[14px] font-medium leading-[140%] tracking-normal text-gray-800 focus:border-blue-500 focus:outline-none transition-all placeholder-gray-400"
@@ -267,8 +255,8 @@ export default function CustomerSupport() {
 
               {/* 4. 문의 내용 입력 상자 (w-283 h-88, mt-15) */}
               <textarea
-                value={inquiryContent}
-                onChange={(e) => setInquiryContent(e.target.value)}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
                 placeholder="서비스 이용 중 불편한 점이나 건의사항을 자세히 적어주세요. (최대 500자)"
                 disabled={isSubmitting}
                 maxLength={500}
