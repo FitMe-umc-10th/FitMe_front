@@ -86,7 +86,7 @@ export default function SignupPage() {
       });
       toast.success('회원가입이 완료되었어요!');
       navigate('/login');
-    } catch (error) {
+    } catch {
       // 409(이메일 중복), 400(유효성) 등 에러 처리
       toast.error('회원가입에 실패했어요. 다시 확인해주세요.');
     }

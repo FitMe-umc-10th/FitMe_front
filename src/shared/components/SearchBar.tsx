@@ -30,7 +30,7 @@ export default function SearchBar({
   // 디바운스된 값이 바뀔 때만 실제 검색 실행
   useEffect(() => {
     onSearch?.(debouncedValue);
-  }, [debouncedValue]);
+  }, [debouncedValue, onSearch]);
 
   return (
     <form className="relative w-full" onSubmit={handleSubmit}>

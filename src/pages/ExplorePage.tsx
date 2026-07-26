@@ -401,7 +401,7 @@ export default function ExplorePage() {
             <Dropdown
               options={SORT_OPTIONS}
               value={sortBy}
-              onChange={(val) => setSortBy(val as any)}
+              onChange={(val) => setSortBy(val as 'deadline' | 'latest' | 'popular')}
             />
             <span className="text-xs text-slate-400 font-semibold">
               {!isLoading && `총 ${data?.pages[0]?.total ?? 0}건`}
