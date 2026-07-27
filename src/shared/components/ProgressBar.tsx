@@ -4,24 +4,24 @@ type ProgressBarProps = {
 };
 
 export function ProgressBar({ current, total }: ProgressBarProps) {
-  const steps = Array.from({ length: total }, (_, index) => index + 1);
+  const percent = (current / total) * 100;
 
   return (
     <div
-      className="flex w-full gap-1"
+      className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200"
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={total}
       aria-valuenow={current}
     >
-      {steps.map((step) => (
-        <span
-          key={step}
-          className={`h-1.5 flex-1 rounded-full ${
-            step <= current ? 'bg-blue-600' : 'bg-gray-200'
-          }`}
-        />
-      ))}
+      <div
+        className="h-full rounded-full bg-blue-600"
+        style={{
+          width: `${percent}%`,
+          // 푸딩 탄성 — 목표 살짝 넘었다가 되돌아옴
+          transition: 'width 600ms cubic-bezier(0.68, -0.55, 0.27, 1.55)',
+        }}
+      />
     </div>
   );
 }
