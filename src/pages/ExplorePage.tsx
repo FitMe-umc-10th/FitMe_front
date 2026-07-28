@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { getExplorePostings } from '@/apis/posting';
+import { getSearchPosts } from '@/apis/explore';
+import type { SearchPostItem, SearchNextCursor } from '@/types/explore';
+import type { Posting } from '@/types/posting';
 import { Layout } from '@/shared/components';
 import { TabBar } from '@/shared/components/TabBar';
 import SearchBar from '@/shared/components/SearchBar';
@@ -23,6 +25,26 @@ const SORT_OPTIONS = [
 
 // 추천 테마 키워드 (피그마 시안 반영)
 const RECOMMENDED_THEMES = ['고액장학금', '디자인공모전', '해외연수프로그램', '창업지원프로그램'];
+
+const CATEGORY_MAP: Record<string, 'MARKETING' | 'PM' | 'DESIGN' | 'DEV' | 'LANGUAGE' | 'ETC'> = {
+  '마케팅': 'MARKETING',
+  '기획/아이디어': 'PM',
+  '디자인': 'DESIGN',
+  'IT/개발': 'DEV',
+  '어학': 'LANGUAGE',
+  '기타': 'ETC',
+};
+
+const mapSearchPostItemToPosting = (item: SearchPostItem): Posting => ({
+  id: item.postId,
+  type: item.type,
+  title: item.title,
+  organization: item.organization,
+  deadline: item.deadlineDate,
+  posterUrl: item.thumbnailUrl,
+  isSaved: item.saved,
+  category: item.category ?? undefined,
+});
 
 export default function ExplorePage() {
   const [keyword, setKeyword] = useState(''); // 입력창 텍스트
@@ -106,25 +128,25 @@ export default function ExplorePage() {
     setIsSearchFocused(false);
   };
 
-  // 무한 스크롤 쿼리 구성
+  // 무한 스크롤 커서 쿼리 구성 (GET /api/v1/posts API 연동)
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
     useInfiniteQuery({
       queryKey: [
-        'postings',
-        'explore',
+        'searchPostsList',
         { keyword: searchQuery, type: activeTab, category: selectedCategory, sortBy },
       ],
-      queryFn: ({ pageParam = 0 }) =>
-        getExplorePostings({
-          keyword: searchQuery,
-          type: activeTab,
-          category: activeTab === 'contest' ? selectedCategory : undefined,
-          sortBy,
-          page: pageParam,
-          limit: 4, // 테스트 및 동작 검증을 위해 페이지당 4개씩 분할
+      queryFn: ({ pageParam }) =>
+        getSearchPosts({
+          type: activeTab === 'scholarship' ? 'SCHOLARSHIP' : activeTab === 'contest' ? 'CONTEST' : 'ALL',
+          sort: sortBy === 'latest' ? 'RECENT' : 'DEADLINE',
+          category: activeTab === 'contest' && selectedCategory ? CATEGORY_MAP[selectedCategory] : undefined,
+          keyword: searchQuery.trim() || undefined,
+          idCursor: pageParam?.idCursor,
+          deadlineCursor: pageParam?.deadlineCursor,
         }),
-      initialPageParam: 0,
-      getNextPageParam: (lastPage) => lastPage.nextPage,
+      initialPageParam: undefined as SearchNextCursor | undefined,
+      getNextPageParam: (lastPage) =>
+        lastPage?.pageInfo?.hasNext ? lastPage.pageInfo.nextCursor ?? undefined : undefined,
     });
 
   // 무한 스크롤 트리거 관측용 커스텀 훅 연동
@@ -133,8 +155,9 @@ export default function ExplorePage() {
     enabled: hasNextPage && !isFetchingNextPage && !isLoading && !isError,
   });
 
-  // 무한 스크롤로 수집된 모든 postings 리스트 평탄화
-  const postings = data?.pages.flatMap((page) => page.postings) ?? [];
+  // 무한 스크롤로 수집된 모든 SearchPostItem을 Posting형으로 평탄화
+  const rawPosts = data?.pages.flatMap((page) => page?.posts ?? []) ?? [];
+  const postings: Posting[] = rawPosts.map(mapSearchPostItemToPosting);
 
   return (
     <Layout
@@ -408,7 +431,7 @@ export default function ExplorePage() {
               onChange={(val) => setSortBy(val as 'deadline' | 'latest' | 'popular')}
             />
             <span className="text-xs text-slate-400 font-semibold">
-              {!isLoading && `총 ${data?.pages[0]?.total ?? 0}건`}
+              {!isLoading && `총 ${postings.length}건`}
             </span>
           </div>
 
