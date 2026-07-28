@@ -2,11 +2,12 @@ import { useToggleSave } from '@/shared/hooks/useToggleSave';
 
 interface HeartButtonProps {
   postingId: number;
+  savedId?: number;
   isSaved: boolean;
 }
 
-export default function HeartButton({ postingId, isSaved }: HeartButtonProps) {
-  const { mutate, isPending } = useToggleSave(postingId);
+export default function HeartButton({ postingId, savedId, isSaved }: HeartButtonProps) {
+  const { mutate, isPending } = useToggleSave(postingId, { savedId });
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
