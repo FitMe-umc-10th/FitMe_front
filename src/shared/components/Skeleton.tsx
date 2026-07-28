@@ -1,6 +1,6 @@
 interface SkeletonProps {
   count?: number;
-  variant?: 'card' | 'list' | 'popular';
+  variant?: 'card' | 'list' | 'popular' | 'mypage';
 }
 
 export default function Skeleton({ count = 1, variant = 'list' }: SkeletonProps) {
@@ -72,6 +72,33 @@ export default function Skeleton({ count = 1, variant = 'list' }: SkeletonProps)
             </div>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (variant === 'mypage') {
+    return (
+      <div className="animate-pulse">
+        {/* 프로필 카드 스켈레톤 (높이 377px, 전체 너비) */}
+        <div className="w-full h-[377px] bg-slate-900/10" />
+
+        {/* 나머지 하단 영역 스켈레톤 (좌우 패딩 20px) */}
+        <div className="space-y-6 px-[20px] pb-6 pt-7">
+          {/* 활동 요약 스켈레톤 */}
+          <div className="space-y-2.5">
+            <div className="h-[25px] w-32 rounded bg-gray-200" />
+            <div className="w-full max-w-[362px] h-[78px] rounded-[8px] bg-gray-100 mx-auto" />
+          </div>
+          {/* 설정 메뉴 스켈레톤 */}
+          <div className="space-y-2.5">
+            <div className="h-[25px] w-20 rounded bg-gray-100" />
+            <div className="w-full max-w-[362px] h-[104px] flex flex-col justify-between mx-auto">
+              <div className="h-[24px] w-full rounded bg-gray-100/80" />
+              <div className="h-[24px] w-full rounded bg-gray-100/80" />
+              <div className="h-[24px] w-full rounded bg-gray-100/80" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
