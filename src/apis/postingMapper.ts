@@ -1,14 +1,18 @@
 import type { HomePostingFeed, Posting, PostingType } from '@/types/posting';
 
 export interface ApiPostingSummary {
-  postId: number;
-  type: PostingType;
+  id?: number;
+  postId?: number;
+  type?: PostingType | null;
   title?: string | null;
+  organizer?: string | null;
   organization?: string | null;
   thumbnailUrl?: string | null;
   deadlineDate?: string | null;
   deadlineLabel?: string | null;
+  isSaved?: boolean;
   saved?: boolean;
+  savedId?: number | null;
   category?: string | null;
   createdAt?: string | null;
   viewedAt?: string | null;
@@ -24,9 +28,11 @@ export interface ApiSavedPosting extends ApiPostingSummary {
 
 export interface ApiPageInfo {
   hasNext: boolean;
-  nextIdCursor?: number | null;
+  nextCursor?: string | null;
+  nextIdCursor?: number | string | null;
   nextDeadlineCursor?: string | null;
-  pageSize: number;
+  size?: number;
+  pageSize?: number;
 }
 
 export interface ApiListResponse<T> {
@@ -55,13 +61,14 @@ const getDeadlineFromLabel = (deadlineLabel?: string | null) => {
 };
 
 export const mapApiPostingToPosting = (posting: ApiPostingSummary): Posting => ({
-  id: posting.postId,
-  type: posting.type,
+  id: posting.postId ?? posting.id ?? 0,
+  savedId: posting.savedId ?? undefined,
+  type: posting.type ?? 'SCHOLARSHIP',
   title: posting.title?.trim() || '제목 없는 공고',
-  organization: posting.organization?.trim() || '기관 정보 없음',
+  organization: posting.organizer?.trim() || posting.organization?.trim() || '기관 정보 없음',
   deadline: posting.deadlineDate ?? getDeadlineFromLabel(posting.deadlineLabel),
   posterUrl: posting.thumbnailUrl ?? '',
-  isSaved: posting.saved ?? false,
+  isSaved: posting.isSaved ?? posting.saved ?? false,
   category: posting.category ?? undefined,
   createdAt: posting.createdAt ?? undefined,
   viewedAt: posting.viewedAt ?? undefined,

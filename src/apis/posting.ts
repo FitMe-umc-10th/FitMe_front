@@ -7,8 +7,14 @@ import type {
   PostingType,
 } from '@/types/posting';
 import { axiosInstance } from '@/apis/axiosInstance';
+import {
+  mapApiSavedPostingList,
+  mapApiSavedPostingToPosting,
+  type ApiSavedPosting,
+} from '@/apis/postingMapper';
 import { MOCK_POSTINGS } from '@/constants/mockData';
 import { getDDayDays } from '@/shared/utils/date';
+import type { ApiResponse } from '@/types/common';
 
 export interface GetExplorePostingsParams {
   keyword: string;
@@ -32,6 +38,21 @@ const DEFAULT_HOME_POSTING_SIZE = 5;
 type MockSavedPostings = Record<number, boolean>;
 
 type ApiPostingType = PostingType | 'SCHOLARSHIP' | 'CONTEST' | string;
+
+type SavedPostingsPayload =
+  | ApiSavedPosting[]
+  | {
+      items?: ApiSavedPosting[];
+      savedPosts?: ApiSavedPosting[];
+      savedPostings?: ApiSavedPosting[];
+      postings?: ApiSavedPosting[];
+      content?: ApiSavedPosting[];
+    };
+
+export interface ToggleSaveResult {
+  isSaved: boolean;
+  savedId?: number;
+}
 
 interface ApiPostingDetail {
   id?: number;
@@ -103,6 +124,19 @@ const unwrapApiData = <T>(payload: unknown): T => {
   }
 
   return payload as T;
+};
+
+const normalizeSavedPostingsPayload = (payload: SavedPostingsPayload): ApiSavedPosting[] => {
+  if (Array.isArray(payload)) return payload;
+
+  return (
+    payload.items ??
+    payload.savedPosts ??
+    payload.savedPostings ??
+    payload.postings ??
+    payload.content ??
+    []
+  );
 };
 
 const normalizePostingType = (type?: ApiPostingType): PostingType => {
@@ -230,6 +264,16 @@ const sortSavedPostings = (postings: Posting[], sort?: GetSavedPostingsParams['s
     const savedIdB = b.savedId ?? b.id;
     return savedIdB - savedIdA;
   });
+};
+
+const getMockSavedPostings = (category?: PostingType | 'ALL', sort?: GetSavedPostingsParams['sort']) => {
+  const postings = applyMockSavedPostings();
+  const savedPostings = filterByPostingType(
+    postings.filter((posting) => posting.isSaved),
+    category,
+  );
+
+  return sortSavedPostings(savedPostings, sort);
 };
 
 // === 탐색/검색 화면 전용 페이지네이션 및 필터링 Mock API ===
@@ -376,15 +420,31 @@ export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
 export const getSavedPostings = async ({
   category = 'ALL',
   sort = 'DEADLINE',
+  cursor,
+  size,
 }: GetSavedPostingsParams = {}): Promise<Posting[]> => {
-  await waitMockNetwork();
-  const postings = applyMockSavedPostings();
-  const savedPostings = filterByPostingType(
-    postings.filter((posting) => posting.isSaved),
-    category,
-  );
+  try {
+    const { data } = await axiosInstance.get<ApiResponse<SavedPostingsPayload> | SavedPostingsPayload>(
+      '/api/v1/saved-posts',
+      {
+        params: {
+          category,
+          sort,
+          cursor,
+          size,
+        },
+      },
+    );
 
-  return sortSavedPostings(savedPostings, sort);
+    return mapApiSavedPostingList(normalizeSavedPostingsPayload(unwrapApiData<SavedPostingsPayload>(data)));
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('저장 목록 API 호출 실패, mock 데이터로 대체합니다.', error);
+      return getMockSavedPostings(category, sort);
+    }
+
+    throw error;
+  }
 };
 
 export const getPostingById = async (postingId: number): Promise<Posting | null> => {
@@ -416,16 +476,49 @@ export const getDeadlinePostings = async (): Promise<Posting[]> => {
   return sortByDeadlineAsc(postings);
 };
 
-export const toggleSave = async (postingId: number, isSaved: boolean): Promise<boolean> => {
-  await waitMockNetwork(); // 네트워크 흉내
+export const toggleSave = async (
+  postingId: number,
+  isSaved: boolean,
+  savedId?: number,
+): Promise<ToggleSaveResult> => {
+  try {
+    if (isSaved) {
+      if (!savedId) {
+        throw new Error('저장 해제에 필요한 savedId가 없습니다.');
+      }
 
-  // 10% 확률로 실패 시나리오
-  if (Math.random() < 0.1) {
-    throw new Error('토글에 실패했습니다.');
+      const { data } = await axiosInstance.delete<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
+        `/api/v1/saved-posts/${savedId}`,
+      );
+      const deletedPosting = mapApiSavedPostingToPosting(unwrapApiData<ApiSavedPosting>(data));
+
+      return {
+        isSaved: false,
+        savedId: deletedPosting.savedId,
+      };
+    }
+
+    const { data } = await axiosInstance.post<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
+      '/api/v1/saved-posts',
+      { postId: postingId },
+    );
+    const savedPosting = mapApiSavedPostingToPosting(unwrapApiData<ApiSavedPosting>(data));
+
+    return {
+      isSaved: true,
+      savedId: savedPosting.savedId,
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 409) {
+      throw error;
+    }
+
+    if (!import.meta.env.DEV) {
+      throw error;
+    }
   }
 
-  // 메모리 상의 mock 데이터를 실제로 업데이트하여 refetch 시에도 상태가 보존되게 함
-  const target = applyMockSavedPostings().find((p) => p.id === postingId);
+  const target = applyMockSavedPostings().find((posting) => posting.id === postingId);
   const nextSavedState = !isSaved;
 
   if (target) {
@@ -435,5 +528,5 @@ export const toggleSave = async (postingId: number, isSaved: boolean): Promise<b
     writeMockSavedPosting(postingId, nextSavedState);
   }
 
-  return nextSavedState; // 정상 처리 시 반전된 값 반환
+  return { isSaved: nextSavedState, savedId: target?.savedId };
 };
