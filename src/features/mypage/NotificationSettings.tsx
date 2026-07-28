@@ -199,8 +199,12 @@ export default function NotificationSettings() {
               />
             </li>
 
-            {/* 맞춤 공고 추천 알림 (제목과 설명문 사이의 gap: 4px) */}
-            <li className="w-full max-w-[402px] h-[75px] pt-[24px] pr-[20px] pb-[24px] pl-[20px] flex items-center justify-between border-b border-gray-100/80">
+            {/* 맞춤 공고 추천 알림 (앱 푸시 꺼짐 시 비활성화되지만 상태값 유지) */}
+            <li
+              className={`w-full max-w-[402px] h-[75px] pt-[24px] pr-[20px] pb-[24px] pl-[20px] flex items-center justify-between border-b border-gray-100/80 transition-opacity duration-200 ${
+                !notificationSettings?.pushEnabled ? 'opacity-50' : ''
+              }`}
+            >
               <div className="w-[253px] h-[45px] flex flex-col gap-[4px] justify-center text-left">
                 <span className="text-[16px] font-medium leading-[140%] tracking-normal text-gray-800 font-pretendard select-none">
                   맞춤 공고 추천 알림
@@ -211,12 +215,17 @@ export default function NotificationSettings() {
               </div>
               <Switch
                 checked={notificationSettings?.recommendedEnabled}
+                disabled={!notificationSettings?.pushEnabled}
                 onChange={() => handleToggle('recommendedEnabled')}
               />
             </li>
 
-            {/* 마감일 임박 리마인드 (제목과 설명문 사이의 gap: 4px) */}
-            <li className="w-full max-w-[402px] h-[75px] pt-[24px] pr-[20px] pb-[24px] pl-[20px] flex items-center justify-between border-b border-gray-100/80">
+            {/* 마감일 임박 리마인드 (앱 푸시 꺼짐 시 비활성화되지만 상태값 유지) */}
+            <li
+              className={`w-full max-w-[402px] h-[75px] pt-[24px] pr-[20px] pb-[24px] pl-[20px] flex items-center justify-between border-b border-gray-100/80 transition-opacity duration-200 ${
+                !notificationSettings?.pushEnabled ? 'opacity-50' : ''
+              }`}
+            >
               <div className="w-[253px] h-[45px] flex flex-col gap-[4px] justify-center text-left">
                 <span className="text-[16px] font-medium leading-[140%] tracking-normal text-gray-800 font-pretendard select-none">
                   마감일 임박 리마인드
@@ -227,6 +236,7 @@ export default function NotificationSettings() {
               </div>
               <Switch
                 checked={notificationSettings?.reminderEnabled}
+                disabled={!notificationSettings?.pushEnabled}
                 onChange={() => handleToggle('reminderEnabled')}
               />
             </li>
