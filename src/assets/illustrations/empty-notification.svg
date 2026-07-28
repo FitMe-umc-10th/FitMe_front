@@ -1,0 +1,19 @@
+<svg width="92" height="92" viewBox="0 0 92 92" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M46 16C32.7452 16 22 26.7452 22 40V56C22 60 18 64 14 64H78C74 64 70 60 70 56V40C70 26.7452 59.2548 16 46 16Z" stroke="url(#paint1_linear_bell)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38 68C38 72.4183 41.5817 76 46 76C50.4183 76 54 72.4183 54 68" stroke="url(#paint2_linear_bell)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M46 10V16" stroke="url(#paint3_linear_bell)" stroke-width="6" stroke-linecap="round" />
+  <defs>
+    <linearGradient id="paint1_linear_bell" x1="22" y1="16" x2="70" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B2D4FF"/>
+      <stop offset="1" stop-color="#5C9CFF"/>
+    </linearGradient>
+    <linearGradient id="paint2_linear_bell" x1="38" y1="68" x2="54" y2="76" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B2D4FF"/>
+      <stop offset="1" stop-color="#5C9CFF"/>
+    </linearGradient>
+    <linearGradient id="paint3_linear_bell" x1="46" y1="10" x2="46" y2="16" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B2D4FF"/>
+      <stop offset="1" stop-color="#5C9CFF"/>
+    </linearGradient>
+  </defs>
+</svg>
