@@ -5,6 +5,7 @@ import { getDeadlineNotifications } from '@/apis/deadlineNotification';
 import { getHomePostingFeed } from '@/apis/posting';
 import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import notificationBellIcon from '@/assets/icons/notification-bell.svg';
+import emptyRecentViewedIcon from '@/assets/illustrations/empty-recent-viewed.svg';
 import Carousel from '@/shared/components/Carousel';
 import EmptyState from '@/shared/components/EmptyState';
 import PostingCard from '@/shared/components/PostingCard';
@@ -25,7 +26,7 @@ const deadlineTabs: { label: string; value: PostingType }[] = [
 
 function SectionHeader({ title, actionLabel = '더보기', onAction }: SectionHeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="relative z-10 flex items-center justify-between gap-3">
       <h2 className="text-[17px] font-extrabold leading-snug text-[#202124]">{title}</h2>
       {onAction && (
         <button
@@ -71,6 +72,7 @@ function NotificationButton({ hasUnreadNotification }: { hasUnreadNotification: 
 export default function HomePage() {
   const navigate = useNavigate();
   const [activeDeadlineTab, setActiveDeadlineTab] = useState<PostingType>('SCHOLARSHIP');
+  const [isRecentViewedExpanded, setIsRecentViewedExpanded] = useState(false);
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: postingQueryKeys.home,
@@ -119,27 +121,58 @@ export default function HomePage() {
           )}
         </section>
 
-        <section className="-mx-5 space-y-4 bg-[#EEF6FF] px-5 py-5">
+        <section
+          className={`relative -mx-5 overflow-hidden bg-[#EEF6FF] px-5 pt-5 ${
+            isRecentViewedExpanded ? 'h-[368px]' : 'h-[177px]'
+          }`}
+        >
           <SectionHeader
             title="현수님의 최근 조회 목록"
-            onAction={() => navigate('/recent-postings')}
+            actionLabel={isRecentViewedExpanded ? '작게 보기' : '더보기'}
+            onAction={() => {
+              setIsRecentViewedExpanded(!isRecentViewedExpanded);
+            }}
           />
           {isPending && <Skeleton variant="card" count={2} />}
-          {data && data.recentViewedPostings.length > 0 && (
-            <Carousel storageKey="home-recent-carousel-index">
+          {data && data.recentViewedPostings.length > 0 && !isRecentViewedExpanded && (
+            <div className="mt-5">
+              <Carousel storageKey="home-recent-carousel-index">
+                {data.recentViewedPostings.map((posting) => (
+                  <PostingCard key={posting.id} posting={posting} variant="vertical" />
+                ))}
+              </Carousel>
+            </div>
+          )}
+          {data && data.recentViewedPostings.length > 0 && isRecentViewedExpanded && (
+            <div className="mt-5 flex flex-col gap-3">
               {data.recentViewedPostings.map((posting) => (
-                <PostingCard key={posting.id} posting={posting} variant="vertical" />
+                <PostingCard key={posting.id} posting={posting} variant="horizontal" />
               ))}
-            </Carousel>
+            </div>
           )}
           {data && data.recentViewedPostings.length === 0 && (
-            <EmptyState
-              illustration="recent-viewed"
-              message="아직 조회한 공고가 없어요."
-              subMessage="관심 있는 공고를 둘러보면 여기에 모아드릴게요!"
-              messageClassName="mt-0 text-[18px] font-bold leading-[28px] !text-[#737373]"
-              subMessageClassName="mt-0 max-w-[300px] text-[18px] font-bold leading-[28px] !text-[#737373]"
-            />
+            <div
+              className={
+                isRecentViewedExpanded
+                  ? 'flex h-[288px] flex-col items-center justify-center text-center'
+                  : 'flex h-[117px] flex-col items-center justify-center text-center'
+              }
+            >
+              {isRecentViewedExpanded && (
+                <img
+                  src={emptyRecentViewedIcon}
+                  alt=""
+                  aria-hidden="true"
+                  className="mb-2 h-[84px] w-[104px] object-contain"
+                />
+              )}
+              <p className="text-[18px] font-semibold leading-[28px] text-[#737373]">
+                아직 조회한 공고가 없어요.
+              </p>
+              <p className="max-w-[300px] text-[18px] font-semibold leading-[28px] text-[#737373]">
+                관심 있는 공고를 둘러보면 여기에 모아드릴게요!
+              </p>
+            </div>
           )}
         </section>
 
