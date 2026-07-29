@@ -59,7 +59,10 @@ export interface ApiPopularPostingsResponse {
 export type ApiClosingSoonPostingsResponse = ApiPostingSummary[];
 
 const getDeadlineFromLabel = (deadlineLabel?: number | string | null) => {
-  if (!deadlineLabel) return DEFAULT_DEADLINE;
+  if (deadlineLabel === undefined || deadlineLabel === null || deadlineLabel === '') {
+    return DEFAULT_DEADLINE;
+  }
+
   if (typeof deadlineLabel === 'number') {
     const date = new Date();
     date.setDate(date.getDate() + deadlineLabel);
