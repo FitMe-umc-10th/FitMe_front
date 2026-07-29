@@ -134,9 +134,11 @@ export default function HomePage() {
           )}
           {data && data.recentViewedPostings.length === 0 && (
             <EmptyState
-              illustration="heart-plus"
+              illustration="recent-viewed"
               message="아직 조회한 공고가 없어요."
               subMessage="관심 있는 공고를 둘러보면 여기에 모아드릴게요!"
+              messageClassName="mt-0 text-[18px] font-bold leading-[28px] !text-[#737373]"
+              subMessageClassName="mt-0 max-w-[300px] text-[18px] font-bold leading-[28px] !text-[#737373]"
             />
           )}
         </section>
