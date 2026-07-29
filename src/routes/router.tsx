@@ -19,6 +19,7 @@ import CustomerSupport from '@/features/mypage/CustomerSupport';
 import NoticeList from '@/features/mypage/AnnouncementPage';
 import HistoryList from '@/features/history/HistoryList';
 import HistoryDetail from '@/features/history/HistoryDetail';
+import OAuthCallbackPage from '@/pages/OAuthCallbackPage';
 
 export const router = createBrowserRouter([
   // 인증 화면 (누구나 접근 가능)
@@ -29,6 +30,11 @@ export const router = createBrowserRouter([
       { path: '/login/email', element: <EmailLoginPage /> },
       { path: '/signup', element: <SignupPage /> },
       { path: '/onboarding', element: <OnboardingPage /> },
+      { path: '/login', element: <LoginPage /> },
+      { path: '/login/email', element: <EmailLoginPage /> },
+      { path: '/signup', element: <SignupPage /> },
+      { path: '/onboarding', element: <OnboardingPage /> },
+      { path: '/oauth2/callback', element: <OAuthCallbackPage /> }, // ← 추가
     ],
   },
   // 보호된 화면 (로그인 + 온보딩 완료해야 접근)
