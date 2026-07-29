@@ -9,7 +9,6 @@ import ExplorePage from '@/pages/ExplorePage';
 import HomePage from '@/pages/HomePage';
 import NotificationList from '@/features/notification/NotificationList';
 import PostingDetailPage from '@/pages/PostingDetailPage';
-import RecentViewedPage from '@/pages/RecentViewedPage';
 import SavedPage from '@/pages/SavedPage';
 
 import MyPageMain from '@/features/mypage/MyPageMain';
@@ -45,7 +44,6 @@ export const router = createBrowserRouter([
       { path: '/explore', element: <ExplorePage /> },
       { path: '/saved', element: <SavedPage /> },
       { path: '/notifications', element: <NotificationList /> },
-      { path: '/recent-postings', element: <RecentViewedPage /> },
       { path: '/postings/:postingId', element: <PostingDetailPage /> },
 
       // 마이페이지
