@@ -31,6 +31,7 @@ const INCOME_OPTIONS = Array.from({ length: 10 }, (_, i) => ({
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const setOnboarded = useAuthStore((s) => s.setOnboarded);
+  const userName = useAuthStore((s) => s.userName);
 
   const [step, setStep] = useState(0);
   const [residence, setResidence] = useState('');
@@ -68,12 +69,14 @@ export default function OnboardingPage() {
         interests,
         customInterests: customInterest.trim() ? [customInterest.trim()] : [],
       });
+      // 저장 성공 → 온보딩 완료 처리 후 홈으로
+      setOnboarded(true);
+      navigate('/');
     } catch (e) {
-      console.warn('온보딩 API 실패 (CORS 미해결):', e);
+      // 저장 실패 → 홈 안 가고 에러 알림
+      console.error('온보딩 저장 실패:', e);
+      // toast.error('온보딩 저장에 실패했어요. 다시 시도해주세요.'); // toast 있으면
     }
-    // API 실패해도 일단 홈으로 (CORS 열리기 전 임시)
-    setOnboarded(true);
-    navigate('/');
   };
   const labelClass = 'mb-1.5 block font-semibold';
 
@@ -102,7 +105,7 @@ export default function OnboardingPage() {
             <h1 className="text-2xl font-bold leading-relaxed">
               안녕하세요!
               <br />
-              <span className="text-blue-600">현수님의 정보를 알려주세요</span>
+              <span className="text-blue-600">{userName}님의 정보를 알려주세요</span>
             </h1>
             <p className="mt-3 text-sm text-gray-400">맞춤 추천을 위해 필요해요</p>
           </div>
