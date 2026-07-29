@@ -367,20 +367,36 @@ export const getClosingSoonPostings = async ({
 };
 
 export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
-  const [popularPostings, recentViewedPostings, scholarshipDeadlinePostings, contestDeadlinePostings] =
-    await Promise.all([
+  const [popularResult, recentViewedResult, scholarshipDeadlineResult, contestDeadlineResult] =
+    await Promise.allSettled([
       getPopularPostings({ size: DEFAULT_HOME_POPULAR_SIZE }),
       getRecentViewedPostings({ size: DEFAULT_HOME_RECENT_VIEWED_SIZE }),
       getClosingSoonPostings({ postType: 'SCHOLARSHIP', size: DEFAULT_HOME_CLOSING_SOON_SIZE }),
       getClosingSoonPostings({ postType: 'CONTEST', size: DEFAULT_HOME_CLOSING_SOON_SIZE }),
     ]);
 
+  const results = [
+    popularResult,
+    recentViewedResult,
+    scholarshipDeadlineResult,
+    contestDeadlineResult,
+  ];
+
+  const firstRejectedResult = results.find((result) => result.status === 'rejected');
+
+  if (results.every((result) => result.status === 'rejected') && firstRejectedResult?.status === 'rejected') {
+    throw firstRejectedResult.reason;
+  }
+
+  const getSettledPostings = (result: PromiseSettledResult<Posting[]>) =>
+    result.status === 'fulfilled' ? result.value : [];
+
   return {
-    popularPostings,
-    recentViewedPostings,
+    popularPostings: getSettledPostings(popularResult),
+    recentViewedPostings: getSettledPostings(recentViewedResult),
     deadlinePostings: {
-      SCHOLARSHIP: scholarshipDeadlinePostings,
-      CONTEST: contestDeadlinePostings,
+      SCHOLARSHIP: getSettledPostings(scholarshipDeadlineResult),
+      CONTEST: getSettledPostings(contestDeadlineResult),
     },
   };
 };
