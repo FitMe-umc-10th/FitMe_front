@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/shared/components';
+import EmptyState from '@/shared/components/EmptyState';
 import { getDeadlineNotifications } from '@/apis/deadlineNotification';
 
 export default function NotificationList() {
@@ -12,19 +13,11 @@ export default function NotificationList() {
     queryFn: getDeadlineNotifications,
   });
 
-  // 2. 알림 읽음 처리 Mutation(해야 함!!)
-  // const markAsReadMutation = useMutation({
-  //   mutationFn: markAsRead,
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({ queryKey: ['notifications'] });
-  //   },
-  // });
-
-  // const handleNotificationClick = (notification: Notification) => {
-  //   if (!notification.isRead) {
-  //     markAsReadMutation.mutate(notification.id);
-  //   }
-  // };
+  const handleNotificationClick = (postId: number) => {
+    if (postId) {
+      navigate(`/postings/${postId}`);
+    }
+  };
 
   // const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
 
@@ -53,7 +46,7 @@ export default function NotificationList() {
                 />
               </svg>
             </button>
-            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard text-center">
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 text-center">
               알림
             </h1>
           </header>
@@ -102,23 +95,9 @@ export default function NotificationList() {
                 />
               </svg>
             </button>
-            {/* {unreadCount > 0 && (
-              <div
-                className="flex items-center justify-center rounded-full bg-[#E5F1FF] text-[#0066FF] select-none font-bold"
-                style={{
-                  width: '25px',
-                  height: '26px',
-                  fontFamily: "'Noto Sans KR', 'Pretendard', sans-serif",
-                  fontSize: '14px',
-                  lineHeight: '18px',
-                }}
-              >
-                {unreadCount}
-              </div>
-            )} */}
           </div>
 
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard select-none text-center">
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 select-none text-center">
             알림
           </h1>
 
@@ -135,30 +114,33 @@ export default function NotificationList() {
               return (
                 <div
                   key={notification.notificationId}
-                  // onClick={() => handleNotificationClick(notification)}
-                  className={`group flex flex-col justify-center h-[106px] min-h-[106px] pt-[28px] pr-[20px] pb-[28px] pl-[20px] border-b border-gray-100 transition-colors duration-150 cursor-pointer ${
+                  onClick={() => handleNotificationClick(notification.postId)}
+                  className={`group flex flex-col justify-center min-h-[106px] px-[20px] py-[20px] border-b border-gray-100/80 transition-colors duration-150 cursor-pointer ${
                     isUnread ? 'bg-[#F0F6FF] hover:bg-[#E3EDFD]' : 'bg-white hover:bg-gray-50'
                   }`}
-                  style={{ opacity: 1 }}
                 >
-                  {/* 첫 번째 행: [카테고리] 제목 + 시간 */}
-                  <div className="flex items-start justify-between w-full">
-                    <div className="flex-1 min-w-0 pr-4">
-                      <h2 className="text-[16px] font-semibold font-pretendard leading-[140%] text-gray-950 truncate select-none">
-                        <span className={isUnread ? 'text-[#0066FF]' : 'text-gray-400'}>
-                          [{notification.categoryPrefix}]
-                        </span>{' '}
+                  {/* 첫 번째 행: [카테고리 뱃지] + 알림 제목 + 시간 */}
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-[8px] flex-1 min-w-0 pr-2">
+                      <span
+                        className={`px-[8px] py-[4px] rounded-[6px] text-[12px] font-semibold leading-[1.2] shrink-0 select-none ${
+                          isUnread ? 'bg-[#E5F1FF] text-[#0066FF]' : 'bg-[#F1F5F9] text-[#64748B]'
+                        }`}
+                      >
+                        {notification.categoryPrefix}
+                      </span>
+                      <h2 className="text-[16px] font-semibold leading-[140%] text-gray-950 truncate select-none">
                         {notification.title}
                       </h2>
                     </div>
-                    <span className="text-[14px] font-medium font-pretendard leading-[140%] text-gray-400 shrink-0 select-none">
-                      {notification.createdAt}
+                    <span className="text-[13px] font-medium leading-[140%] text-gray-400 shrink-0 select-none">
+                      {notification.displayTime || notification.createdAt}
                     </span>
                   </div>
 
                   {/* 두 번째 행: 알림 본문 */}
                   <div className="mt-[8px] w-full">
-                    <p className="text-[14px] font-medium font-pretendard leading-[140%] text-gray-700 truncate select-none">
+                    <p className="text-[14px] font-medium leading-[140%] text-gray-600 truncate select-none">
                       {notification.message}
                     </p>
                   </div>
@@ -167,21 +149,14 @@ export default function NotificationList() {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              className="size-12 mb-4 text-gray-300"
-              strokeWidth="1.5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M14.857 17.082a9.001 9.001 0 0 1-11.963-9.4A8.961 8.961 0 0 1 12 3c1.252 0 2.455.256 3.548.709m-1.745 12.012a9 9 0 0 1 0-14.544M12 21H12.008M12 18H12.008"
-              />
-            </svg>
-            <p className="text-sm font-medium">새로운 알림이 없습니다.</p>
+          <div className="py-20 flex items-center justify-center w-full">
+            <EmptyState
+              illustration="bell"
+              message="새로운 알림이 없습니다"
+              subMessage="새로운 소식이 도착하면 알려드릴게요!"
+              messageClassName="text-[16px] text-slate-800"
+              subMessageClassName="text-[13px] text-slate-400"
+            />
           </div>
         )}
       </div>
