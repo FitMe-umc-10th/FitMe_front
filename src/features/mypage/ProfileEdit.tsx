@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getUserProfileDetail, updateUserProfile } from '@/apis/mypage';
 import { Layout } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
+import defaultPersonImg from '@/assets/illustrations/default_person.svg';
 
 const AVAILABLE_FIELDS = [
   { id: 1, name: '마케팅' },
@@ -63,18 +64,6 @@ export default function ProfileEdit() {
       setProfileImg(profileDetail.profileImageUrl);
     }
   }, [profileDetail]);
-
-  // 데이터 로드 완료 시 로컬 상태 초기화
-  // useEffect(() => {
-  //   if (profile) {
-  //     setName(profile.name);
-  //     setGpa(profile.gpa);
-  //     setIncomeBracket(profile.incomeBracket);
-  //     setFields(profile.fieldsOfInterest);
-  //     setRegion(profile.activityRegion);
-  //     setProfileImg(profile.profileImageUrl);
-  //   }
-  // }, [profile]);
 
   // 3. 프로필 저장 Mutation
   const { mutate: saveProfile, isPending: isSaving } = useMutation({
@@ -201,7 +190,14 @@ export default function ProfileEdit() {
           <div className="flex flex-col items-center justify-center mt-[20px]">
             <div className="relative w-[101px] h-[101px]">
               <div className="w-[101px] h-[101px] overflow-hidden rounded-[50.5px] border border-gray-200/80 shadow-md">
-                <img src={profileImg} alt="프로필 미리보기" className="size-full object-cover" />
+                <img
+                  src={profileImg || defaultPersonImg}
+                  onError={(e) => {
+                    e.currentTarget.src = defaultPersonImg;
+                  }}
+                  alt="프로필 미리보기"
+                  className="size-full object-cover ince"
+                />
               </div>
               {/* 카메라 토글 버튼 */}
               <button
@@ -236,7 +232,7 @@ export default function ProfileEdit() {
               {profileDetail?.name}
             </h2>
             <p className="mt-[10px] text-xs font-medium text-gray-400 leading-none">
-              {profileDetail?.universityName} | 22학번
+              {profileDetail?.universityName}
             </p>
           </div>
 
@@ -418,13 +414,6 @@ export default function ProfileEdit() {
                 }`}
               >
                 갤러리에서 선택
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveBottomSheet(null)}
-                className="w-full py-4 text-center text-sm font-bold rounded-xl bg-red-50/70 text-red-500 hover:bg-red-50/90 active:scale-[0.99] transition-all"
-              >
-                돌아가기
               </button>
             </div>
 
