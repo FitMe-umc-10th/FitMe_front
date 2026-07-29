@@ -11,6 +11,7 @@ import EmptyState from '@/shared/components/EmptyState';
 import PostingCard from '@/shared/components/PostingCard';
 import Skeleton from '@/shared/components/Skeleton';
 import { ErrorState, Header, Layout, Logo, Tab, TabBar } from '@/shared/components';
+import { useAuthStore } from '@/store/authStore';
 import type { PostingType } from '@/types/posting';
 
 type SectionHeaderProps = {
@@ -71,12 +72,13 @@ function NotificationButton({ hasUnreadNotification }: { hasUnreadNotification: 
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const userId = useAuthStore((state) => state.userId);
   const [activeDeadlineTab, setActiveDeadlineTab] = useState<PostingType>('SCHOLARSHIP');
   const [isRecentViewedExpanded, setIsRecentViewedExpanded] = useState(false);
 
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: postingQueryKeys.home,
-    queryFn: getHomePostingFeed,
+    queryKey: [...postingQueryKeys.home, userId],
+    queryFn: () => getHomePostingFeed({ userId }),
   });
   const { data: deadlineNotifications } = useQuery({
     queryKey: ['deadlineNotifications'],

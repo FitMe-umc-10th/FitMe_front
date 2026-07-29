@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type {
   GetClosingSoonPostingsParams,
+  GetHomePostingFeedParams,
   GetHomePostingListParams,
   GetRecentViewedPostingsParams,
   GetSavedPostingsParams,
@@ -366,13 +367,25 @@ export const getClosingSoonPostings = async ({
   return mapApiPostingList(result ?? []);
 };
 
-export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
+export const getHomePostingFeed = async ({
+  userId = DEFAULT_HOME_USER_ID,
+}: GetHomePostingFeedParams = {}): Promise<HomePostingFeed> => {
+  const resolvedUserId = userId ?? DEFAULT_HOME_USER_ID;
+
   const [popularResult, recentViewedResult, scholarshipDeadlineResult, contestDeadlineResult] =
     await Promise.allSettled([
       getPopularPostings({ size: DEFAULT_HOME_POPULAR_SIZE }),
-      getRecentViewedPostings({ size: DEFAULT_HOME_RECENT_VIEWED_SIZE }),
-      getClosingSoonPostings({ postType: 'SCHOLARSHIP', size: DEFAULT_HOME_CLOSING_SOON_SIZE }),
-      getClosingSoonPostings({ postType: 'CONTEST', size: DEFAULT_HOME_CLOSING_SOON_SIZE }),
+      getRecentViewedPostings({ userId: resolvedUserId, size: DEFAULT_HOME_RECENT_VIEWED_SIZE }),
+      getClosingSoonPostings({
+        userId: resolvedUserId,
+        postType: 'SCHOLARSHIP',
+        size: DEFAULT_HOME_CLOSING_SOON_SIZE,
+      }),
+      getClosingSoonPostings({
+        userId: resolvedUserId,
+        postType: 'CONTEST',
+        size: DEFAULT_HOME_CLOSING_SOON_SIZE,
+      }),
     ]);
 
   const results = [

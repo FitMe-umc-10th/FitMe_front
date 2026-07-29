@@ -8,6 +8,7 @@ export default function OAuthCallbackPage() {
   const navigate = useNavigate();
 
   const setAccessToken = useAuthStore((s) => s.setAccessToken);
+  const setUserId = useAuthStore((s) => s.setUserId);
   const setOnboarded = useAuthStore((s) => s.setOnboarded);
   const setUserName = useAuthStore((s) => s.setUserName);
   const toastError = useToastStore((s) => s.error);
@@ -22,6 +23,7 @@ export default function OAuthCallbackPage() {
     // 성공 시 백엔드가 붙여주는 파라미터
     // ?accessToken=xxx&userId=12&name=홍길동&isOnboarded=false
     const accessToken = searchParams.get('accessToken');
+    const userId = Number(searchParams.get('userId'));
     const name = searchParams.get('name');
     const isOnboarded = searchParams.get('isOnboarded') === 'true';
 
@@ -34,12 +36,13 @@ export default function OAuthCallbackPage() {
 
     // authStore에 저장 → axios 인터셉터가 이후 요청에 자동 주입
     setAccessToken(accessToken);
+    setUserId(Number.isNaN(userId) ? null : userId);
     setUserName(name ?? '');
     setOnboarded(isOnboarded);
 
     // 온보딩 완료면 홈, 아니면 온보딩으로
     navigate(isOnboarded ? '/' : '/onboarding', { replace: true });
-  }, [searchParams, navigate, setAccessToken, setUserName, setOnboarded, toastError]);
+  }, [searchParams, navigate, setAccessToken, setUserId, setUserName, setOnboarded, toastError]);
 
   return (
     <div className="flex min-h-dvh items-center justify-center">
