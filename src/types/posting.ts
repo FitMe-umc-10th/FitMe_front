@@ -77,5 +77,19 @@ export interface GetSavedPostingsParams extends CursorPageParams {
 }
 
 export interface GetHomePostingListParams {
+  cursor?: number;
+  size?: number;
+}
+
+export interface GetRecentViewedPostingsParams {
+  userId?: number;
+  page?: number;
+  size?: number;
+}
+
+export interface GetClosingSoonPostingsParams {
+  userId?: number;
+  postType: PostingType;
+  sort?: 'FIT';
   size?: number;
 }

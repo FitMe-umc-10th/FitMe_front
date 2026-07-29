@@ -4,10 +4,11 @@ export interface ApiPostingSummary {
   postId: number;
   type: PostingType;
   title?: string | null;
+  organizer?: string | null;
   organization?: string | null;
   thumbnailUrl?: string | null;
   deadlineDate?: string | null;
-  deadlineLabel?: string | null;
+  deadlineLabel?: number | string | null;
   saved?: boolean;
   category?: string | null;
   createdAt?: string | null;
@@ -42,8 +43,29 @@ export interface ApiHomePostingFeed {
 
 const DEFAULT_DEADLINE = '2099-12-31';
 
-const getDeadlineFromLabel = (deadlineLabel?: string | null) => {
+export interface ApiRecentViewedPostingsResponse {
+  hasNext: boolean;
+  nextCursor?: number | null;
+  posts: ApiPostingSummary[];
+}
+
+export interface ApiPopularPostingsResponse {
+  popularPosts: ApiPostingSummary[];
+  hasNext: boolean;
+  nextIdCursor?: number | null;
+  nextDeadlineCursor?: string | null;
+}
+
+export type ApiClosingSoonPostingsResponse = ApiPostingSummary[];
+
+const getDeadlineFromLabel = (deadlineLabel?: number | string | null) => {
   if (!deadlineLabel) return DEFAULT_DEADLINE;
+  if (typeof deadlineLabel === 'number') {
+    const date = new Date();
+    date.setDate(date.getDate() + deadlineLabel);
+    return date.toISOString().slice(0, 10);
+  }
+
   if (deadlineLabel === '마감') return new Date().toISOString().slice(0, 10);
 
   const matchedDays = deadlineLabel.match(/^D-(\d+)$/);
@@ -58,7 +80,7 @@ export const mapApiPostingToPosting = (posting: ApiPostingSummary): Posting => (
   id: posting.postId,
   type: posting.type,
   title: posting.title?.trim() || '제목 없는 공고',
-  organization: posting.organization?.trim() || '기관 정보 없음',
+  organization: posting.organizer?.trim() || posting.organization?.trim() || '기관 정보 없음',
   deadline: posting.deadlineDate ?? getDeadlineFromLabel(posting.deadlineLabel),
   posterUrl: posting.thumbnailUrl ?? '',
   isSaved: posting.saved ?? false,
