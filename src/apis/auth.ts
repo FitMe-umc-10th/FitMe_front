@@ -24,6 +24,7 @@ export interface LoginResponse {
     memberId: number;
     email: string;
     name: string;
+    isOnboarded: boolean;
   };
 }
 // 회원가입 요청 타입 (Swagger 기준)
@@ -44,22 +45,10 @@ export interface OnboardingRequest {
   interests: string[];
   customInterests: string[]; // 직접입력
 }
-
-// ===== 로그인 (백엔드 API 아직 없음 → 임시 mock) =====
+// ===== 로그인 =====
 export async function login(body: LoginRequest): Promise<LoginResponse> {
-  // TODO: 백엔드 로그인 API 나오면 아래 2줄 주석 해제하고 mock 삭제
-  // const { data } = await axiosInstance.post('/api/auth/login', body);
-  // return data.result;
-
-  // --- 임시 mock (로그인 API 나올 때까지) ---
-  console.log('로그인 요청(mock):', body);
-  return {
-    accessToken: 'mock-access-token',
-    refreshToken: 'mock-refresh-token',
-    tokenType: 'Bearer',
-    expiresIn: 3600,
-    member: { memberId: 1, email: body.email, name: '테스트' },
-  };
+  const { data } = await axiosInstance.post('/api/auth/login', body);
+  return data.result; // { accessToken, refreshToken, member: { isOnboarded, ... }, ... }
 }
 // 회원가입
 export async function signup(body: SignupRequest): Promise<void> {

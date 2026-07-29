@@ -9,6 +9,8 @@ export default function EmailLoginPage() {
   const navigate = useNavigate();
   const setAccessToken = useAuthStore((s) => s.setAccessToken);
   const toastError = useToastStore((s) => s.error);
+  const setOnboarded = useAuthStore((s) => s.setOnboarded);
+  const setUserName = useAuthStore((s) => s.setUserName);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,8 +22,10 @@ export default function EmailLoginPage() {
 
   const handleLogin = async () => {
     try {
-      const { accessToken } = await login({ email, password, keepLogin });
+      const { accessToken, member } = await login({ email, password, keepLogin });
       setAccessToken(accessToken);
+      setOnboarded(member.isOnboarded); // ← 온보딩 여부 저장
+      setUserName(member.name); // ← 이름 저장
       navigate('/');
     } catch {
       toastError('로그인에 실패했습니다. 다시 시도해주세요.');
