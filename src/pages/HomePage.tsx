@@ -12,7 +12,7 @@ import PostingCard from '@/shared/components/PostingCard';
 import Skeleton from '@/shared/components/Skeleton';
 import { ErrorState, Header, Layout, Logo, Tab, TabBar } from '@/shared/components';
 import { useAuthStore } from '@/store/authStore';
-import type { PostingType } from '@/types/posting';
+import type { Posting, PostingType } from '@/types/posting';
 
 type SectionHeaderProps = {
   title: string;
@@ -67,6 +67,16 @@ function NotificationButton({ hasUnreadNotification }: { hasUnreadNotification: 
         <span className="absolute right-[3px] top-[3px] size-2 rounded-full bg-[#FF2F2F]" />
       )}
     </button>
+  );
+}
+
+function HorizontalPostingList({ postings }: { postings: Posting[] }) {
+  return (
+    <div className="flex flex-col gap-3">
+      {postings.map((posting) => (
+        <PostingCard key={posting.id} posting={posting} variant="horizontal" />
+      ))}
+    </div>
   );
 }
 
@@ -146,10 +156,8 @@ export default function HomePage() {
             </div>
           )}
           {data && data.recentViewedPostings.length > 0 && isRecentViewedExpanded && (
-            <div className="mt-5 flex flex-col gap-3">
-              {data.recentViewedPostings.map((posting) => (
-                <PostingCard key={posting.id} posting={posting} variant="horizontal" />
-              ))}
+            <div className="mt-5">
+              <HorizontalPostingList postings={data.recentViewedPostings} />
             </div>
           )}
           {data && data.recentViewedPostings.length === 0 && (
@@ -182,13 +190,7 @@ export default function HomePage() {
           <SectionHeader title="마감 임박! 놓치지 마세요" onAction={() => navigate('/explore')} />
           <Tab tabs={deadlineTabs} active={activeDeadlineTab} onChange={setActiveDeadlineTab} />
           {isPending && <Skeleton variant="list" count={3} />}
-          {data && deadlinePostings.length > 0 && (
-            <div className="flex flex-col gap-3">
-              {deadlinePostings.map((posting) => (
-                <PostingCard key={posting.id} posting={posting} variant="horizontal" />
-              ))}
-            </div>
-          )}
+          {data && deadlinePostings.length > 0 && <HorizontalPostingList postings={deadlinePostings} />}
           {data && deadlinePostings.length === 0 && (
             <EmptyState
               message="마감 임박 공고가 없어요."
