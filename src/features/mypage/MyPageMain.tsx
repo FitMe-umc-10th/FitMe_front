@@ -10,11 +10,13 @@ import exclamationStick from '@/assets/exclamation_mark_stick.svg';
 import exclamationDot from '@/assets/exclamation_mark_dot.svg';
 import default_person from '@/assets/illustrations/default_person.svg';
 import { requestWithdrawal } from '@/apis/withdrawal';
+import { useAuthStore } from '@/store/authStore';
 import Skeleton from '@/shared/components/Skeleton';
 
 export default function MyPageMain() {
   const navigate = useNavigate();
   const toast = useToastStore();
+  const logout = useAuthStore((state) => state.logout);
 
   // 로컬 모달 팝업 상태 정의 (공통 모달 코드 영향 최소화)
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
@@ -257,7 +259,9 @@ export default function MyPageMain() {
                 type="button"
                 onClick={() => {
                   setIsLogoutOpen(false);
+                  logout();
                   toast.success('로그아웃 되었습니다.');
+                  navigate('/login', { replace: true });
                 }}
                 className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
               >
