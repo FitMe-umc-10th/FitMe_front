@@ -32,7 +32,7 @@ export default function MyPageMain() {
     queryFn: getAnnouncements,
   });
 
-  const hasNewNotice = notices?.some((notice) => notice.isNew) ?? false;
+  const hasNewNotice = Array.isArray(notices) ? notices.some((notice) => notice.isNew) : false;
 
   // 장학금 포맷팅 함수 (원 -> 만원)
   const formatScholarship = (amount: number) => {

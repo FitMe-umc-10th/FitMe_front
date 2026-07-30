@@ -76,7 +76,7 @@ export default function NoticeList() {
       className="bg-white"
     >
       <div className="w-full max-w-[402px] mx-auto bg-white flex flex-col">
-        {notices && notices.length > 0 ? (
+        {Array.isArray(notices) && notices.length > 0 ? (
           <div className="flex flex-col bg-white">
             {notices.map((notice) => {
               const isExpanded = expandedId === notice.announcementId;
