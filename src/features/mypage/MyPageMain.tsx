@@ -52,6 +52,19 @@ export default function MyPageMain() {
     setIsWithdrawalOpen(true);
   };
 
+  // 회원탈퇴 승인 실행 핸들러 (API 호출 + 토큰 삭제 + 로그인 페이지 이동)
+  const handleConfirmWithdrawal = async () => {
+    try {
+      setIsWithdrawalOpen(false);
+      await requestWithdrawal();
+      logout();
+      toast.success('회원 탈퇴가 완료되었습니다.');
+      navigate('/login', { replace: true });
+    } catch {
+      toast.error('회원 탈퇴 처리 중 오류가 발생했습니다.');
+    }
+  };
+
   // skeleton UI
   if (isLoading || !profile) {
     return (
@@ -324,11 +337,7 @@ export default function MyPageMain() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setIsWithdrawalOpen(false);
-                  requestWithdrawal();
-                  toast.error('회원 탈퇴가 완료되었습니다.');
-                }}
+                onClick={handleConfirmWithdrawal}
                 className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
               >
                 탈퇴하기
