@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getNotificationSettings, updateNotificationSettings } from '@/apis/mypage';
 import { Layout, Switch } from '@/shared/components';
+import chevronLeftIcon from '@/assets/icons/chevron-left.svg';
 import { validateEmail } from '@/shared/utils/validation';
 import { useToastStore } from '@/store/toastStore';
 
@@ -105,16 +106,7 @@ export default function NotificationSettings() {
             onClick={() => navigate(-1)}
             className="w-[41px] h-[41px] flex items-center justify-center rounded-full text-gray-800 hover:bg-gray-50 active:scale-95 transition-all shrink-0"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6">
-              <path
-                d="M15 18L9 12L15 6"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.2"
-              />
-            </svg>
+            <img src={chevronLeftIcon} className="size-6" alt="뒤로가기" />
           </button>
           <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard select-none text-center">
             알림 설정

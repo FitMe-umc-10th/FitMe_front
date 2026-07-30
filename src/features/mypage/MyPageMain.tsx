@@ -9,6 +9,7 @@ import exclamationBorder from '@/assets/exclamation_mark_border.svg';
 import exclamationStick from '@/assets/exclamation_mark_stick.svg';
 import exclamationDot from '@/assets/exclamation_mark_dot.svg';
 import default_person from '@/assets/illustrations/default_person.svg';
+import chevronRightIcon from '@/assets/icons/chevron-right.svg';
 import { requestWithdrawal } from '@/apis/withdrawal';
 import { useAuthStore } from '@/store/authStore';
 import Skeleton from '@/shared/components/Skeleton';
@@ -167,15 +168,7 @@ export default function MyPageMain() {
                 className="w-full h-[24px] flex items-center justify-between hover:opacity-75 active:opacity-60 transition-opacity text-left focus:outline-none"
               >
                 <span className="text-sm font-semibold text-[#8C8C8C]">알림 설정</span>
-                <svg
-                  className="size-4.5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
               </button>
 
               {/* 공지사항 */}
@@ -190,15 +183,7 @@ export default function MyPageMain() {
                     <span className="absolute -top-0.5 -right-2 size-1.5 rounded-full bg-red-500 ring-2 ring-white" />
                   )}
                 </div>
-                <svg
-                  className="size-4.5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
               </button>
 
               {/* 고객센터 및 문의 */}
@@ -208,15 +193,7 @@ export default function MyPageMain() {
                 className="w-full h-[24px] flex items-center justify-between mt-[18px] hover:opacity-75 active:opacity-60 transition-opacity text-left focus:outline-none"
               >
                 <span className="text-sm font-semibold text-[#8C8C8C]">고객센터 및 문의</span>
-                <svg
-                  className="size-4.5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
               </button>
             </div>
           </section>

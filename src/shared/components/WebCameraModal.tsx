@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToastStore } from '@/store/toastStore';
+import cameraIcon from '@/assets/icons/camera-icon.svg';
 
 export interface WebCameraModalProps {
   isOpen: boolean;
@@ -114,20 +115,7 @@ export default function WebCameraModal({ isOpen, onClose, onCapture }: WebCamera
             onClick={handleCapture}
             className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5"
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="size-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 9a2 2 0 012-2h3l2-3h4l2 3h3a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-              />
-              <circle cx="12" cy="13" r="3" />
-            </svg>
+            <img src={cameraIcon} className="size-5 filter invert brightness-200" alt="" />
             촬영하기
           </button>
         </div>

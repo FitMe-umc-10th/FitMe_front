@@ -6,6 +6,9 @@ import { useToastStore } from '@/store/toastStore';
 import { getFAQs } from '@/apis/faqs';
 import { submitInquiry } from '@/apis/inquiries';
 import { validateInquiry } from '@/shared/utils/validation';
+import chevronLeftIcon from '@/assets/icons/chevron-left.svg';
+import chevronDownIcon from '@/assets/icons/chevron-down.svg';
+import closeXIcon from '@/assets/icons/close-x.svg';
 
 export default function CustomerSupport() {
   const navigate = useNavigate();
@@ -91,16 +94,7 @@ export default function CustomerSupport() {
             onClick={() => navigate(-1)}
             className="w-[41px] h-[41px] flex items-center justify-center rounded-full text-gray-800 hover:bg-gray-50 active:scale-95 transition-all shrink-0"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6">
-              <path
-                d="M15 18L9 12L15 6"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.2"
-              />
-            </svg>
+            <img src={chevronLeftIcon} className="size-6" alt="뒤로가기" />
           </button>
           <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 select-none text-center">
             고객 센터
@@ -148,17 +142,13 @@ export default function CustomerSupport() {
 
                       {/* 화살표 아이콘 */}
                       <div className="w-[24px] h-[24px] flex items-center justify-center shrink-0 text-gray-400">
-                        <svg
+                        <img
+                          src={chevronDownIcon}
                           className={`size-6 transition-transform duration-200 ${
                             isExpanded ? 'rotate-180 text-blue-500' : ''
                           }`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
+                          alt=""
+                        />
                       </div>
                     </button>
 
@@ -217,15 +207,7 @@ export default function CustomerSupport() {
                 disabled={isSubmitting}
                 className="w-[24px] h-[24px] flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors focus:outline-none active:scale-90"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="size-6"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <img src={closeXIcon} className="size-6" alt="닫기" />
               </button>
             </div>
 
