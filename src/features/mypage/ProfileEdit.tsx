@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getUserProfileDetail, updateUserProfile } from '@/apis/mypage';
-import { Layout } from '@/shared/components';
+import { Layout, WebCameraModal } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
 import { validateGpa } from '@/shared/utils/validation';
 import defaultPersonImg from '@/assets/illustrations/default_person.svg';
@@ -34,6 +34,9 @@ export default function ProfileEdit() {
   // 파일 선택기 ref
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // 실시간 웹 카메라 모달 제어 상태
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
 
   // 1. 기존 유저 정보 패치
   const { data: profileDetail, isLoading } = useQuery({
@@ -104,10 +107,11 @@ export default function ProfileEdit() {
   const handleConfirmUpload = () => {
     if (selectedUploadOption === 'gallery') {
       fileInputRef.current?.click();
+      setActiveBottomSheet(null);
     } else if (selectedUploadOption === 'camera') {
-      cameraInputRef.current?.click();
+      setIsCameraModalOpen(true);
+      setActiveBottomSheet(null);
     }
-    setActiveBottomSheet(null);
   };
 
   // 프로필 정보 폼 서브밋 핸들러
@@ -514,6 +518,16 @@ export default function ProfileEdit() {
           </div>
         </div>
       )}
+
+      {/* 웹 카메라 직접 촬영 팝업 모달 (모듈화) */}
+      <WebCameraModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        onCapture={(dataUrl) => {
+          setProfileImg(dataUrl);
+          toast.success('사진 촬영이 완료되었습니다.');
+        }}
+      />
     </Layout>
   );
 }
