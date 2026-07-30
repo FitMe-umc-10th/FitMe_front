@@ -16,7 +16,7 @@ export default function NoticeList() {
     queryFn: getAnnouncements,
   });
 
-  const { data: noticeDetail } = useQuery({
+  const { data: noticeDetail, isLoading: isDetailLoading } = useQuery({
     queryKey: ['noticeDetail', expandedId],
     queryFn: () => getAnnouncementDetail(expandedId as number),
     enabled: !!expandedId,
@@ -119,7 +119,9 @@ export default function NoticeList() {
                         notice.isNew ? 'bg-[#f0f6ff]/40' : 'bg-slate-50/50'
                       }`}
                     >
-                      {noticeDetail?.content || '공지사항 내용을 불러오는 중입니다...'}
+                      {isDetailLoading || (noticeDetail && noticeDetail.announcementId !== notice.announcementId)
+                        ? '공지사항 내용을 불러오는 중입니다...'
+                        : noticeDetail?.content || '내용이 없습니다.'}
                     </div>
                   )}
                 </div>
