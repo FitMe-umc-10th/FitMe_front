@@ -5,6 +5,7 @@ import { Layout } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
 import { getFAQs } from '@/apis/faqs';
 import { submitInquiry } from '@/apis/inquiries';
+import { validateInquiry } from '@/shared/utils/validation';
 
 export default function CustomerSupport() {
   const navigate = useNavigate();
@@ -44,18 +45,19 @@ export default function CustomerSupport() {
 
   // 제출 실행 핸들러
   const handleInquirySubmit = () => {
-    if (!replyEmail.trim()) {
-      toast.error('답변 받을 이메일을 입력해 주세요.');
+    const { emailError, contentError } = validateInquiry(replyEmail, content);
+    if (emailError) {
+      toast.error(emailError);
       return;
     }
-    if (!content.trim()) {
-      toast.error('상세 문의 내용을 입력해 주세요.');
+    if (contentError) {
+      toast.error(contentError);
       return;
     }
 
     sendInquiry({
-      replyEmail,
-      content,
+      replyEmail: replyEmail.trim(),
+      content: content.trim(),
     });
   };
 

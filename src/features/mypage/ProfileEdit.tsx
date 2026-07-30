@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getUserProfileDetail, updateUserProfile } from '@/apis/mypage';
 import { Layout } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
+import { validateGpa } from '@/shared/utils/validation';
 import defaultPersonImg from '@/assets/illustrations/default_person.svg';
 
 const AVAILABLE_FIELDS = [
@@ -114,8 +115,9 @@ export default function ProfileEdit() {
     e.preventDefault();
     const gpaNum = typeof gpa === 'string' ? parseFloat(gpa) || 0 : gpa;
 
-    if (gpaNum < 0 || gpaNum > 4.5) {
-      toast.error('학점은 0 ~ 4.5 사이로 입력해 주세요.');
+    const gpaErrorMsg = validateGpa(gpaNum);
+    if (gpaErrorMsg) {
+      toast.error(gpaErrorMsg);
       return;
     }
 
