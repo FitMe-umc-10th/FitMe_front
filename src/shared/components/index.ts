@@ -8,3 +8,4 @@ export { TabBar } from './TabBar';
 export { Switch } from './Switch';
 export { Accordion } from './Accordion';
 export { default as ErrorState } from './ErrorState';
+export { default as WebCameraModal } from './WebCameraModal';
