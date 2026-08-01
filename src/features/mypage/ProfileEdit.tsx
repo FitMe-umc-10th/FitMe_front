@@ -15,10 +15,10 @@ const AVAILABLE_FIELDS = [
   { id: 2, name: '기획/아이디어' },
   { id: 3, name: '디자인' },
   { id: 4, name: 'IT/개발' },
-  { id: 5, name: '어학' },
-  { id: 6, name: '이학' },
-  { id: 7, name: '공학' },
-  { id: 8, name: '예체능' },
+  // { id: 5, name: '어학' },
+  // { id: 6, name: '이학' },
+  // { id: 7, name: '공학' },
+  // { id: 8, name: '예체능' },
 ];
 const AVAILABLE_REGIONS = [
   '서울특별시 전체',
@@ -66,7 +66,16 @@ export default function ProfileEdit() {
     if (profileDetail) {
       setGpa(profileDetail.gpa);
       setIncomeBracket(profileDetail.incomeBracket);
-      setInterests(profileDetail.interests.map((interest) => interest.interestId));
+      if (Array.isArray(profileDetail.interests)) {
+        const selectedIds = profileDetail.interests
+          .filter((interest: any) =>
+            typeof interest === 'number'
+              ? true
+              : interest.selected === true || interest.selected === undefined,
+          )
+          .map((interest: any) => (typeof interest === 'number' ? interest : interest.interestId));
+        setInterests(selectedIds);
+      }
       setRegion(profileDetail.region);
       setProfileImg(profileDetail.profileImageUrl);
     }
