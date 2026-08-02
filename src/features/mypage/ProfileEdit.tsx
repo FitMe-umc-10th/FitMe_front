@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { getPresignedUrl, uploadImageToS3, getUserProfileDetail, updateUserProfile } from '@/apis/mypage';
+import {
+  getPresignedUrl,
+  uploadImageToS3,
+  getUserProfileDetail,
+  updateUserProfile,
+} from '@/apis/mypage';
 import { Layout, WebCameraModal } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
 import { validateGpa } from '@/shared/utils/validation';
@@ -110,7 +115,7 @@ export default function ProfileEdit() {
       const contentType = file.type || 'image/jpeg';
 
       // 1. Presigned URL 발급
-      const presignedData = await getPresignedUrl(fileName, contentType);
+      const presignedData = await getPresignedUrl(fileName, contentType, file.size);
 
       // 2. S3 직접 업로드 (PUT)
       await uploadImageToS3(presignedData.uploadUrl, file, contentType);

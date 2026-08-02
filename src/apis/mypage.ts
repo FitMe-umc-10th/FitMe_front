@@ -39,10 +39,10 @@ export const updateNotificationSettings = async (settings: NotificationSettingDT
   return data.result;
 };
 
-export const getPresignedUrl = async (fileName: string, contentType: string) => {
+export const getPresignedUrl = async (fileName: string, contentType: string, fileSize: number) => {
   const { data } = await axiosInstance.post<ApiResponse<RevertImageUrlDTO>>(
     '/api/v1/mypage/profile/image/presigned-url',
-    { fileName, contentType },
+    { fileName, contentType, fileSize },
   );
   return data.result;
 };
