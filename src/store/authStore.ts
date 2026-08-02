@@ -1,17 +1,27 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface AuthState {
   accessToken: string | null;
-  isOnboarded: boolean; // 온보딩 완료 여부 (Protected Route 분기용)
+  isOnboarded: boolean;
+  userName: string;
   setAccessToken: (token: string | null) => void;
   setOnboarded: (v: boolean) => void;
+  setUserName: (name: string) => void;
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  accessToken: null,
-  isOnboarded: false,
-  setAccessToken: (token) => set({ accessToken: token }),
-  setOnboarded: (v) => set({ isOnboarded: v }),
-  logout: () => set({ accessToken: null, isOnboarded: false }),
-}));
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      accessToken: null,
+      isOnboarded: false,
+      userName: '',
+      setAccessToken: (token) => set({ accessToken: token }),
+      setOnboarded: (v) => set({ isOnboarded: v }),
+      setUserName: (name) => set({ userName: name }),
+      logout: () => set({ accessToken: null, isOnboarded: false, userName: '' }),
+    }),
+    { name: 'auth-storage' }, // localStorage에 저장될 키 이름
+  ),
+);

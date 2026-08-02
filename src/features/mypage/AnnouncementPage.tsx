@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getAnnouncements, getAnnouncementDetail } from '@/apis/announcements';
 import { Layout } from '@/shared/components';
+import chevronLeftIcon from '@/assets/icons/chevron-left.svg';
 
 export default function NoticeList() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function NoticeList() {
     queryFn: getAnnouncements,
   });
 
-  const { data: noticeDetail } = useQuery({
+  const { data: noticeDetail, isLoading: isDetailLoading } = useQuery({
     queryKey: ['noticeDetail', expandedId],
     queryFn: () => getAnnouncementDetail(expandedId as number),
     enabled: !!expandedId,
@@ -56,16 +57,7 @@ export default function NoticeList() {
             onClick={() => navigate(-1)}
             className="w-[41px] h-[41px] flex items-center justify-center rounded-full text-gray-800 hover:bg-gray-50 active:scale-95 transition-all shrink-0"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6">
-              <path
-                d="M15 18L9 12L15 6"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.2"
-              />
-            </svg>
+            <img src={chevronLeftIcon} className="size-6" alt="뒤로가기" />
           </button>
           <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 select-none text-center">
             공지 사항
@@ -76,7 +68,7 @@ export default function NoticeList() {
       className="bg-white"
     >
       <div className="w-full max-w-[402px] mx-auto bg-white flex flex-col">
-        {notices && notices.length > 0 ? (
+        {Array.isArray(notices) && notices.length > 0 ? (
           <div className="flex flex-col bg-white">
             {notices.map((notice) => {
               const isExpanded = expandedId === notice.announcementId;
@@ -119,7 +111,9 @@ export default function NoticeList() {
                         notice.isNew ? 'bg-[#f0f6ff]/40' : 'bg-slate-50/50'
                       }`}
                     >
-                      {noticeDetail?.content || '공지사항 내용을 불러오는 중입니다...'}
+                      {isDetailLoading || (noticeDetail && noticeDetail.announcementId !== notice.announcementId)
+                        ? '공지사항 내용을 불러오는 중입니다...'
+                        : noticeDetail?.content || '내용이 없습니다.'}
                     </div>
                   )}
                 </div>

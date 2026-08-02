@@ -2,33 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Logo } from '@/shared/components/Logo';
 import { useToastStore } from '@/store/toastStore';
 import { signup, sendEmailCode, verifyEmailCode } from '@/apis/auth';
 
-// 검증 규칙 (Zod)
-const signupSchema = z
-  .object({
-    name: z.string().min(1, '이름을 입력해주세요'),
-    birth: z.string().regex(/^\d{4}\.\d{2}\.\d{2}$/, 'YYYY.MM.DD 형식으로 입력해주세요'),
-    email: z.string().email('올바른 이메일 형식이 아니에요'),
-    password: z
-      .string()
-      .min(7, '7자 이상 입력해주세요')
-      .regex(
-        /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/,
-        '영어·숫자·특수문자를 모두 포함해주세요',
-      ),
-    passwordConfirm: z.string(),
-    agree: z.boolean().refine((v) => v === true, { message: '약관에 동의해주세요' }),
-  })
-  .refine((data) => data.password === data.passwordConfirm, {
-    path: ['passwordConfirm'],
-    message: '비밀번호가 일치하지 않아요',
-  });
-
-type SignupForm = z.infer<typeof signupSchema>;
+import { signupSchema, emailSchema, type SignupFormValues as SignupForm } from '@/shared/utils/validation';
 
 // Figma 공통 스타일 (인풋 border #D9D9D9, radius 10px, 포커스 시 파란 테두리)
 const inputClass =
@@ -58,7 +36,7 @@ export default function SignupPage() {
 
   // 이메일 형식 맞아야 "인증번호 전송" 버튼 활성화
   const emailValue = watch('email') ?? '';
-  const emailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
+  const emailFormatValid = emailSchema.safeParse(emailValue).success;
 
   // 인증번호 발송
   const sendCode = async () => {

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { getExplorePostings } from '@/apis/posting';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { getSearchPosts } from '@/apis/explore';
+import type { SearchPostItem, SearchNextCursor } from '@/types/explore';
+import type { Posting } from '@/types/posting';
 import { Layout } from '@/shared/components';
 import { TabBar } from '@/shared/components/TabBar';
 import SearchBar from '@/shared/components/SearchBar';
@@ -9,6 +11,7 @@ import Dropdown from '@/shared/components/Dropdown';
 import PostingCard from '@/shared/components/PostingCard';
 import EmptyState from '@/shared/components/EmptyState';
 import { useIntersectionObserver } from '@/shared/hooks/useIntersectionObserver';
+import { getLiveSearchData } from '@/apis/search';
 
 // 공모전 카테고리 정의
 const CATEGORIES = ['전체', '마케팅', '기획/아이디어', '디자인', 'IT/개발', '어학', '기타'];
@@ -23,17 +26,25 @@ const SORT_OPTIONS = [
 // 추천 테마 키워드 (피그마 시안 반영)
 const RECOMMENDED_THEMES = ['고액장학금', '디자인공모전', '해외연수프로그램', '창업지원프로그램'];
 
-// 실시간 인기 공고 목록 및 증감 상태 (피그마 시안 반영)
-const POPULAR_POSTINGS_MOCK = [
-  { title: '우수 인재 장학금', status: 'up' },
-  { title: 'CJ 청년 장학금', status: 'down' },
-  { title: '행정안전부 청년 장학금', status: 'same' },
-  { title: '서울 특별시 중구 희망 장학금', status: 'same' },
-  { title: '현대차 정몽구 재단 장학금', status: 'up' },
-  { title: '청년 사회혁신 마케팅 챌린지', status: 'down' },
-  { title: '대기업 브랜드 마케팅', status: 'same' },
-  { title: '대학원 대통령 과학 장학금', status: 'same' },
-];
+const CATEGORY_MAP: Record<string, 'MARKETING' | 'PM' | 'DESIGN' | 'DEV' | 'LANGUAGE' | 'ETC'> = {
+  마케팅: 'MARKETING',
+  '기획/아이디어': 'PM',
+  디자인: 'DESIGN',
+  'IT/개발': 'DEV',
+  어학: 'LANGUAGE',
+  기타: 'ETC',
+};
+
+const mapSearchPostItemToPosting = (item: SearchPostItem): Posting => ({
+  id: item.postId,
+  type: item.type,
+  title: item.title,
+  organization: item.organization,
+  deadline: item.deadlineDate,
+  posterUrl: item.thumbnailUrl,
+  isSaved: item.saved,
+  category: item.category ?? undefined,
+});
 
 export default function ExplorePage() {
   const [keyword, setKeyword] = useState(''); // 입력창 텍스트
@@ -44,17 +55,27 @@ export default function ExplorePage() {
   const [sortBy, setSortBy] = useState<'deadline' | 'latest' | 'popular'>('deadline'); // 정렬 방식
   const [recentSearches, setRecentSearches] = useState<string[]>([]); // 최근 검색어 목록
 
-  // 최근 검색어 불러오기
+  // 1. 실시간 검색 데이터 (최근 검색어 & 실시간 인기 공고 API 연동)
+  const { data: liveSearchData } = useQuery({
+    queryKey: ['liveSearchData'],
+    queryFn: getLiveSearchData,
+  });
+
+  // 최근 검색어 불러오기 (API 데이터 우선, 로컬스토리지 fallback)
   useEffect(() => {
-    const saved = localStorage.getItem('recent-searches');
-    if (saved) {
-      try {
-        setRecentSearches(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to load recent searches', e);
+    if (liveSearchData?.recentKeywords && liveSearchData.recentKeywords.length > 0) {
+      setRecentSearches(liveSearchData.recentKeywords.map((item) => item.keyword));
+    } else {
+      const saved = localStorage.getItem('recent-searches');
+      if (saved) {
+        try {
+          setRecentSearches(JSON.parse(saved));
+        } catch (e) {
+          console.error('Failed to load recent searches', e);
+        }
       }
     }
-  }, []);
+  }, [liveSearchData]);
 
   // 검색 키워드 로컬 스토리지에 추가
   const saveRecentSearch = (query: string) => {
@@ -107,25 +128,33 @@ export default function ExplorePage() {
     setIsSearchFocused(false);
   };
 
-  // 무한 스크롤 쿼리 구성
+  // 무한 스크롤 커서 쿼리 구성 (GET /api/v1/posts API 연동)
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
     useInfiniteQuery({
       queryKey: [
-        'postings',
-        'explore',
+        'searchPostsList',
         { keyword: searchQuery, type: activeTab, category: selectedCategory, sortBy },
       ],
-      queryFn: ({ pageParam = 0 }) =>
-        getExplorePostings({
-          keyword: searchQuery,
-          type: activeTab,
-          category: activeTab === 'contest' ? selectedCategory : undefined,
-          sortBy,
-          page: pageParam,
-          limit: 4, // 테스트 및 동작 검증을 위해 페이지당 4개씩 분할
+      queryFn: ({ pageParam }) =>
+        getSearchPosts({
+          type:
+            activeTab === 'scholarship'
+              ? 'SCHOLARSHIP'
+              : activeTab === 'contest'
+                ? 'CONTEST'
+                : 'ALL',
+          sort: sortBy === 'latest' ? 'RECENT' : 'DEADLINE',
+          category:
+            activeTab === 'contest' && selectedCategory
+              ? CATEGORY_MAP[selectedCategory]
+              : undefined,
+          keyword: searchQuery.trim() || undefined,
+          idCursor: pageParam?.idCursor,
+          deadlineCursor: pageParam?.deadlineCursor,
         }),
-      initialPageParam: 0,
-      getNextPageParam: (lastPage) => lastPage.nextPage,
+      initialPageParam: undefined as SearchNextCursor | undefined,
+      getNextPageParam: (lastPage) =>
+        lastPage?.pageInfo?.hasNext ? (lastPage.pageInfo.nextCursor ?? undefined) : undefined,
     });
 
   // 무한 스크롤 트리거 관측용 커스텀 훅 연동
@@ -134,8 +163,9 @@ export default function ExplorePage() {
     enabled: hasNextPage && !isFetchingNextPage && !isLoading && !isError,
   });
 
-  // 무한 스크롤로 수집된 모든 postings 리스트 평탄화
-  const postings = data?.pages.flatMap((page) => page.postings) ?? [];
+  // 무한 스크롤로 수집된 모든 SearchPostItem을 Posting형으로 평탄화
+  const rawPosts = data?.pages.flatMap((page) => page?.posts ?? []) ?? [];
+  const postings: Posting[] = rawPosts.map(mapSearchPostItemToPosting);
 
   return (
     <Layout
@@ -316,60 +346,65 @@ export default function ExplorePage() {
           <div className="mt-[24px] flex items-baseline gap-[8px] px-[20px]">
             <h4 className="font-semibold text-[16px] leading-[1.4] text-slate-800">실시간 공고</h4>
             <span className="font-medium text-[12px] leading-[1.4] text-slate-400">
-              오늘 22시 기준
+              {liveSearchData?.realtimePosts?.baseTime || '오늘 22시 기준'}
             </span>
           </div>
 
-          {/* 실시간 인기 공고 목록 (헤더 기준 24px 거리에 배치, 가로폭 화면 충전, 좌우 20px 여백) */}
+          {/* 실시간 인기 공고 목록 (API 데이터 연동) */}
           <div className="mt-[24px] flex flex-col gap-[20px] px-[20px] w-full">
-            {POPULAR_POSTINGS_MOCK.map((item, idx) => (
-              <div
-                key={idx}
-                onClick={() => handleSelectKeyword(item.title)}
-                className="flex items-center justify-between cursor-pointer group w-full"
-              >
-                <div className="flex items-center flex-1 min-w-0">
-                  {/* 숫자랑 검색어는 28px 거리가 있음 */}
-                  <span
-                    className={`font-semibold text-[14px] w-[16px] text-center mr-[28px] shrink-0 ${
-                      idx < 3 ? 'text-blue-500' : 'text-slate-400'
-                    }`}
-                  >
-                    {idx + 1}
-                  </span>
-                  <span className="font-medium text-[14px] text-slate-800 group-hover:text-blue-500 transition-colors truncate flex-1 pr-4">
-                    {item.title}
-                  </span>
-                </div>
+            {liveSearchData?.realtimePosts?.posts?.map((item) => {
+              return (
+                <div
+                  key={item.postId || item.rank}
+                  onClick={() => handleSelectKeyword(item.title)}
+                  className="flex items-center justify-between cursor-pointer group w-full"
+                >
+                  <div className="flex items-center flex-1 min-w-0">
+                    {/* 순위 (1~3위 파란색) */}
+                    <span
+                      className={`font-semibold text-[14px] w-[16px] text-center mr-[28px] shrink-0 ${
+                        item.rank <= 3 ? 'text-blue-500' : 'text-slate-400'
+                      }`}
+                    >
+                      {item.rank}
+                    </span>
+                    <span className="font-medium text-[14px] text-slate-800 group-hover:text-blue-500 transition-colors truncate flex-1 pr-4">
+                      {item.title}
+                    </span>
+                  </div>
 
-                {/* 피그마 규격 화살표 (8x6) 및 작대기 (11px) */}
-                <div className="flex items-center justify-center w-[16px] h-[16px] shrink-0">
-                  {item.status === 'up' && (
-                    <svg
-                      width="8"
-                      height="6"
-                      viewBox="0 0 8 6"
-                      className="text-blue-500 fill-current"
-                    >
-                      <polygon points="4,0 8,6 0,6" />
-                    </svg>
-                  )}
-                  {item.status === 'down' && (
-                    <svg
-                      width="8"
-                      height="6"
-                      viewBox="0 0 8 6"
-                      className="text-red-500 fill-current"
-                    >
-                      <polygon points="4,6 8,0 0,0" />
-                    </svg>
-                  )}
-                  {item.status === 'same' && (
-                    <div className="w-[11px] h-[1.5px] bg-slate-300 rounded-full" />
-                  )}
+                  {/* 순위 변동 표시 (UP/DOWN/NEW/STAY) */}
+                  <div className="flex items-center justify-center w-[16px] h-[16px] shrink-0">
+                    {item.fluctuation === 'UP' && (
+                      <svg
+                        width="8"
+                        height="6"
+                        viewBox="0 0 8 6"
+                        className="text-blue-500 fill-current"
+                      >
+                        <polygon points="4,0 8,6 0,6" />
+                      </svg>
+                    )}
+                    {item.fluctuation === 'DOWN' && (
+                      <svg
+                        width="8"
+                        height="6"
+                        viewBox="0 0 8 6"
+                        className="text-red-500 fill-current"
+                      >
+                        <polygon points="4,6 8,0 0,0" />
+                      </svg>
+                    )}
+                    {item.fluctuation === 'NEW' && (
+                      <span className="text-[10px] font-bold text-red-500">NEW</span>
+                    )}
+                    {item.fluctuation === 'SAME' && (
+                      <div className="w-[11px] h-[1.5px] bg-slate-300 rounded-full" />
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ) : (
@@ -377,7 +412,7 @@ export default function ExplorePage() {
         <div className="flex flex-col flex-1 pb-4">
           {/* 공모전 탭 선택 시 노출할 분야 세부 카테고리 칩 스크롤 (메뉴와 24px 거리, 칩 간 11.5px 간격, 아래와 20px 격리) */}
           {activeTab === 'contest' && (
-            <div className="flex items-center gap-[11.5px] overflow-x-auto bg-white pl-[20px] pr-[20px] pt-[24px] pb-[20px] border-b border-slate-100 scrollbar-none sticky top-[108px] z-10">
+            <div className="flex items-center gap-[11.5px] overflow-x-auto bg-white pl-[20px] pr-[20px] pt-[24px] pb-[20px] border-slate-100 scrollbar-none sticky top-[108px] z-10">
               {CATEGORIES.map((cat) => (
                 <div key={cat} className="shrink-0">
                   <Chip
@@ -404,7 +439,7 @@ export default function ExplorePage() {
               onChange={(val) => setSortBy(val as 'deadline' | 'latest' | 'popular')}
             />
             <span className="text-xs text-slate-400 font-semibold">
-              {!isLoading && `총 ${data?.pages[0]?.total ?? 0}건`}
+              {!isLoading && `총 ${postings.length}건`}
             </span>
           </div>
 

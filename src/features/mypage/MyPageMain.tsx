@@ -8,11 +8,16 @@ import { useToastStore } from '@/store/toastStore';
 import exclamationBorder from '@/assets/exclamation_mark_border.svg';
 import exclamationStick from '@/assets/exclamation_mark_stick.svg';
 import exclamationDot from '@/assets/exclamation_mark_dot.svg';
+import default_person from '@/assets/illustrations/default_person.svg';
+import chevronRightIcon from '@/assets/icons/chevron-right.svg';
 import { requestWithdrawal } from '@/apis/withdrawal';
+import { useAuthStore } from '@/store/authStore';
+import Skeleton from '@/shared/components/Skeleton';
 
 export default function MyPageMain() {
   const navigate = useNavigate();
   const toast = useToastStore();
+  const logout = useAuthStore((state) => state.logout);
 
   // 로컬 모달 팝업 상태 정의 (공통 모달 코드 영향 최소화)
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
@@ -30,7 +35,7 @@ export default function MyPageMain() {
     queryFn: getAnnouncements,
   });
 
-  const hasNewNotice = notices?.some((notice) => notice.isNew) ?? false;
+  const hasNewNotice = Array.isArray(notices) ? notices.some((notice) => notice.isNew) : false;
 
   // 장학금 포맷팅 함수 (원 -> 만원)
   const formatScholarship = (amount: number) => {
@@ -48,35 +53,29 @@ export default function MyPageMain() {
     setIsWithdrawalOpen(true);
   };
 
-  // 로딩 상태 (레이아웃 깜빡임과 밀림을 방지하기 위한 완성형 스켈레톤 Shimmer UI)
+  // 회원탈퇴 승인 실행 핸들러 (API 호출 + 토큰 삭제 + 로그인 페이지 이동)
+  const handleConfirmWithdrawal = async () => {
+    try {
+      setIsWithdrawalOpen(false);
+      await requestWithdrawal();
+      logout();
+      toast.success('회원 탈퇴가 완료되었습니다.');
+      navigate('/login', { replace: true });
+    } catch {
+      toast.error('회원 탈퇴 처리 중 오류가 발생했습니다.');
+    }
+  };
+
+  // skeleton UI
   if (isLoading || !profile) {
     return (
       <Layout tabBar={<TabBar />} className="bg-slate-50/50">
-        <div className="animate-pulse">
-          {/* 프로필 카드 스켈레톤 (높이 377px, 전체 너비) */}
-          <div className="w-full h-[377px] bg-slate-900/10" />
-
-          {/* 나머지 하단 영역 스켈레톤 (좌우 패딩 20px) */}
-          <div className="space-y-6 px-[20px] pb-6 pt-7">
-            {/* 활동 요약 스켈레톤 */}
-            <div className="space-y-2.5">
-              <div className="h-[25px] w-32 rounded bg-gray-200" />
-              <div className="w-full max-w-[362px] h-[78px] rounded-[8px] bg-gray-100 mx-auto" />
-            </div>
-            {/* 설정 메뉴 스켈레톤 */}
-            <div className="space-y-2.5">
-              <div className="h-[25px] w-20 rounded bg-gray-100" />
-              <div className="w-full max-w-[362px] h-[104px] flex flex-col justify-between mx-auto">
-                <div className="h-[24px] w-full rounded bg-gray-100/80" />
-                <div className="h-[24px] w-full rounded bg-gray-100/80" />
-                <div className="h-[24px] w-full rounded bg-gray-100/80" />
-              </div>
-            </div>
-          </div>
-        </div>
+        <Skeleton variant="mypage" />
       </Layout>
     );
   }
+
+  const bgImageUrl = profile?.profile?.profileImageUrl || default_person;
 
   return (
     <Layout tabBar={<TabBar />} className="bg-slate-50/50">
@@ -85,7 +84,7 @@ export default function MyPageMain() {
         <section className="relative w-full h-[377px] bg-slate-950 text-white px-5 py-6 flex flex-col justify-between overflow-hidden">
           {/* 선명한 배경 이미지 (opacity: 0.5, 블러 없음) */}
           <div
-            style={{ backgroundImage: `url(${profile.profile.profileImageUrl})`, opacity: 0.5 }}
+            style={{ backgroundImage: `url("${bgImageUrl}")`, opacity: 0.5 }}
             className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none"
           />
 
@@ -103,10 +102,7 @@ export default function MyPageMain() {
               <h3 className="text-2xl font-medium tracking-tight text-white">
                 {profile.profile.name}
               </h3>
-              <p className="text-sm font-medium text-slate-300">
-                {/* 임시로 22학번으로 표시 */}
-                {profile.profile.universityName} | 22학번
-              </p>
+              <p className="text-sm font-medium text-slate-300">{profile.profile.universityName}</p>
             </div>
             <div>
               <button
@@ -131,7 +127,7 @@ export default function MyPageMain() {
               <div className="flex flex-col items-center justify-center w-[38px] h-[48px] gap-[7px] text-center">
                 <p className="text-xs font-medium text-gray-400 whitespace-nowrap">지원 완료</p>
                 <p className="text-base font-bold text-gray-800 leading-none">
-                  {profile.activitySummary.completedApplicationCount}회
+                  {profile.activitySummary.completedApplicationCount || 0}회
                 </p>
               </div>
 
@@ -153,7 +149,7 @@ export default function MyPageMain() {
               <div className="flex flex-col items-center justify-center w-[38px] h-[48px] gap-[7px] text-center">
                 <p className="text-xs font-medium text-gray-400 whitespace-nowrap">결과 대기</p>
                 <p className="text-base font-bold text-gray-800 leading-none">
-                  {profile.activitySummary.pendingResultCount}건
+                  {profile.activitySummary.pendingResultCount || 0}건
                 </p>
               </div>
             </div>
@@ -171,16 +167,8 @@ export default function MyPageMain() {
                 onClick={() => navigate('/my/notifications')}
                 className="w-full h-[24px] flex items-center justify-between hover:opacity-75 active:opacity-60 transition-opacity text-left focus:outline-none"
               >
-                <span className="text-sm font-semibold text-gray-800">알림 설정</span>
-                <svg
-                  className="size-4.5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <span className="text-sm font-semibold text-[#8C8C8C]">알림 설정</span>
+                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
               </button>
 
               {/* 공지사항 */}
@@ -189,23 +177,13 @@ export default function MyPageMain() {
                 onClick={() => navigate('/my/notices')}
                 className="w-full h-[24px] flex items-center justify-between mt-[16px] hover:opacity-75 active:opacity-60 transition-opacity text-left focus:outline-none"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-800">공지사항</span>
+                <div className="relative inline-flex items-center">
+                  <span className="text-sm font-semibold text-[#8C8C8C]">공지사항</span>
                   {hasNewNotice && (
-                    <span className="flex size-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
-                      N
-                    </span>
+                    <span className="absolute -top-0.5 -right-2 size-1.5 rounded-full bg-red-500 ring-2 ring-white" />
                   )}
                 </div>
-                <svg
-                  className="size-4.5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
               </button>
 
               {/* 고객센터 및 문의 */}
@@ -214,16 +192,8 @@ export default function MyPageMain() {
                 onClick={() => navigate('/my/support')}
                 className="w-full h-[24px] flex items-center justify-between mt-[18px] hover:opacity-75 active:opacity-60 transition-opacity text-left focus:outline-none"
               >
-                <span className="text-sm font-semibold text-gray-800">고객센터 및 문의</span>
-                <svg
-                  className="size-4.5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <span className="text-sm font-semibold text-[#8C8C8C]">고객센터 및 문의</span>
+                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
               </button>
             </div>
           </section>
@@ -233,7 +203,7 @@ export default function MyPageMain() {
             <button
               type="button"
               onClick={handleLogoutClick}
-              className="hover:text-gray-600 active:text-gray-800 transition-colors"
+              className="hover:text-gray-600 active:text-gray-800 transition-colors border-b"
             >
               로그아웃
             </button>
@@ -241,17 +211,13 @@ export default function MyPageMain() {
             <button
               type="button"
               onClick={handleWithdrawalClick}
-              className="hover:text-gray-600 active:text-gray-800 transition-colors"
+              className="hover:text-gray-600 active:text-gray-800 transition-colors border-b"
             >
               회원탈퇴
             </button>
           </div>
         </div>
       </div>
-
-      {/* ======================================================== */}
-      {/* 커스텀 로컬 모달 렌더링 영역 (피그마 픽셀 스펙 일치) */}
-      {/* ======================================================== */}
 
       {/* 1. 로그아웃 모달 (w-323, h-177) */}
       {isLogoutOpen && (
@@ -283,7 +249,9 @@ export default function MyPageMain() {
                 type="button"
                 onClick={() => {
                   setIsLogoutOpen(false);
+                  logout();
                   toast.success('로그아웃 되었습니다.');
+                  navigate('/login', { replace: true });
                 }}
                 className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
               >
@@ -346,11 +314,7 @@ export default function MyPageMain() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setIsWithdrawalOpen(false);
-                  requestWithdrawal();
-                  toast.error('회원 탈퇴가 완료되었습니다.');
-                }}
+                onClick={handleConfirmWithdrawal}
                 className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
               >
                 탈퇴하기

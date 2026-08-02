@@ -2,12 +2,13 @@ import emptyBookmarkedListDot from '@/assets/illustrations/empty-bookmarked-list
 import emptyBookmarkedListFlag from '@/assets/illustrations/empty-bookmarked-list-flag.svg';
 import emptyMatchedList from '@/assets/illustrations/empty-matched-list.svg';
 import emptySavedAnnounce from '@/assets/illustrations/empty-saved-announce.svg';
+import emptyNotification from '@/assets/illustrations/empty-notification.svg';
 import emptyWaitingList from '@/assets/empty_waiting_list.svg';
 
 interface EmptyStateProps {
   message: string;
   subMessage?: string;
-  illustration?: 'heart-plus' | 'heart-wave' | 'bookmark' | 'clock' | 'none';
+  illustration?: 'heart-plus' | 'heart-wave' | 'bookmark' | 'clock' | 'bell' | 'none';
   messageClassName?: string;
   subMessageClassName?: string;
   cta?: {
@@ -26,6 +27,14 @@ export default function EmptyState({
 }: EmptyStateProps) {
   const renderIllustration = () => {
     switch (illustration) {
+      case 'bell':
+        return (
+          <img
+            src={emptyNotification}
+            className="w-[92px] h-[92px] mb-4 object-contain"
+            alt="알림 없음"
+          />
+        );
       case 'heart-plus':
         return (
           <img
