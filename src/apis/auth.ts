@@ -6,6 +6,7 @@
 // ============================================
 
 import { axiosInstance } from './axiosInstance'; // 백엔드 나오면 주석 해제
+import axios from 'axios';
 
 // ===== 요청/응답 타입 정의 =====
 // 로그인 요청 시 보내는 값
@@ -73,4 +74,18 @@ export async function verifyEmailCode(email: string, code: string): Promise<bool
 // ===== 온보딩 조건 저장 =====
 export async function saveOnboarding(body: OnboardingRequest): Promise<void> {
   await axiosInstance.post('/api/v1/onboarding', body);
+}
+
+// ===== 소셜 계정 연동 =====
+// ⚠️ Authorization 헤더가 붙으면 백엔드가 예외 → 인터셉터 없는 순수 axios 사용
+export async function linkAccount(linkToken: string): Promise<LoginResponse> {
+  const { data } = await axios.patch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/auth/link`,
+    null, // 바디 없음
+    {
+      headers: { 'Link-Token': `Bearer ${linkToken}` },
+      withCredentials: true, // refreshToken 쿠키 수신용
+    },
+  );
+  return data.result; // { accessToken, member: { name, isOnboarded, ... } }
 }
