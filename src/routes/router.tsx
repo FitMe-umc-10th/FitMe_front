@@ -34,7 +34,7 @@ export const router = createBrowserRouter([
       { path: '/login/email', element: <EmailLoginPage /> },
       { path: '/signup', element: <SignupPage /> },
       { path: '/onboarding', element: <OnboardingPage /> },
-      { path: '/oauth2/callback', element: <OAuthCallbackPage /> }, // ← 추가
+      { path: '/oauth2/callback', element: <OAuthCallbackPage /> }, // OAuth 로그인 후 리다이렉트되는 페이지
     ],
   },
   // 보호된 화면 (로그인 + 온보딩 완료해야 접근)

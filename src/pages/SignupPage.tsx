@@ -5,8 +5,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Logo } from '@/shared/components/Logo';
 import { useToastStore } from '@/store/toastStore';
 import { signup, sendEmailCode, verifyEmailCode } from '@/apis/auth';
+import TermsAgreement from '@/shared/components/TermsAgreement';
 
-import { signupSchema, emailSchema, type SignupFormValues as SignupForm } from '@/shared/utils/validation';
+import {
+  signupSchema,
+  emailSchema,
+  type SignupFormValues as SignupForm,
+} from '@/shared/utils/validation';
 
 // Figma 공통 스타일 (인풋 border #D9D9D9, radius 10px, 포커스 시 파란 테두리)
 const inputClass =
@@ -127,7 +132,37 @@ export default function SignupPage() {
             defaultValue=""
             render={({ field, fieldState }) => (
               <>
-                <input {...field} placeholder="YYYY.MM.DD" className={inputClass} />
+                <input
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const prev = field.value ?? '';
+                    const isDeleting = raw.length < prev.length; // 지우는 중인지
+
+                    const digits = raw.replace(/\D/g, '').slice(0, 8); // 숫자만, 최대 8자리
+                    let formatted = digits;
+                    if (digits.length >= 6) {
+                      // YYYY.MM.DD (월 두 자리 끝나면 점 자동)
+                      formatted = `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`;
+                    } else if (digits.length >= 4) {
+                      // YYYY. (연도 네 자리 끝나면 점 자동)
+                      formatted = `${digits.slice(0, 4)}.${digits.slice(4)}`;
+                    }
+
+                    // 지우는 중인데 마침 끝에 점이 붙었으면 점 제거 (백스페이스로 지워지게)
+                    if (isDeleting && formatted.endsWith('.')) {
+                      formatted = formatted.slice(0, -1);
+                    }
+
+                    field.onChange(formatted);
+                  }}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                  inputMode="numeric"
+                  placeholder="YYYY.MM.DD"
+                  className={inputClass}
+                />
                 {fieldState.error && (
                   <p className="mt-1 text-sm text-red-500">{fieldState.error.message}</p>
                 )}
@@ -261,22 +296,12 @@ export default function SignupPage() {
           />
         </div>
 
-        {/* 약관 동의 */}
+        {/* 약관 동의 (아코디언) */}
         <Controller
           control={control}
           name="agree"
           defaultValue={false}
-          render={({ field }) => (
-            <label className="flex items-center gap-3 text-[16px] text-[#4B5563]">
-              <input
-                type="checkbox"
-                checked={!!field.value}
-                onChange={(e) => field.onChange(e.target.checked)}
-                className="size-6 rounded-lg accent-[#0059FF]"
-              />
-              개인정보 보호 약관 동의
-            </label>
-          )}
+          render={({ field }) => <TermsAgreement onRequiredChange={field.onChange} />}
         />
       </form>
 
