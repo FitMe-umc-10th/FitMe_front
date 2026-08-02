@@ -8,6 +8,7 @@ import Dropdown from '@/shared/components/Dropdown';
 import BottomSheet from '@/shared/components/BottomSheet';
 import { useAuthStore } from '@/store/authStore';
 import { saveOnboarding } from '@/apis/auth';
+import { validateGpa } from '@/shared/utils/validation';
 
 const INTERESTS = ['마케팅', '기획/아이디어', '디자인', 'IT/개발', '어학', '영상편집'];
 const RESIDENCE_OPTIONS = [
@@ -42,7 +43,7 @@ export default function OnboardingPage() {
   const [customInterest, setCustomInterest] = useState('');
   const [incomeSheetOpen, setIncomeSheetOpen] = useState(false);
 
-  const gpaError = gpa !== '' && Number(gpa) > 4.5 ? '최대 학점은 4.5에요!' : undefined;
+  const gpaError = gpa !== '' ? validateGpa(gpa) || undefined : undefined;
 
   const toggleInterest = (item: string) => {
     setInterests((prev) =>

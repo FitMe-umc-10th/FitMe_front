@@ -9,12 +9,15 @@ import exclamationBorder from '@/assets/exclamation_mark_border.svg';
 import exclamationStick from '@/assets/exclamation_mark_stick.svg';
 import exclamationDot from '@/assets/exclamation_mark_dot.svg';
 import default_person from '@/assets/illustrations/default_person.svg';
+import chevronRightIcon from '@/assets/icons/chevron-right.svg';
 import { requestWithdrawal } from '@/apis/withdrawal';
+import { useAuthStore } from '@/store/authStore';
 import Skeleton from '@/shared/components/Skeleton';
 
 export default function MyPageMain() {
   const navigate = useNavigate();
   const toast = useToastStore();
+  const logout = useAuthStore((state) => state.logout);
 
   // 로컬 모달 팝업 상태 정의 (공통 모달 코드 영향 최소화)
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
@@ -32,7 +35,7 @@ export default function MyPageMain() {
     queryFn: getAnnouncements,
   });
 
-  const hasNewNotice = notices?.some((notice) => notice.isNew) ?? false;
+  const hasNewNotice = Array.isArray(notices) ? notices.some((notice) => notice.isNew) : false;
 
   // 장학금 포맷팅 함수 (원 -> 만원)
   const formatScholarship = (amount: number) => {
@@ -48,6 +51,19 @@ export default function MyPageMain() {
   // 회원탈퇴 버튼 핸들러
   const handleWithdrawalClick = () => {
     setIsWithdrawalOpen(true);
+  };
+
+  // 회원탈퇴 승인 실행 핸들러 (API 호출 + 토큰 삭제 + 로그인 페이지 이동)
+  const handleConfirmWithdrawal = async () => {
+    try {
+      setIsWithdrawalOpen(false);
+      await requestWithdrawal();
+      logout();
+      toast.success('회원 탈퇴가 완료되었습니다.');
+      navigate('/login', { replace: true });
+    } catch {
+      toast.error('회원 탈퇴 처리 중 오류가 발생했습니다.');
+    }
   };
 
   // skeleton UI
@@ -152,15 +168,7 @@ export default function MyPageMain() {
                 className="w-full h-[24px] flex items-center justify-between hover:opacity-75 active:opacity-60 transition-opacity text-left focus:outline-none"
               >
                 <span className="text-sm font-semibold text-[#8C8C8C]">알림 설정</span>
-                <svg
-                  className="size-4.5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
               </button>
 
               {/* 공지사항 */}
@@ -175,15 +183,7 @@ export default function MyPageMain() {
                     <span className="absolute -top-0.5 -right-2 size-1.5 rounded-full bg-red-500 ring-2 ring-white" />
                   )}
                 </div>
-                <svg
-                  className="size-4.5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
               </button>
 
               {/* 고객센터 및 문의 */}
@@ -193,15 +193,7 @@ export default function MyPageMain() {
                 className="w-full h-[24px] flex items-center justify-between mt-[18px] hover:opacity-75 active:opacity-60 transition-opacity text-left focus:outline-none"
               >
                 <span className="text-sm font-semibold text-[#8C8C8C]">고객센터 및 문의</span>
-                <svg
-                  className="size-4.5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
               </button>
             </div>
           </section>
@@ -257,7 +249,9 @@ export default function MyPageMain() {
                 type="button"
                 onClick={() => {
                   setIsLogoutOpen(false);
+                  logout();
                   toast.success('로그아웃 되었습니다.');
+                  navigate('/login', { replace: true });
                 }}
                 className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
               >
@@ -320,11 +314,7 @@ export default function MyPageMain() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setIsWithdrawalOpen(false);
-                  requestWithdrawal();
-                  toast.error('회원 탈퇴가 완료되었습니다.');
-                }}
+                onClick={handleConfirmWithdrawal}
                 className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
               >
                 탈퇴하기

@@ -27,12 +27,12 @@ const SORT_OPTIONS = [
 const RECOMMENDED_THEMES = ['고액장학금', '디자인공모전', '해외연수프로그램', '창업지원프로그램'];
 
 const CATEGORY_MAP: Record<string, 'MARKETING' | 'PM' | 'DESIGN' | 'DEV' | 'LANGUAGE' | 'ETC'> = {
-  '마케팅': 'MARKETING',
+  마케팅: 'MARKETING',
   '기획/아이디어': 'PM',
-  '디자인': 'DESIGN',
+  디자인: 'DESIGN',
   'IT/개발': 'DEV',
-  '어학': 'LANGUAGE',
-  '기타': 'ETC',
+  어학: 'LANGUAGE',
+  기타: 'ETC',
 };
 
 const mapSearchPostItemToPosting = (item: SearchPostItem): Posting => ({
@@ -137,16 +137,24 @@ export default function ExplorePage() {
       ],
       queryFn: ({ pageParam }) =>
         getSearchPosts({
-          type: activeTab === 'scholarship' ? 'SCHOLARSHIP' : activeTab === 'contest' ? 'CONTEST' : 'ALL',
+          type:
+            activeTab === 'scholarship'
+              ? 'SCHOLARSHIP'
+              : activeTab === 'contest'
+                ? 'CONTEST'
+                : 'ALL',
           sort: sortBy === 'latest' ? 'RECENT' : 'DEADLINE',
-          category: activeTab === 'contest' && selectedCategory ? CATEGORY_MAP[selectedCategory] : undefined,
+          category:
+            activeTab === 'contest' && selectedCategory
+              ? CATEGORY_MAP[selectedCategory]
+              : undefined,
           keyword: searchQuery.trim() || undefined,
           idCursor: pageParam?.idCursor,
           deadlineCursor: pageParam?.deadlineCursor,
         }),
       initialPageParam: undefined as SearchNextCursor | undefined,
       getNextPageParam: (lastPage) =>
-        lastPage?.pageInfo?.hasNext ? lastPage.pageInfo.nextCursor ?? undefined : undefined,
+        lastPage?.pageInfo?.hasNext ? (lastPage.pageInfo.nextCursor ?? undefined) : undefined,
     });
 
   // 무한 스크롤 트리거 관측용 커스텀 훅 연동
@@ -404,7 +412,7 @@ export default function ExplorePage() {
         <div className="flex flex-col flex-1 pb-4">
           {/* 공모전 탭 선택 시 노출할 분야 세부 카테고리 칩 스크롤 (메뉴와 24px 거리, 칩 간 11.5px 간격, 아래와 20px 격리) */}
           {activeTab === 'contest' && (
-            <div className="flex items-center gap-[11.5px] overflow-x-auto bg-white pl-[20px] pr-[20px] pt-[24px] pb-[20px] border-b border-slate-100 scrollbar-none sticky top-[108px] z-10">
+            <div className="flex items-center gap-[11.5px] overflow-x-auto bg-white pl-[20px] pr-[20px] pt-[24px] pb-[20px] border-slate-100 scrollbar-none sticky top-[108px] z-10">
               {CATEGORIES.map((cat) => (
                 <div key={cat} className="shrink-0">
                   <Chip
