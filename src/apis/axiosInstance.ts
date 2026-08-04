@@ -35,6 +35,8 @@ axiosInstance.interceptors.response.use(
           original.headers.Authorization = `Bearer ${newToken}`;
           return axiosInstance(original);
         }
+        // 재발급 실패(토큰 무효/만료) → 로그아웃해서 로그인으로 유도
+        useAuthStore.getState().logout();
       } catch {
         isRefreshing = false;
         useAuthStore.getState().logout();
