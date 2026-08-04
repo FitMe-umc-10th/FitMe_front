@@ -4,26 +4,16 @@ import { ProgressBar } from '@/shared/components';
 import Input from '@/shared/components/Input';
 import Button from '@/shared/components/Button';
 import Chip from '@/shared/components/Chip';
-import Dropdown from '@/shared/components/Dropdown';
 import BottomSheet from '@/shared/components/BottomSheet';
 import { useAuthStore } from '@/store/authStore';
 import { saveOnboarding } from '@/apis/auth';
 import { validateGpa } from '@/shared/utils/validation';
+import SearchableSelect from '@/shared/components/SearchableSelect';
+import { REGION_OPTIONS } from '@/constants/regions';
+import { UNIVERSITY_OPTIONS } from '@/constants/universities';
 
 const INTERESTS = ['마케팅', '기획/아이디어', '디자인', 'IT/개발', '어학', '영상편집'];
-const RESIDENCE_OPTIONS = [
-  { label: '서울특별시', value: '서울' },
-  { label: '경기도', value: '경기' },
-  { label: '인천광역시', value: '인천' },
-  { label: '부산광역시', value: '부산' },
-  { label: '대구광역시', value: '대구' },
-];
-const UNIVERSITY_OPTIONS = [
-  { label: '홍익대학교', value: '홍익대' },
-  { label: '동국대학교', value: '동국대' },
-  { label: '연세대학교', value: '연세대' },
-  { label: '고려대학교', value: '고려대' },
-];
+
 const INCOME_OPTIONS = Array.from({ length: 10 }, (_, i) => ({
   label: `${i + 1}구간`,
   value: String(i + 1),
@@ -121,16 +111,16 @@ export default function OnboardingPage() {
               입력해 주세요!
             </h2>
             <label className={labelClass}>거주지역</label>
-            <Dropdown
+            <SearchableSelect
               fullWidth
               placeholder="검색하기"
-              options={RESIDENCE_OPTIONS}
+              options={REGION_OPTIONS}
               value={residence}
               onChange={setResidence}
             />
             <div className="mt-5">
               <label className={labelClass}>소속대학</label>
-              <Dropdown
+              <SearchableSelect
                 fullWidth
                 placeholder="검색하기"
                 options={UNIVERSITY_OPTIONS}
