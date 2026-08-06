@@ -24,12 +24,18 @@ export default function SearchBar({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSubmit?.(value);
+    if (onSubmit) {
+      onSubmit(value);
+    } else if (onSearch) {
+      onSearch(value);
+    }
   };
 
-  // 디바운스된 값이 바뀔 때만 실제 검색 실행
+  // onSearch가 명시적으로 전달된 경우에만 디바운스 검색 실행 (엔터 키 검색일 땐 onSubmit 사용)
   useEffect(() => {
-    onSearch?.(debouncedValue);
+    if (onSearch && debouncedValue) {
+      onSearch(debouncedValue);
+    }
   }, [debouncedValue, onSearch]);
 
   return (
