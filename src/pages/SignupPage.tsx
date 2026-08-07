@@ -44,20 +44,40 @@ export default function SignupPage() {
   const emailFormatValid = emailSchema.safeParse(emailValue).success;
 
   // 인증번호 발송
+  //예외처리 추가
   const sendCode = async () => {
-    await sendEmailCode(watch('email')); // 현재 입력된 이메일로 발송
-    setCodeSent(true); // 버튼 텍스트 '재전송'으로, 인증칸 열림
-    toast.success('인증번호를 전송했어요');
+    try {
+      await sendEmailCode(watch('email'));
+      setCodeSent(true); // 버튼 텍스트 '재전송'으로, 인증칸 열림
+      toast.success('인증번호를 전송했어요');
+    } catch (e) {
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      if (status === 409) {
+        toast.error('이미 가입된 이메일이에요. 로그인 또는 소셜 로그인을 이용해주세요.');
+      } else {
+        toast.error('인증번호 전송에 실패했어요. 잠시 후 다시 시도해주세요.');
+      }
+    }
   };
 
   // 인증번호 확인
+  // 예외처리 추가
   const verifyCode = async () => {
-    const ok = await verifyEmailCode(watch('email'), code); // mock: 6자리면 true
-    if (ok) {
-      setIsVerified(true); // 인증 완료 → 칸 잠기고 '인증 완료' 표시
-      toast.success('인증 완료');
-    } else {
-      toast.error('인증번호 6자리를 입력해주세요');
+    try {
+      const ok = await verifyEmailCode(watch('email'), code);
+      if (ok) {
+        setIsVerified(true); // 인증 완료 → 칸 잠기고 '인증 완료' 표시
+        toast.success('인증 완료');
+      } else {
+        toast.error('인증번호가 일치하지 않아요. 다시 확인해주세요.');
+      }
+    } catch (e) {
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      if (status === 400) {
+        toast.error('인증번호가 올바르지 않거나 만료되었어요.');
+      } else {
+        toast.error('인증 확인에 실패했어요. 잠시 후 다시 시도해주세요.');
+      }
     }
   };
 

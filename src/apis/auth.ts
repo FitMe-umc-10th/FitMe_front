@@ -1,8 +1,5 @@
 // ============================================
 // auth 관련 API 함수 모음
-// 지금은 전부 mock(가짜 데이터)이고, 백엔드 Swagger 나오면
-// 각 함수 안의 TODO 주석만 실제 axios 호출로 교체하면 됨.
-// (컴포넌트는 이 함수들을 부르기만 하니까 안 건드려도 됨)
 // ============================================
 
 import { axiosInstance } from './axiosInstance'; // 백엔드 나오면 주석 해제
@@ -63,14 +60,14 @@ export async function sendEmailCode(email: string): Promise<void> {
 }
 
 // ===== 이메일 인증번호 확인 =====
+// ⚠️ 스웨거 변경: POST /email-verifications/confirm → PATCH /email-verifications
 export async function verifyEmailCode(email: string, code: string): Promise<boolean> {
-  const { data } = await axiosInstance.post('/api/auth/email-verifications/confirm', {
+  const { data } = await axiosInstance.patch('/api/auth/email-verifications', {
     email,
     verificationCode: code,
   });
   return data.result.isVerified; // 응답의 result.isVerified
 }
-
 // ===== 온보딩 조건 저장 =====
 export async function saveOnboarding(body: OnboardingRequest): Promise<void> {
   await axiosInstance.post('/api/v1/onboarding', body);
@@ -88,4 +85,10 @@ export async function linkAccount(linkToken: string): Promise<LoginResponse> {
     },
   );
   return data.result; // { accessToken, member: { name, isOnboarded, ... } }
+}
+
+// ===== 로그아웃 =====
+// Authorization은 요청 인터셉터가 자동 주입, refreshToken은 쿠키 자동 첨부
+export async function logout(): Promise<void> {
+  await axiosInstance.post('/api/auth/logout');
 }
