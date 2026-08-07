@@ -81,7 +81,7 @@ export default function HomePage() {
     queryFn: getDeadlineNotifications,
   });
   const unreadNotificationCount =
-    deadlineNotifications?.notifications.filter((n) => !n.isRead).length ?? 0;
+    deadlineNotifications?.notifications?.filter((n) => !n.isRead).length ?? 0;
 
   const deadlinePostings = data?.deadlinePostings[activeDeadlineTab] ?? [];
 
