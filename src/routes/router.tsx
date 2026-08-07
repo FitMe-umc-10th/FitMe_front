@@ -30,10 +30,6 @@ export const router = createBrowserRouter([
       { path: '/login/email', element: <EmailLoginPage /> },
       { path: '/signup', element: <SignupPage /> },
       { path: '/onboarding', element: <OnboardingPage /> },
-      { path: '/login', element: <LoginPage /> },
-      { path: '/login/email', element: <EmailLoginPage /> },
-      { path: '/signup', element: <SignupPage /> },
-      { path: '/onboarding', element: <OnboardingPage /> },
       { path: '/oauth2/callback', element: <OAuthCallbackPage /> }, // OAuth 로그인 후 리다이렉트되는 페이지
     ],
   },
