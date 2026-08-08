@@ -78,7 +78,7 @@ export default function HomePage() {
   });
   const { data: deadlineNotifications } = useQuery({
     queryKey: ['deadlineNotifications'],
-    queryFn: getDeadlineNotifications,
+    queryFn: () => getDeadlineNotifications(15),
   });
   const unreadNotificationCount =
     deadlineNotifications?.notifications?.filter((n) => !n.isRead).length ?? 0;
