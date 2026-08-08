@@ -5,8 +5,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Logo } from '@/shared/components/Logo';
 import { useToastStore } from '@/store/toastStore';
 import { signup, sendEmailCode, verifyEmailCode } from '@/apis/auth';
+import TermsAgreement from '@/shared/components/TermsAgreement';
 
-import { signupSchema, emailSchema, type SignupFormValues as SignupForm } from '@/shared/utils/validation';
+import {
+  signupSchema,
+  emailSchema,
+  type SignupFormValues as SignupForm,
+} from '@/shared/utils/validation';
 
 // Figma 공통 스타일 (인풋 border #D9D9D9, radius 10px, 포커스 시 파란 테두리)
 const inputClass =
@@ -39,20 +44,40 @@ export default function SignupPage() {
   const emailFormatValid = emailSchema.safeParse(emailValue).success;
 
   // 인증번호 발송
+  //예외처리 추가
   const sendCode = async () => {
-    await sendEmailCode(watch('email')); // 현재 입력된 이메일로 발송
-    setCodeSent(true); // 버튼 텍스트 '재전송'으로, 인증칸 열림
-    toast.success('인증번호를 전송했어요');
+    try {
+      await sendEmailCode(watch('email'));
+      setCodeSent(true); // 버튼 텍스트 '재전송'으로, 인증칸 열림
+      toast.success('인증번호를 전송했어요');
+    } catch (e) {
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      if (status === 409) {
+        toast.error('이미 가입된 이메일이에요. 로그인 또는 소셜 로그인을 이용해주세요.');
+      } else {
+        toast.error('인증번호 전송에 실패했어요. 잠시 후 다시 시도해주세요.');
+      }
+    }
   };
 
   // 인증번호 확인
+  // 예외처리 추가
   const verifyCode = async () => {
-    const ok = await verifyEmailCode(watch('email'), code); // mock: 6자리면 true
-    if (ok) {
-      setIsVerified(true); // 인증 완료 → 칸 잠기고 '인증 완료' 표시
-      toast.success('인증 완료');
-    } else {
-      toast.error('인증번호 6자리를 입력해주세요');
+    try {
+      const ok = await verifyEmailCode(watch('email'), code);
+      if (ok) {
+        setIsVerified(true); // 인증 완료 → 칸 잠기고 '인증 완료' 표시
+        toast.success('인증 완료');
+      } else {
+        toast.error('인증번호가 일치하지 않아요. 다시 확인해주세요.');
+      }
+    } catch (e) {
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      if (status === 400) {
+        toast.error('인증번호가 올바르지 않거나 만료되었어요.');
+      } else {
+        toast.error('인증 확인에 실패했어요. 잠시 후 다시 시도해주세요.');
+      }
     }
   };
 
@@ -127,7 +152,37 @@ export default function SignupPage() {
             defaultValue=""
             render={({ field, fieldState }) => (
               <>
-                <input {...field} placeholder="YYYY.MM.DD" className={inputClass} />
+                <input
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const prev = field.value ?? '';
+                    const isDeleting = raw.length < prev.length; // 지우는 중인지
+
+                    const digits = raw.replace(/\D/g, '').slice(0, 8); // 숫자만, 최대 8자리
+                    let formatted = digits;
+                    if (digits.length >= 6) {
+                      // YYYY.MM.DD (월 두 자리 끝나면 점 자동)
+                      formatted = `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`;
+                    } else if (digits.length >= 4) {
+                      // YYYY. (연도 네 자리 끝나면 점 자동)
+                      formatted = `${digits.slice(0, 4)}.${digits.slice(4)}`;
+                    }
+
+                    // 지우는 중인데 마침 끝에 점이 붙었으면 점 제거 (백스페이스로 지워지게)
+                    if (isDeleting && formatted.endsWith('.')) {
+                      formatted = formatted.slice(0, -1);
+                    }
+
+                    field.onChange(formatted);
+                  }}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                  inputMode="numeric"
+                  placeholder="YYYY.MM.DD"
+                  className={inputClass}
+                />
                 {fieldState.error && (
                   <p className="mt-1 text-sm text-red-500">{fieldState.error.message}</p>
                 )}
@@ -261,22 +316,12 @@ export default function SignupPage() {
           />
         </div>
 
-        {/* 약관 동의 */}
+        {/* 약관 동의 (아코디언) */}
         <Controller
           control={control}
           name="agree"
           defaultValue={false}
-          render={({ field }) => (
-            <label className="flex items-center gap-3 text-[16px] text-[#4B5563]">
-              <input
-                type="checkbox"
-                checked={!!field.value}
-                onChange={(e) => field.onChange(e.target.checked)}
-                className="size-6 rounded-lg accent-[#0059FF]"
-              />
-              개인정보 보호 약관 동의
-            </label>
-          )}
+          render={({ field }) => <TermsAgreement onRequiredChange={field.onChange} />}
         />
       </form>
 

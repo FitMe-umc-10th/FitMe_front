@@ -1,11 +1,9 @@
 // ============================================
 // auth 관련 API 함수 모음
-// 지금은 전부 mock(가짜 데이터)이고, 백엔드 Swagger 나오면
-// 각 함수 안의 TODO 주석만 실제 axios 호출로 교체하면 됨.
-// (컴포넌트는 이 함수들을 부르기만 하니까 안 건드려도 됨)
 // ============================================
 
 import { axiosInstance } from './axiosInstance'; // 백엔드 나오면 주석 해제
+import axios from 'axios';
 
 // ===== 요청/응답 타입 정의 =====
 // 로그인 요청 시 보내는 값
@@ -62,15 +60,35 @@ export async function sendEmailCode(email: string): Promise<void> {
 }
 
 // ===== 이메일 인증번호 확인 =====
+// ⚠️ 스웨거 변경: POST /email-verifications/confirm → PATCH /email-verifications
 export async function verifyEmailCode(email: string, code: string): Promise<boolean> {
-  const { data } = await axiosInstance.post('/api/auth/email-verifications/confirm', {
+  const { data } = await axiosInstance.patch('/api/auth/email-verifications', {
     email,
     verificationCode: code,
   });
   return data.result.isVerified; // 응답의 result.isVerified
 }
-
 // ===== 온보딩 조건 저장 =====
 export async function saveOnboarding(body: OnboardingRequest): Promise<void> {
   await axiosInstance.post('/api/v1/onboarding', body);
+}
+
+// ===== 소셜 계정 연동 =====
+// ⚠️ Authorization 헤더가 붙으면 백엔드가 예외 → 인터셉터 없는 순수 axios 사용
+export async function linkAccount(linkToken: string): Promise<LoginResponse> {
+  const { data } = await axios.patch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/auth/link`,
+    null, // 바디 없음
+    {
+      headers: { 'Link-Token': `Bearer ${linkToken}` },
+      withCredentials: true, // refreshToken 쿠키 수신용
+    },
+  );
+  return data.result; // { accessToken, member: { name, isOnboarded, ... } }
+}
+
+// ===== 로그아웃 =====
+// Authorization은 요청 인터셉터가 자동 주입, refreshToken은 쿠키 자동 첨부
+export async function logout(): Promise<void> {
+  await axiosInstance.post('/api/auth/logout');
 }

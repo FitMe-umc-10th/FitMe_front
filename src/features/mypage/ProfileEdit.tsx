@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { getUserProfileDetail, updateUserProfile } from '@/apis/mypage';
+import {
+  getPresignedUrl,
+  uploadImageToS3,
+  getUserProfileDetail,
+  updateUserProfile,
+} from '@/apis/mypage';
 import { Layout, WebCameraModal } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
 import { validateGpa } from '@/shared/utils/validation';
+import { dataURLtoFile } from '@/shared/utils/file';
 import defaultPersonImg from '@/assets/illustrations/default_person.svg';
 import chevronLeftIcon from '@/assets/icons/chevron-left.svg';
 import chevronRightIcon from '@/assets/icons/chevron-right.svg';
@@ -15,10 +21,10 @@ const AVAILABLE_FIELDS = [
   { id: 2, name: '기획/아이디어' },
   { id: 3, name: '디자인' },
   { id: 4, name: 'IT/개발' },
-  { id: 5, name: '어학' },
-  { id: 6, name: '이학' },
-  { id: 7, name: '공학' },
-  { id: 8, name: '예체능' },
+  // { id: 5, name: '어학' },
+  // { id: 6, name: '이학' },
+  // { id: 7, name: '공학' },
+  // { id: 8, name: '예체능' },
 ];
 const AVAILABLE_REGIONS = [
   '서울특별시 전체',
@@ -66,7 +72,16 @@ export default function ProfileEdit() {
     if (profileDetail) {
       setGpa(profileDetail.gpa);
       setIncomeBracket(profileDetail.incomeBracket);
-      setInterests(profileDetail.interests.map((interest) => interest.interestId));
+      if (Array.isArray(profileDetail.interests)) {
+        const selectedIds = profileDetail.interests
+          .filter((interest: any) =>
+            typeof interest === 'number'
+              ? true
+              : interest.selected === true || interest.selected === undefined,
+          )
+          .map((interest: any) => (typeof interest === 'number' ? interest : interest.interestId));
+        setInterests(selectedIds);
+      }
       setRegion(profileDetail.region);
       setProfileImg(profileDetail.profileImageUrl);
     }
@@ -93,10 +108,24 @@ export default function ProfileEdit() {
     );
   };
 
-  // 이미지 파일 선택 처리
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  // 이미지 Presigned URL 발급 및 S3 업로드 프로세서
+  const processAndUploadImage = async (file: File) => {
+    try {
+      const fileName = file.name;
+      const contentType = file.type || 'image/jpeg';
+
+      // 1. Presigned URL 발급
+      const presignedData = await getPresignedUrl(fileName, contentType, file.size);
+
+      // 2. S3 직접 업로드 (PUT)
+      await uploadImageToS3(presignedData.uploadUrl, file, contentType);
+
+      // 3. 최종 저장용 fileUrl을 프로필 이미지 상태로 저장
+      setProfileImg(presignedData.fileUrl);
+      toast.success('프로필 이미지가 성공적으로 업로드되었습니다.');
+    } catch (err) {
+      console.error('S3 이미지 업로드 실패 (로컬 프리뷰 폴백):', err);
+      // S3 API 미구현 시 로컬 FileReader 프리뷰로 안전하게 폴백
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImg(reader.result as string);
@@ -104,6 +133,20 @@ export default function ProfileEdit() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // 갤러리/파일 선택기 이미지 업로드 핸들러
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processAndUploadImage(file);
+    }
+  };
+
+  // 실시간 카메라 캡처 이미지 업로드 핸들러
+  const handleCameraCapture = (dataUrl: string) => {
+    const file = dataURLtoFile(dataUrl, `camera_${Date.now()}.jpg`);
+    processAndUploadImage(file);
   };
 
   // 바텀시트 확인 버튼 핸들러 (사진 업로드 전용)
@@ -196,7 +239,7 @@ export default function ProfileEdit() {
                     e.currentTarget.src = defaultPersonImg;
                   }}
                   alt="프로필 미리보기"
-                  className="size-full object-cover ince"
+                  className="size-full object-cover"
                 />
               </div>
               {/* 카메라 토글 버튼 */}
@@ -484,10 +527,7 @@ export default function ProfileEdit() {
       <WebCameraModal
         isOpen={isCameraModalOpen}
         onClose={() => setIsCameraModalOpen(false)}
-        onCapture={(dataUrl) => {
-          setProfileImg(dataUrl);
-          toast.success('사진 촬영이 완료되었습니다.');
-        }}
+        onCapture={handleCameraCapture}
       />
     </Layout>
   );

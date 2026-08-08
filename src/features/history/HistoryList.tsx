@@ -24,10 +24,10 @@ export default function HistoryList() {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // 이력 데이터 조회
+  // 이력 데이터 조회 (쿼리 파라미터 tab, page, size 전달)
   const { data: histories = [], isLoading } = useQuery<UserApplicationListItem[]>({
-    queryKey: ['historyList'],
-    queryFn: getHistoryList,
+    queryKey: ['historyList', activeTab],
+    queryFn: () => getHistoryList({ tab: activeTab, page: 0, size: 15 }),
   });
 
   // 상태 변경 Mutation
@@ -69,8 +69,8 @@ export default function HistoryList() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 탭 필터링
-  const filteredHistories = histories.filter((item) => {
+  // 탭 필터링 (배열 가드 포함)
+  const filteredHistories = (Array.isArray(histories) ? histories : []).filter((item) => {
     if (activeTab === 'FINAL_PASSED') {
       return item.status === 'FINAL_PASSED';
     }

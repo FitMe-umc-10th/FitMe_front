@@ -3,15 +3,24 @@ import type {
   UserApplicationListItem,
   HistoryStatus,
   UserApplicationDetail,
+  GetHistoryListParams,
 } from '@/types/history';
 import { axiosInstance } from './axiosInstance';
 
-// 이력 전체 가져오기
-export const getHistoryList = async (): Promise<UserApplicationListItem[]> => {
+// 이력 전체 가져오기 (쿼리 파라미터 tab, page, size 지원)
+export const getHistoryList = async (
+  params?: GetHistoryListParams,
+): Promise<UserApplicationListItem[]> => {
   const { data } = await axiosInstance.get<
     ApiResponse<{ userApplications: UserApplicationListItem[] }>
-  >('/api/v1/user-applications');
-  return data.result.userApplications;
+  >('/api/v1/user-applications', {
+    params: {
+      tab: params?.tab ?? 'IN_PROGRESS',
+      page: params?.page ?? 0,
+      size: params?.size ?? 15,
+    },
+  });
+  return data.result?.userApplications ?? [];
 };
 
 // 이력 생성
