@@ -49,6 +49,8 @@ type SavedPostingsPayload =
       content?: ApiSavedPosting[];
     };
 
+type SavedPostMutationPayload = Partial<ApiSavedPosting> | number | string | null | undefined;
+
 export interface ToggleSaveResult {
   isSaved: boolean;
   savedId?: number;
@@ -137,6 +139,21 @@ const normalizeSavedPostingsPayload = (payload: SavedPostingsPayload): ApiSavedP
     payload.content ??
     []
   );
+};
+
+const getSavedIdFromPayload = (payload: SavedPostMutationPayload, fallback?: number) => {
+  if (typeof payload === 'number') return payload;
+
+  if (typeof payload === 'string') {
+    const parsedSavedId = Number(payload);
+    return Number.isFinite(parsedSavedId) ? parsedSavedId : fallback;
+  }
+
+  if (payload && typeof payload.savedId === 'number') {
+    return payload.savedId;
+  }
+
+  return fallback;
 };
 
 const normalizePostingType = (type?: ApiPostingType): PostingType => {
@@ -490,11 +507,11 @@ export const toggleSave = async (
       const { data } = await axiosInstance.delete<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
         `/api/v1/saved-posts/${savedId}`,
       );
-      const deletedPosting = mapApiSavedPostingToPosting(unwrapApiData<ApiSavedPosting>(data));
+      const deletedPosting = unwrapApiData<SavedPostMutationPayload>(data);
 
       return {
         isSaved: false,
-        savedId: deletedPosting.savedId,
+        savedId: getSavedIdFromPayload(deletedPosting, savedId),
       };
     }
 
@@ -502,11 +519,12 @@ export const toggleSave = async (
       '/api/v1/saved-posts',
       { postId: postingId },
     );
-    const savedPosting = mapApiSavedPostingToPosting(unwrapApiData<ApiSavedPosting>(data));
+    const savedPostingPayload = unwrapApiData<ApiSavedPosting>(data);
+    const savedPosting = mapApiSavedPostingToPosting(savedPostingPayload);
 
     return {
       isSaved: true,
-      savedId: savedPosting.savedId,
+      savedId: getSavedIdFromPayload(savedPostingPayload, savedPosting.savedId),
     };
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 409) {
