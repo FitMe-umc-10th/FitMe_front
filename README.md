@@ -201,11 +201,7 @@ pnpm install
 
 프로젝트 루트에 `.env` 파일을 생성합니다. (`.env`는 gitignore 대상이며, 배포 환경에는 Vercel 환경 변수로 별도 등록합니다.)
 
-```bash
-VITE_API_BASE_URL=https://api.fit-me.site
-```
 
-> ⚠️ 이 값이 없으면 API 요청이 백엔드가 아닌 실행 도메인으로 전송되어 정상 동작하지 않습니다.
 
 ### 3. 개발 서버 실행
 
