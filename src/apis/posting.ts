@@ -43,7 +43,7 @@ const MOCK_NETWORK_DELAY_MS = 300;
 const DEFAULT_HOME_USER_ID = 1;
 const DEFAULT_HOME_POPULAR_SIZE = 8;
 const DEFAULT_HOME_RECENT_VIEWED_SIZE = 10;
-const DEFAULT_HOME_CLOSING_SOON_SIZE = 10;
+const DEFAULT_HOME_CLOSING_SOON_SIZE = 5;
 
 type MockSavedPostings = Record<number, boolean>;
 
@@ -426,14 +426,14 @@ export const getPopularPostings = async ({
 };
 
 export const getRecentViewedPostings = async ({
-  userId = DEFAULT_HOME_USER_ID,
-  page = 0,
+  cursor,
+  type = 'ALL',
   size = DEFAULT_HOME_RECENT_VIEWED_SIZE,
 }: GetRecentViewedPostingsParams = {}): Promise<Posting[]> => {
   const { data } = await axiosInstance.get('/api/v1/posts/recent-views', {
     params: {
-      userId,
-      page,
+      cursor,
+      type,
       size,
     },
   });
@@ -443,16 +443,20 @@ export const getRecentViewedPostings = async ({
 };
 
 export const getClosingSoonPostings = async ({
-  userId = DEFAULT_HOME_USER_ID,
-  postType,
+  type,
+  category,
   sort = 'FIT',
+  deadlineCursor,
+  idCursor,
   size = DEFAULT_HOME_CLOSING_SOON_SIZE,
 }: GetClosingSoonPostingsParams): Promise<Posting[]> => {
   const { data } = await axiosInstance.get('/api/v1/posts/closing-soon', {
     params: {
-      userId,
-      type: postType,
+      type,
+      category,
       sort,
+      deadlineCursor,
+      idCursor,
       size,
     },
   });
@@ -464,20 +468,18 @@ export const getClosingSoonPostings = async ({
 export const getHomePostingFeed = async ({
   userId = DEFAULT_HOME_USER_ID,
 }: GetHomePostingFeedParams = {}): Promise<HomePostingFeed> => {
-  const resolvedUserId = userId ?? DEFAULT_HOME_USER_ID;
+  void userId;
 
   const [popularResult, recentViewedResult, scholarshipDeadlineResult, contestDeadlineResult] =
     await Promise.allSettled([
       getPopularPostings({ size: DEFAULT_HOME_POPULAR_SIZE }),
-      getRecentViewedPostings({ userId: resolvedUserId, size: DEFAULT_HOME_RECENT_VIEWED_SIZE }),
+      getRecentViewedPostings({ type: 'ALL', size: DEFAULT_HOME_RECENT_VIEWED_SIZE }),
       getClosingSoonPostings({
-        userId: resolvedUserId,
-        postType: 'SCHOLARSHIP',
+        type: 'SCHOLARSHIP',
         size: DEFAULT_HOME_CLOSING_SOON_SIZE,
       }),
       getClosingSoonPostings({
-        userId: resolvedUserId,
-        postType: 'CONTEST',
+        type: 'CONTEST',
         size: DEFAULT_HOME_CLOSING_SOON_SIZE,
       }),
     ]);
