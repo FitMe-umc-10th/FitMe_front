@@ -249,8 +249,8 @@ const mapApiPostingDetailToPosting = (posting: ApiPostingDetail, fallbackType: P
 const getPostingDetailByType = async (postingId: number, type: PostingType): Promise<Posting> => {
   const endpoint =
     type === 'SCHOLARSHIP'
-      ? `/api/v1/post/scholarship/${postingId}`
-      : `/api/v1/post/contests/${postingId}`;
+      ? `/api/v1/posts/scholarship/${postingId}`
+      : `/api/v1/posts/contests/${postingId}`;
   const { data } = await axiosInstance.get(endpoint);
 
   return mapApiPostingDetailToPosting(unwrapApiData<ApiPostingDetail>(data), type);
@@ -414,7 +414,7 @@ export const getPopularPostings = async ({
   cursor,
   size = DEFAULT_HOME_POPULAR_SIZE,
 }: GetHomePostingListParams = {}): Promise<Posting[]> => {
-  const { data } = await axiosInstance.get('/api/v1/post/popular', {
+  const { data } = await axiosInstance.get('/api/v1/posts/popular', {
     params: {
       cursor,
       size,
@@ -430,7 +430,7 @@ export const getRecentViewedPostings = async ({
   page = 0,
   size = DEFAULT_HOME_RECENT_VIEWED_SIZE,
 }: GetRecentViewedPostingsParams = {}): Promise<Posting[]> => {
-  const { data } = await axiosInstance.get('/api/v1/post/recent-views', {
+  const { data } = await axiosInstance.get('/api/v1/posts/recent-views', {
     params: {
       userId,
       page,
@@ -448,7 +448,7 @@ export const getClosingSoonPostings = async ({
   sort = 'FIT',
   size = DEFAULT_HOME_CLOSING_SOON_SIZE,
 }: GetClosingSoonPostingsParams): Promise<Posting[]> => {
-  const { data } = await axiosInstance.get('/api/v1/post/closing-soon', {
+  const { data } = await axiosInstance.get('/api/v1/posts/closing-soon', {
     params: {
       userId,
       type: postType,
