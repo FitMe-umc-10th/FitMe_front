@@ -11,6 +11,7 @@ interface DropdownProps {
   onChange: (value: string) => void;
   placeholder?: string; // 선택 전 안내 문구
   fullWidth?: boolean; // true면 가로 꽉 찬 박스 스타일 (온보딩용)
+  align?: 'left' | 'right'; // 메뉴 팝업 정렬 위치 (기본값 'left')
 }
 
 export default function Dropdown({
@@ -19,6 +20,7 @@ export default function Dropdown({
   onChange,
   placeholder = '선택',
   fullWidth = false,
+  align = 'left',
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -70,8 +72,8 @@ export default function Dropdown({
         <ul
           className={
             fullWidth
-              ? 'absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg'
-              : 'absolute right-0 z-10 mt-2 w-28 rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg'
+              ? 'absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg'
+              : `absolute ${align === 'right' ? 'right-0' : 'left-0'} z-20 mt-2 w-28 rounded-lg border border-[#E5E7EB] bg-white py-1 shadow-lg`
           }
         >
           {options.map((opt) => (
