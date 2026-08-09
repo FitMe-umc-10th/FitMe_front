@@ -86,16 +86,12 @@ export interface GetHomePostingFeedParams {
 }
 
 export interface GetRecentViewedPostingsParams {
-  cursor?: string;
-  type?: PostingCategoryFilter;
+  page?: number;
   size?: number;
 }
 
 export interface GetClosingSoonPostingsParams {
   type: PostingCategoryFilter;
-  category?: string;
   sort?: 'FIT' | 'DEADLINE' | 'RECENT';
-  deadlineCursor?: string;
-  idCursor?: number;
   size?: number;
 }

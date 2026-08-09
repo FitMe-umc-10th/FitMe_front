@@ -426,14 +426,12 @@ export const getPopularPostings = async ({
 };
 
 export const getRecentViewedPostings = async ({
-  cursor,
-  type = 'ALL',
+  page = 0,
   size = DEFAULT_HOME_RECENT_VIEWED_SIZE,
 }: GetRecentViewedPostingsParams = {}): Promise<Posting[]> => {
   const { data } = await axiosInstance.get('/api/v1/posts/recent-views', {
     params: {
-      cursor,
-      type,
+      page,
       size,
     },
   });
@@ -444,19 +442,13 @@ export const getRecentViewedPostings = async ({
 
 export const getClosingSoonPostings = async ({
   type,
-  category,
   sort = 'FIT',
-  deadlineCursor,
-  idCursor,
   size = DEFAULT_HOME_CLOSING_SOON_SIZE,
 }: GetClosingSoonPostingsParams): Promise<Posting[]> => {
   const { data } = await axiosInstance.get('/api/v1/posts/closing-soon', {
     params: {
-      type,
-      category,
+      postType: type === 'ALL' ? undefined : type,
       sort,
-      deadlineCursor,
-      idCursor,
       size,
     },
   });
@@ -473,7 +465,7 @@ export const getHomePostingFeed = async ({
   const [popularResult, recentViewedResult, scholarshipDeadlineResult, contestDeadlineResult] =
     await Promise.allSettled([
       getPopularPostings({ size: DEFAULT_HOME_POPULAR_SIZE }),
-      getRecentViewedPostings({ type: 'ALL', size: DEFAULT_HOME_RECENT_VIEWED_SIZE }),
+      getRecentViewedPostings({ page: 0, size: DEFAULT_HOME_RECENT_VIEWED_SIZE }),
       getClosingSoonPostings({
         type: 'SCHOLARSHIP',
         size: DEFAULT_HOME_CLOSING_SOON_SIZE,
