@@ -98,6 +98,13 @@ export default function HomePage() {
     deadlineNotifications?.notifications?.filter((n) => !n.isRead).length ?? 0;
 
   const deadlinePostings = data?.deadlinePostings[activeDeadlineTab] ?? [];
+  const recentViewedPostings = data?.recentViewedPostings ?? [];
+  const hasRecentViewedPostings = recentViewedPostings.length > 0;
+  const recentViewedSectionHeight = isRecentViewedExpanded
+    ? 'h-[368px]'
+    : hasRecentViewedPostings
+      ? 'h-[268px]'
+      : 'h-[177px]';
 
   return (
     <Layout
@@ -134,9 +141,7 @@ export default function HomePage() {
         </section>
 
         <section
-          className={`relative -mx-5 overflow-hidden bg-[#EEF6FF] px-5 pt-5 ${
-            isRecentViewedExpanded ? 'h-[368px]' : 'h-[177px]'
-          }`}
+          className={`relative -mx-5 overflow-hidden bg-[#EEF6FF] px-5 pt-5 ${recentViewedSectionHeight}`}
         >
           <SectionHeader
             title="현수님의 최근 조회 목록"
@@ -146,21 +151,21 @@ export default function HomePage() {
             }}
           />
           {isPending && <Skeleton variant="card" count={2} />}
-          {data && data.recentViewedPostings.length > 0 && !isRecentViewedExpanded && (
+          {data && hasRecentViewedPostings && !isRecentViewedExpanded && (
             <div className="mt-5">
               <Carousel storageKey="home-recent-carousel-index">
-                {data.recentViewedPostings.map((posting) => (
+                {recentViewedPostings.map((posting) => (
                   <PostingCard key={posting.id} posting={posting} variant="vertical" />
                 ))}
               </Carousel>
             </div>
           )}
-          {data && data.recentViewedPostings.length > 0 && isRecentViewedExpanded && (
+          {data && hasRecentViewedPostings && isRecentViewedExpanded && (
             <div className="mt-5">
-              <HorizontalPostingList postings={data.recentViewedPostings} />
+              <HorizontalPostingList postings={recentViewedPostings} />
             </div>
           )}
-          {data && data.recentViewedPostings.length === 0 && (
+          {data && !hasRecentViewedPostings && (
             <div
               className={
                 isRecentViewedExpanded
