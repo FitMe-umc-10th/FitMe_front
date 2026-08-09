@@ -1,15 +1,22 @@
+import axios from 'axios';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toggleSave } from '@/apis/posting';
 import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import { useToastStore } from '@/store/toastStore';
 import type { HomePostingFeed, Posting } from '@/types/posting';
 
-const updatePostingSavedState = (posting: Posting, postingId: number, nextSavedState: boolean) => {
+const updatePostingSavedState = (
+  posting: Posting,
+  postingId: number,
+  nextSavedState: boolean,
+  savedId?: number,
+) => {
   if (posting.id !== postingId) return posting;
 
   return {
     ...posting,
     isSaved: nextSavedState,
+    savedId: nextSavedState ? savedId ?? posting.savedId : undefined,
     savedCount: Math.max(0, (posting.savedCount ?? 0) + (nextSavedState ? 1 : -1)),
   };
 };
@@ -18,24 +25,26 @@ const updateHomeFeedSavedState = (
   feed: HomePostingFeed,
   postingId: number,
   nextSavedState: boolean,
+  savedId?: number,
 ): HomePostingFeed => ({
   popularPostings: feed.popularPostings.map((posting) =>
-    updatePostingSavedState(posting, postingId, nextSavedState),
+    updatePostingSavedState(posting, postingId, nextSavedState, savedId),
   ),
   recentViewedPostings: feed.recentViewedPostings.map((posting) =>
-    updatePostingSavedState(posting, postingId, nextSavedState),
+    updatePostingSavedState(posting, postingId, nextSavedState, savedId),
   ),
   deadlinePostings: {
     SCHOLARSHIP: feed.deadlinePostings.SCHOLARSHIP.map((posting) =>
-      updatePostingSavedState(posting, postingId, nextSavedState),
+      updatePostingSavedState(posting, postingId, nextSavedState, savedId),
     ),
     CONTEST: feed.deadlinePostings.CONTEST.map((posting) =>
-      updatePostingSavedState(posting, postingId, nextSavedState),
+      updatePostingSavedState(posting, postingId, nextSavedState, savedId),
     ),
   },
 });
 
 interface UseToggleSaveOptions {
+  savedId?: number;
   showErrorToast?: boolean;
   onError?: (currentSavedState: boolean) => void;
 }
@@ -43,10 +52,10 @@ interface UseToggleSaveOptions {
 export const useToggleSave = (postingId: number, options: UseToggleSaveOptions = {}) => {
   const queryClient = useQueryClient();
   const showToast = useToastStore((state) => state.show);
-  const { showErrorToast = true, onError } = options;
+  const { savedId, showErrorToast = true, onError } = options;
 
   return useMutation({
-    mutationFn: (isSaved: boolean) => toggleSave(postingId, isSaved),
+    mutationFn: (isSaved: boolean) => toggleSave(postingId, isSaved, savedId),
     // 1. 낙관적 업데이트 수행 (서버 응답을 기다리지 않고 UI 상태 먼저 갱신)
     onMutate: async (currentSavedState) => {
       const nextSavedState = !currentSavedState;
@@ -108,8 +117,44 @@ export const useToggleSave = (postingId: number, options: UseToggleSaveOptions =
         previousSavedPostings,
       };
     },
+    onSuccess: (result) => {
+      const syncSavedResult = (posting: Posting) =>
+        updatePostingSavedState(posting, postingId, result.isSaved, result.savedId);
+
+      queryClient.setQueryData<Posting[]>(postingQueryKeys.all, (old) => {
+        if (!old) return old;
+        return old.map(syncSavedResult);
+      });
+
+      queryClient.setQueryData<HomePostingFeed>(postingQueryKeys.home, (old) => {
+        if (!old) return old;
+        return updateHomeFeedSavedState(old, postingId, result.isSaved, result.savedId);
+      });
+
+      queryClient.setQueryData<Posting[]>(postingQueryKeys.recentViewed, (old) => {
+        if (!old) return old;
+        return old.map(syncSavedResult);
+      });
+
+      queryClient.setQueryData<Posting>(postingQueryKeys.detail(postingId), (old) => {
+        if (!old) return old;
+        return syncSavedResult(old);
+      });
+
+      queryClient.setQueryData<Posting[]>(postingQueryKeys.deadline, (old) => {
+        if (!old) return old;
+        return old.map(syncSavedResult);
+      });
+    },
     // 2. 에러가 나면 기존 데이터로 원상복구하고 토스트 알림을 띄웁니다.
     onError: (_err, currentSavedState, context) => {
+      if (!currentSavedState && axios.isAxiosError(_err) && _err.response?.status === 409) {
+        if (showErrorToast) {
+          showToast('이미 저장된 공고입니다.', 'error');
+        }
+        return;
+      }
+
       if (context?.previousPostings) {
         queryClient.setQueryData(postingQueryKeys.all, context.previousPostings);
       }

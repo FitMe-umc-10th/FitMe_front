@@ -35,7 +35,7 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
         <div className="flex min-w-0 flex-1 flex-col justify-between px-3 pb-3 pt-2">
           <div className="flex items-center justify-between">
             <DayBadge deadline={posting.deadline} />
-            <HeartButton postingId={posting.id} isSaved={posting.isSaved} />
+            <HeartButton postingId={posting.id} savedId={posting.savedId} isSaved={posting.isSaved} />
           </div>
 
           <h3 className="truncate text-[13px] font-bold leading-[1.35] text-[#1F2937]">{posting.title}</h3>
@@ -77,7 +77,7 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
           </div>
 
           <div className="mb-0.5 flex-shrink-0">
-            <HeartButton postingId={posting.id} isSaved={posting.isSaved} />
+            <HeartButton postingId={posting.id} savedId={posting.savedId} isSaved={posting.isSaved} />
           </div>
         </div>
       </div>
@@ -99,7 +99,7 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
         </div>
 
         <div className="absolute right-3 top-[22px]">
-          <HeartButton postingId={posting.id} isSaved={posting.isSaved} />
+          <HeartButton postingId={posting.id} savedId={posting.savedId} isSaved={posting.isSaved} />
         </div>
 
         <h3 className="absolute left-3 right-3 top-[67.14px] truncate text-[14px] font-bold leading-[19px] text-[#262626]">
