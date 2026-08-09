@@ -1,21 +1,30 @@
-import { ApiResponse } from '@/types/common';
+import type { ApiResponse } from '@/types/common';
 import { axiosInstance } from './axiosInstance';
-import type { DeadlineNotificationDTO } from '@/types/deadlineNotification';
+import type { DeadlineNotificationDTO, UnreadCountResponse } from '@/types/deadlineNotification';
 
-export const getDeadlineNotifications = async (size: number = 15): Promise<DeadlineNotificationDTO> => {
+export const getDeadlineNotifications = async (
+  size: number = 15,
+  cursor?: number,
+): Promise<DeadlineNotificationDTO> => {
   try {
-    const { data } = await axiosInstance.get<DeadlineNotificationDTO>(
+    const { data } = await axiosInstance.get<ApiResponse<DeadlineNotificationDTO>>(
       '/api/v1/deadline-notifications',
       {
         params: {
           size,
+          cursor,
         },
       },
     );
-    return data;
+    const result = data?.result ?? (data as unknown as DeadlineNotificationDTO);
+    return {
+      hasNext: result?.hasNext ?? false,
+      nextCursor: result?.nextCursor ?? null,
+      notifications: result?.notifications ?? [],
+    };
   } catch (error) {
     console.warn(
-      '[deadlineNotifications] 백엔드 엔드포인트 미구현/오류로 인한 안전 폴백 처리입니다.',
+      '[deadlineNotifications] 알림 목록 조회 실패 안전 폴백 처리입니다.',
       error,
     );
     return {
@@ -28,10 +37,16 @@ export const getDeadlineNotifications = async (size: number = 15): Promise<Deadl
 
 export const getDeadlineNotificationCount = async (): Promise<number> => {
   try {
-    const { data } = await axiosInstance.get<ApiResponse<number>>(
+    const { data } = await axiosInstance.get<ApiResponse<UnreadCountResponse | number>>(
       '/api/v1/deadline-notifications/unread-count',
     );
-    return data.result ?? 0;
+    if (data?.result && typeof data.result === 'object' && 'unreadCount' in data.result) {
+      return (data.result as UnreadCountResponse).unreadCount ?? 0;
+    }
+    if (typeof data?.result === 'number') {
+      return data.result;
+    }
+    return 0;
   } catch {
     return 0;
   }
