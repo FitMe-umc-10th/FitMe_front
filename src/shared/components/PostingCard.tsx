@@ -9,9 +9,10 @@ interface PostingCardProps {
   posting: Posting;
   variant: 'horizontal' | 'vertical' | 'popular';
   onClick?: () => void;
+  carouselIndexLabel?: string;
 }
 
-export default function PostingCard({ posting, variant, onClick }: PostingCardProps) {
+export default function PostingCard({ posting, variant, onClick, carouselIndexLabel }: PostingCardProps) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -59,6 +60,12 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
           <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
           <div className="absolute inset-0 bg-gradient-to-t from-white/45 via-white/5 to-transparent" />
         </div>
+
+        {carouselIndexLabel && (
+          <div className="absolute right-5 top-4 flex h-5 min-w-7 items-center justify-center rounded-full bg-[#A5A5A5] px-[5px] text-[12px] font-medium leading-none text-white">
+            {carouselIndexLabel}
+          </div>
+        )}
 
         <div className="mt-auto flex items-end justify-between gap-4">
           <div className="min-w-0 flex-1">

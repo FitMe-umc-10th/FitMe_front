@@ -230,9 +230,10 @@ export default function Carousel({
       >
         {displayItems.map((child, index) => {
           const activeDisplayIndex = loop && count > 1 ? currentIndex + 1 : currentIndex;
+          const realIndex = getRealIndex(index);
           const isActive = spotlight
             ? index === activeDisplayIndex
-            : getRealIndex(index) === currentIndex;
+            : realIndex === currentIndex;
           const inactiveOriginClass = index < activeDisplayIndex ? 'origin-right' : 'origin-left';
           const spotlightClass = spotlight
             ? `transform-gpu transition-all duration-300 ease-out ${
@@ -247,14 +248,18 @@ export default function Carousel({
               key={index}
               className={`${loop ? 'snap-center flex-shrink-0' : 'snap-start flex-shrink-0'} ${spotlightClass}`}
             >
-              {child}
+              {showIndicator && React.isValidElement(child)
+                ? React.cloneElement(child as React.ReactElement<{ carouselIndexLabel?: string }>, {
+                    carouselIndexLabel: `${realIndex + 1}/${count}`,
+                  })
+                : child}
             </div>
           );
         })}
       </div>
 
-      {/* 인디케이터 표시 (showIndicator가 true일 때만 노출, 인기 공고 카드 우측 상단 오버레이 위치로 조율) */}
-      {showIndicator && count > 0 && (
+      {/* 일반 캐러셀 인디케이터. spotlight 캐러셀은 각 카드 내부에 번호를 붙인다. */}
+      {showIndicator && !spotlight && count > 0 && (
         <div className="pointer-events-none absolute right-[70px] top-9 z-20 flex h-5 w-7 items-center justify-center rounded-full bg-[#A5A5A5] px-[5px] text-[12px] font-medium leading-none text-white select-none">
           {currentIndex + 1}/{count}
         </div>
