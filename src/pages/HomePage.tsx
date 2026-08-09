@@ -72,7 +72,7 @@ function NotificationButton({ hasUnreadNotification }: { hasUnreadNotification: 
 
 function HorizontalPostingList({ postings }: { postings: Posting[] }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex w-full flex-col items-center gap-3">
       {postings.map((posting) => (
         <PostingCard key={posting.id} posting={posting} variant="horizontal" />
       ))}
@@ -161,7 +161,7 @@ export default function HomePage() {
             </div>
           )}
           {data && hasRecentViewedPostings && isRecentViewedExpanded && (
-            <div className="mt-5">
+            <div className="mt-5 max-h-[276px] overflow-y-auto pb-4 scrollbar-none">
               <HorizontalPostingList postings={recentViewedPostings} />
             </div>
           )}

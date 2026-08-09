@@ -87,18 +87,18 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
   return (
     <div
       onClick={handleClick}
-      className="grid h-[128px] cursor-pointer select-none grid-cols-[176px_187px] gap-0 bg-white transition-all duration-200"
+      className="grid h-[128px] w-full max-w-[363px] cursor-pointer select-none grid-cols-[48.49%_51.51%] gap-0 overflow-hidden rounded-[16px] bg-white shadow-[0_4px_14px_rgba(15,23,42,0.07)] transition-all duration-200"
     >
-      <div className="h-[128px] overflow-hidden rounded-l-[16px] bg-[#E6EEF8]">
+      <div className="h-[128px] overflow-hidden bg-[#E6EEF8]">
         <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
       </div>
 
-      <div className="relative h-[128px] w-[187px] min-w-0 bg-white px-3 py-5">
-        <div className="absolute left-3 top-[22px]">
+      <div className="relative h-[128px] min-w-0 bg-white px-3 py-5">
+        <div className="absolute left-3 top-[30px]">
           <DayBadge deadline={posting.deadline} />
         </div>
 
-        <div className="absolute right-3 top-[22px]">
+        <div className="absolute right-3 top-[30px]">
           <HeartButton postingId={posting.id} savedId={posting.savedId} isSaved={posting.isSaved} />
         </div>
 
