@@ -305,7 +305,7 @@ function DetailUnavailableState({
 }
 
 function DetailSaveButton({ posting }: { posting: Posting }) {
-  const { mutate, isPending } = useToggleSave(posting.id);
+  const { mutate, isPending } = useToggleSave(posting.id, { savedId: posting.savedId });
   const isSaved = posting.isSaved;
 
   const handleClick = () => {

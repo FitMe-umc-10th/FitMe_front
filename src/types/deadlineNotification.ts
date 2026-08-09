@@ -8,10 +8,15 @@ export interface NotificationDTO {
   displayTime: string;
   isRead: boolean;
   postId: number;
+  postType?: string;
 }
 
 export interface DeadlineNotificationDTO {
   hasNext: boolean;
   nextCursor: number | null;
   notifications: NotificationDTO[];
+}
+
+export interface UnreadCountResponse {
+  unreadCount: number;
 }

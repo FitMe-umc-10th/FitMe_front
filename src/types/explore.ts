@@ -1,12 +1,12 @@
 export interface SearchPostItem {
   postId: number;
-  type: 'SCHOLARSHIP' | 'CONTEST';
+  type: 'SCHOLARSHIP' | 'CONTEST' | 'ALL' | 'ETC';
   title: string;
   deadlineDate: string;
   deadlineLabel: string;
   organization: string;
   thumbnailUrl: string;
-  category: string | null;
+  category: 'PM' | 'MARKETING' | 'DESIGN' | 'IT' | 'VIDEO' | 'ETC' | null;
   saved: boolean;
 }
 
@@ -22,6 +22,11 @@ export interface SearchPageInfo {
 }
 
 export interface SearchPostsResult {
-  posts: SearchPostItem[];
-  pageInfo: SearchPageInfo;
+  data: SearchPostItem[];
+  hasNext: boolean;
+  nextIdCursor?: number;
+  nextDeadlineCursor?: string;
+  pageSize?: number;
+  posts?: SearchPostItem[];
+  pageInfo?: SearchPageInfo;
 }

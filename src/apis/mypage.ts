@@ -6,13 +6,13 @@ import type { NotificationSettingDTO } from '@/types/notificationSetting';
 import type { RevertImageUrlDTO } from '@/types/profile';
 
 export const getUserProfile = async (): Promise<MyPageDTO> => {
-  const { data } = await axiosInstance.get<ApiResponse<MyPageDTO>>('/api/v1/mypage');
+  const { data } = await axiosInstance.get<ApiResponse<MyPageDTO>>('/api/v1/users/me');
   return data.result;
 };
 
 export const updateUserProfile = async (profile: ProfileDetailDTO) => {
   const { data } = await axiosInstance.patch<ApiResponse<ProfileDetailDTO>>(
-    '/api/v1/mypage/profile',
+    '/api/v1/users/me/profile',
     profile,
   );
   return data.result;
@@ -20,20 +20,20 @@ export const updateUserProfile = async (profile: ProfileDetailDTO) => {
 
 export const getUserProfileDetail = async (): Promise<ProfileSettingsDTO> => {
   const { data } =
-    await axiosInstance.get<ApiResponse<ProfileSettingsDTO>>('/api/v1/mypage/profile');
+    await axiosInstance.get<ApiResponse<ProfileSettingsDTO>>('/api/v1/users/me/profile');
   return data.result;
 };
 
 export const getNotificationSettings = async (): Promise<NotificationSettingDTO> => {
   const { data } = await axiosInstance.get<ApiResponse<NotificationSettingDTO>>(
-    '/api/v1/mypage/notification-settings',
+    '/api/v1/users/me/notification-settings',
   );
   return data.result;
 };
 
 export const updateNotificationSettings = async (settings: NotificationSettingDTO) => {
   const { data } = await axiosInstance.patch<ApiResponse<NotificationSettingDTO>>(
-    '/api/v1/mypage/notification-settings',
+    '/api/v1/users/me/notification-settings',
     settings,
   );
   return data.result;
@@ -41,7 +41,7 @@ export const updateNotificationSettings = async (settings: NotificationSettingDT
 
 export const getPresignedUrl = async (fileName: string, contentType: string, fileSize: number) => {
   const { data } = await axiosInstance.post<ApiResponse<RevertImageUrlDTO>>(
-    '/api/v1/mypage/profile/image/presigned-url',
+    '/api/v1/users/me/profile/image/presigned-url',
     { fileName, contentType, fileSize },
   );
   return data.result;
