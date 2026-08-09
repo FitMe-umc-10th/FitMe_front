@@ -5,6 +5,7 @@ interface CarouselProps {
   showIndicator?: boolean;
   showProgress?: boolean;
   loop?: boolean;
+  spotlight?: boolean;
   storageKey?: string;
 }
 
@@ -13,6 +14,7 @@ export default function Carousel({
   showIndicator = false,
   showProgress = false,
   loop = false,
+  spotlight = false,
   storageKey,
 }: CarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -79,7 +81,7 @@ export default function Carousel({
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [count, getStoredIndex, getStoredScrollLeft, loop, scrollToIndex]);
+  }, [count, getStoredIndex, getStoredScrollLeft, loop, scrollToIndex, spotlight]);
 
   const updateCurrentIndex = (nextIndex: number) => {
     setCurrentIndex(nextIndex);
@@ -160,6 +162,7 @@ export default function Carousel({
         if (realLastChild) {
           const targetLeft = realLastChild.offsetLeft + realLastChild.offsetWidth / 2 - clientWidth / 2;
           container.scrollLeft = targetLeft;
+          updateCurrentIndex(count - 1);
         }
       }
       // 복제된 첫 번째 아이템(인덱스 count + 1)에 도달한 경우 -> 실물 첫 번째 아이템(인덱스 1)으로 점프
@@ -168,6 +171,7 @@ export default function Carousel({
         if (realFirstChild) {
           const targetLeft = realFirstChild.offsetLeft + realFirstChild.offsetWidth / 2 - clientWidth / 2;
           container.scrollLeft = targetLeft;
+          updateCurrentIndex(0);
         }
       }
       // 일반 아이템이고, 스크롤 정렬 상태가 정중앙에서 살짝 벗어나 있다면 자석처럼 스르륵 정중앙 정렬
@@ -177,8 +181,9 @@ export default function Carousel({
           const targetLeft = targetChild.offsetLeft + targetChild.offsetWidth / 2 - clientWidth / 2;
           const currentDiff = Math.abs(scrollLeft - targetLeft);
           if (currentDiff > 2) {
-            container.scrollTo({ left: targetLeft, behavior: 'smooth' });
+            container.scrollTo({ left: targetLeft, behavior: spotlight ? 'auto' : 'smooth' });
           }
+          updateCurrentIndex(closestIndex - 1);
         }
       }
     };
@@ -194,34 +199,64 @@ export default function Carousel({
       container.removeEventListener('scroll', handleScrollEvent);
       clearTimeout(scrollTimeout);
     };
-  }, [loop, count]);
+  }, [loop, count, spotlight]);
+
+  const getRealIndex = (displayIndex: number) => {
+    if (!loop || count <= 1) return displayIndex;
+    if (displayIndex === 0) return count - 1;
+    if (displayIndex === count + 1) return 0;
+    return displayIndex - 1;
+  };
 
   // 무한 루프 시 좌우 여백을 두어 인접 카드가 Figma 시안처럼 살짝 보이도록 맞춘다.
-  const paddingClass = loop ? 'px-[38px] py-3' : 'pb-1';
+  const paddingClass = loop ? `${spotlight ? 'px-[35px] py-5' : 'px-[38px] py-3'}` : 'pb-1';
+  const gapClass = spotlight ? 'gap-[10px]' : 'gap-4';
+  const wrapperClass = 'w-full';
   const scrollPaddingStyle = loop
-    ? { scrollPaddingLeft: '38px', scrollPaddingRight: '38px' }
+    ? {
+        scrollPaddingLeft: spotlight ? '35px' : '38px',
+        scrollPaddingRight: spotlight ? '35px' : '38px',
+      }
     : undefined;
 
   return (
-    <div className="relative w-full overflow-visible">
+    <div className={`relative overflow-visible ${wrapperClass}`}>
       {/* 가로 스와이프 스냅 컨테이너 */}
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className={`flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory ${paddingClass}`}
+        className={`flex items-center overflow-x-auto scrollbar-none snap-x snap-mandatory ${gapClass} ${paddingClass}`}
         style={scrollPaddingStyle}
       >
-        {displayItems.map((child, index) => (
-          <div key={index} className={loop ? 'snap-center flex-shrink-0' : 'snap-start flex-shrink-0'}>
-            {child}
-          </div>
-        ))}
+        {displayItems.map((child, index) => {
+          const activeDisplayIndex = loop && count > 1 ? currentIndex + 1 : currentIndex;
+          const isActive = spotlight
+            ? index === activeDisplayIndex
+            : getRealIndex(index) === currentIndex;
+          const inactiveOriginClass = index < activeDisplayIndex ? 'origin-right' : 'origin-left';
+          const spotlightClass = spotlight
+            ? `transform-gpu transition-all duration-300 ease-out ${
+                isActive
+                  ? 'z-10 scale-100 opacity-100'
+                  : `z-0 scale-x-[0.8322] scale-y-[0.8403] opacity-100 ${inactiveOriginClass}`
+              }`
+            : '';
+
+          return (
+            <div
+              key={index}
+              className={`${loop ? 'snap-center flex-shrink-0' : 'snap-start flex-shrink-0'} ${spotlightClass}`}
+            >
+              {child}
+            </div>
+          );
+        })}
       </div>
 
       {/* 인디케이터 표시 (showIndicator가 true일 때만 노출, 인기 공고 카드 우측 상단 오버레이 위치로 조율) */}
       {showIndicator && count > 0 && (
-        <div className="pointer-events-none absolute right-[54px] top-7 z-10 rounded-full bg-[#9FA4AA]/80 px-2.5 py-1 text-[11px] font-bold leading-none text-white/95 backdrop-blur-sm select-none">
-          {currentIndex + 1} / {count}
+        <div className="pointer-events-none absolute right-[70px] top-9 z-20 flex h-5 w-7 items-center justify-center rounded-full bg-[#A5A5A5] px-[5px] text-[12px] font-medium leading-none text-white select-none">
+          {currentIndex + 1}/{count}
         </div>
       )}
 

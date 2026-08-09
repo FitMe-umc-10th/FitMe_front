@@ -125,7 +125,7 @@ export default function HomePage() {
           <SectionHeader title="실시간 인기 공고" />
           {isPending && <Skeleton variant="popular" count={2} />}
           {data && (
-            <Carousel showIndicator showProgress loop storageKey="home-popular-carousel-index">
+            <Carousel showIndicator showProgress loop spotlight storageKey="home-popular-carousel-index">
               {data.popularPostings.map((posting) => (
                 <PostingCard key={posting.id} posting={posting} variant="popular" />
               ))}

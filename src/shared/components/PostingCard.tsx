@@ -53,7 +53,7 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
     return (
       <div
         onClick={handleClick}
-        className="relative flex h-[239px] w-[292px] cursor-pointer select-none flex-col justify-end overflow-hidden rounded-[18px] border border-[#EEF0F3] bg-[#D9F0FF] px-5 pb-5 pt-4 shadow-[0_8px_18px_rgba(15,23,42,0.12)] transition-all duration-200 hover:shadow-[0_10px_22px_rgba(15,23,42,0.14)]"
+        className="relative flex h-[239px] w-[292px] cursor-pointer select-none flex-col justify-end overflow-hidden rounded-2xl border border-[#EEF0F3] bg-[#D9F0FF] px-5 py-4 shadow-[0_8px_18px_rgba(15,23,42,0.12)] transition-all duration-200 hover:shadow-[0_10px_22px_rgba(15,23,42,0.14)]"
       >
         <div className="absolute inset-0 -z-10 h-full w-full">
           <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
