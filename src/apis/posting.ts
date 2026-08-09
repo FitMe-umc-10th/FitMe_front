@@ -204,8 +204,8 @@ const mapApiPostingDetailToPosting = (posting: ApiPostingDetail, fallbackType: P
 const getPostingDetailByType = async (postingId: number, type: PostingType): Promise<Posting> => {
   const endpoint =
     type === 'SCHOLARSHIP'
-      ? `/api/v1/post/scholarship/${postingId}`
-      : `/api/v1/post/contests/${postingId}`;
+      ? `/api/v1/posts/scholarship/${postingId}`
+      : `/api/v1/posts/contests/${postingId}`;
   const { data } = await axiosInstance.get(endpoint);
 
   return mapApiPostingDetailToPosting(unwrapApiData<ApiPostingDetail>(data), type);
