@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { getSearchPosts } from '@/apis/explore';
-import type { SearchPostItem, SearchNextCursor } from '@/types/explore';
+import type { SearchPostItem, SearchNextCursor, SearchPostsResult } from '@/types/explore';
 import type { Posting } from '@/types/posting';
 import { Layout } from '@/shared/components';
 import { TabBar } from '@/shared/components/TabBar';
@@ -11,10 +12,15 @@ import Dropdown from '@/shared/components/Dropdown';
 import PostingCard from '@/shared/components/PostingCard';
 import EmptyState from '@/shared/components/EmptyState';
 import { useIntersectionObserver } from '@/shared/hooks/useIntersectionObserver';
-import { getLiveSearchData } from '@/apis/search';
+import { getLiveSearchData, deleteSearchKeyword } from '@/apis/search';
 
-// 공모전 카테고리 정의
-const CATEGORIES = ['전체', '마케팅', '기획/아이디어', '디자인', 'IT/개발', '어학', '기타'];
+interface RecentSearchItem {
+  searchId?: number;
+  keyword: string;
+}
+
+// 공모전 카테고리 정의 (Swagger Enum: PM, MARKETING, DESIGN, IT, VIDEO, ETC)
+const CATEGORIES = ['전체', '마케팅', '기획/아이디어', '디자인', 'IT/개발', '영상/미디어', '기타'];
 
 // 정렬 드롭다운 옵션
 const SORT_OPTIONS = [
@@ -26,18 +32,18 @@ const SORT_OPTIONS = [
 // 추천 테마 키워드 (피그마 시안 반영)
 const RECOMMENDED_THEMES = ['고액장학금', '디자인공모전', '해외연수프로그램', '창업지원프로그램'];
 
-const CATEGORY_MAP: Record<string, 'MARKETING' | 'PM' | 'DESIGN' | 'DEV' | 'LANGUAGE' | 'ETC'> = {
-  '마케팅': 'MARKETING',
+const CATEGORY_MAP: Record<string, 'PM' | 'MARKETING' | 'DESIGN' | 'IT' | 'VIDEO' | 'ETC'> = {
+  마케팅: 'MARKETING',
   '기획/아이디어': 'PM',
-  '디자인': 'DESIGN',
-  'IT/개발': 'DEV',
-  '어학': 'LANGUAGE',
-  '기타': 'ETC',
+  디자인: 'DESIGN',
+  'IT/개발': 'IT',
+  '영상/미디어': 'VIDEO',
+  기타: 'ETC',
 };
 
 const mapSearchPostItemToPosting = (item: SearchPostItem): Posting => ({
   id: item.postId,
-  type: item.type,
+  type: item.type === 'CONTEST' ? 'CONTEST' : 'SCHOLARSHIP',
   title: item.title,
   organization: item.organization,
   deadline: item.deadlineDate,
@@ -47,13 +53,14 @@ const mapSearchPostItemToPosting = (item: SearchPostItem): Posting => ({
 });
 
 export default function ExplorePage() {
+  const navigate = useNavigate();
   const [keyword, setKeyword] = useState(''); // 입력창 텍스트
   const [searchQuery, setSearchQuery] = useState(''); // 실제 검색어 (디바운스 적용)
   const [isSearchFocused, setIsSearchFocused] = useState(false); // 검색창 포커스(오버레이 활성화) 여부
   const [activeTab, setActiveTab] = useState<'all' | 'scholarship' | 'contest'>('all'); // 대분류 탭
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined); // 공모전 카테고리 칩
   const [sortBy, setSortBy] = useState<'deadline' | 'latest' | 'popular'>('deadline'); // 정렬 방식
-  const [recentSearches, setRecentSearches] = useState<string[]>([]); // 최근 검색어 목록
+  const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]); // 최근 검색어 목록
 
   // 1. 실시간 검색 데이터 (최근 검색어 & 실시간 인기 공고 API 연동)
   const { data: liveSearchData } = useQuery({
@@ -61,15 +68,60 @@ export default function ExplorePage() {
     queryFn: getLiveSearchData,
   });
 
+  // API 데이터 기반 동적 추천 테마 및 실시간 기준 시간 구성
+  const recommendedThemes = (() => {
+    const dynamic: string[] = [];
+    if (liveSearchData?.realtimePosts?.posts?.length) {
+      liveSearchData.realtimePosts.posts.forEach((p) => {
+        const firstWord = p.title.trim().split(/\s+/)[0];
+        if (firstWord && firstWord.length >= 2 && !dynamic.includes(firstWord)) {
+          dynamic.push(firstWord);
+        }
+      });
+    }
+    const merged = Array.from(new Set([...dynamic, ...RECOMMENDED_THEMES]));
+    return merged.slice(0, 6);
+  })();
+
+  const displayBaseTime = (() => {
+    const bt = liveSearchData?.realtimePosts?.baseTime;
+    if (!bt) return '실시간 기준';
+    if (bt.includes('T')) {
+      const timeStr = bt.split('T')[1]?.substring(0, 5);
+      if (timeStr) return `오늘 ${timeStr} 기준`;
+    }
+    return bt;
+  })();
+
+  const handleRealtimePostClick = (item: { postId: number; title: string }) => {
+    if (item.postId) {
+      navigate(`/postings/${item.postId}`);
+    } else {
+      handleSelectKeyword(item.title);
+    }
+  };
+
   // 최근 검색어 불러오기 (API 데이터 우선, 로컬스토리지 fallback)
   useEffect(() => {
     if (liveSearchData?.recentKeywords && liveSearchData.recentKeywords.length > 0) {
-      setRecentSearches(liveSearchData.recentKeywords.map((item) => item.keyword));
+      setRecentSearches(
+        liveSearchData.recentKeywords.map((item) => ({
+          searchId: Number(item.searchId),
+          keyword: item.keyword,
+        })),
+      );
     } else {
       const saved = localStorage.getItem('recent-searches');
       if (saved) {
         try {
-          setRecentSearches(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setRecentSearches(
+              parsed.map((item) =>
+                typeof item === 'string' ? { keyword: item } : (item as RecentSearchItem),
+              ),
+            );
+          }
         } catch (e) {
           console.error('Failed to load recent searches', e);
         }
@@ -82,17 +134,24 @@ export default function ExplorePage() {
     const trimmed = query.trim();
     if (!trimmed) return;
     setRecentSearches((prev) => {
-      const filtered = prev.filter((item) => item !== trimmed);
-      const updated = [trimmed, ...filtered].slice(0, 10); // 최대 10개 관리
+      const filtered = prev.filter((item) => item.keyword !== trimmed);
+      const updated = [{ keyword: trimmed }, ...filtered].slice(0, 10); // 최대 10개 관리
       localStorage.setItem('recent-searches', JSON.stringify(updated));
       return updated;
     });
   };
 
-  // 최근 검색어 개별 삭제
-  const removeRecentSearch = (query: string) => {
+  // 최근 검색어 개별 삭제 (API 호출 + 로컬 상태 삭제)
+  const removeRecentSearch = async (item: RecentSearchItem) => {
+    if (item.searchId) {
+      try {
+        await deleteSearchKeyword(item.searchId);
+      } catch (e) {
+        console.error('Failed to delete recent search keyword:', e);
+      }
+    }
     setRecentSearches((prev) => {
-      const updated = prev.filter((item) => item !== query);
+      const updated = prev.filter((kw) => kw.keyword !== item.keyword);
       localStorage.setItem('recent-searches', JSON.stringify(updated));
       return updated;
     });
@@ -100,6 +159,11 @@ export default function ExplorePage() {
 
   // 최근 검색어 전체 삭제
   const clearRecentSearches = () => {
+    recentSearches.forEach((item) => {
+      if (item.searchId) {
+        deleteSearchKeyword(item.searchId).catch(() => {});
+      }
+    });
     setRecentSearches([]);
     localStorage.removeItem('recent-searches');
   };
@@ -112,12 +176,13 @@ export default function ExplorePage() {
     saveRecentSearch(selected);
   };
 
-  // 검색바에서 디바운스된 검색어 전달받을 때 호출
-  const handleSearch = (debouncedVal: string) => {
-    setSearchQuery(debouncedVal);
-    // 디바운스 완료 시 검색어가 있으면 최근 검색어에 자동 추가
-    if (debouncedVal.trim() && isSearchFocused) {
-      saveRecentSearch(debouncedVal);
+  // 엔터 키 제출 또는 검색 버튼 클릭 시에만 실제 검색 실행
+  const handleSubmitSearch = (val: string) => {
+    const trimmed = val.trim();
+    setSearchQuery(trimmed);
+    setIsSearchFocused(false);
+    if (trimmed) {
+      saveRecentSearch(trimmed);
     }
   };
 
@@ -135,18 +200,39 @@ export default function ExplorePage() {
         'searchPostsList',
         { keyword: searchQuery, type: activeTab, category: selectedCategory, sortBy },
       ],
-      queryFn: ({ pageParam }) =>
+      queryFn: ({ pageParam }: { pageParam?: SearchNextCursor }) =>
         getSearchPosts({
-          type: activeTab === 'scholarship' ? 'SCHOLARSHIP' : activeTab === 'contest' ? 'CONTEST' : 'ALL',
+          type:
+            activeTab === 'scholarship'
+              ? 'SCHOLARSHIP'
+              : activeTab === 'contest'
+                ? 'CONTEST'
+                : 'ALL',
           sort: sortBy === 'latest' ? 'RECENT' : 'DEADLINE',
-          category: activeTab === 'contest' && selectedCategory ? CATEGORY_MAP[selectedCategory] : undefined,
+          category:
+            activeTab === 'contest' && selectedCategory
+              ? CATEGORY_MAP[selectedCategory]
+              : undefined,
           keyword: searchQuery.trim() || undefined,
           idCursor: pageParam?.idCursor,
           deadlineCursor: pageParam?.deadlineCursor,
         }),
       initialPageParam: undefined as SearchNextCursor | undefined,
-      getNextPageParam: (lastPage) =>
-        lastPage?.pageInfo?.hasNext ? lastPage.pageInfo.nextCursor ?? undefined : undefined,
+      getNextPageParam: (lastPage: SearchPostsResult) => {
+        if (!lastPage) return undefined;
+        if (lastPage.hasNext) {
+          if (lastPage.nextIdCursor !== undefined || lastPage.nextDeadlineCursor !== undefined) {
+            return {
+              idCursor: lastPage.nextIdCursor,
+              deadlineCursor: lastPage.nextDeadlineCursor,
+            };
+          }
+          if (lastPage.pageInfo?.nextCursor) {
+            return lastPage.pageInfo.nextCursor;
+          }
+        }
+        return undefined;
+      },
     });
 
   // 무한 스크롤 트리거 관측용 커스텀 훅 연동
@@ -155,8 +241,8 @@ export default function ExplorePage() {
     enabled: hasNextPage && !isFetchingNextPage && !isLoading && !isError,
   });
 
-  // 무한 스크롤로 수집된 모든 SearchPostItem을 Posting형으로 평탄화
-  const rawPosts = data?.pages.flatMap((page) => page?.posts ?? []) ?? [];
+  // 무한 스크롤로 수집된 모든 SearchPostItem을 Posting형으로 평탄화 (Swagger data 우선)
+  const rawPosts = data?.pages.flatMap((page) => page?.data ?? page?.posts ?? []) ?? [];
   const postings: Posting[] = rawPosts.map(mapSearchPostItemToPosting);
 
   return (
@@ -192,8 +278,13 @@ export default function ExplorePage() {
             <div className="flex-1">
               <SearchBar
                 value={keyword}
-                onChange={setKeyword}
-                onSearch={handleSearch}
+                onChange={(val) => {
+                  setKeyword(val);
+                  if (!val.trim()) {
+                    setSearchQuery('');
+                  }
+                }}
+                onSubmit={handleSubmitSearch}
                 onFocus={() => setIsSearchFocused(true)}
                 placeholder="원하는 장학금, 공모전을 찾아보세요"
               />
@@ -260,17 +351,17 @@ export default function ExplorePage() {
             <div className="mt-[24px]">
               {/* 최근 검색어 가로 스크롤 동글이 */}
               <div className="flex gap-[8px] px-[20px] overflow-x-auto scrollbar-none">
-                {recentSearches.map((kw) => (
+                {recentSearches.map((item) => (
                   <span
-                    key={kw}
+                    key={item.searchId ?? item.keyword}
                     className="inline-flex items-center gap-[4px] px-[12px] py-[8px] rounded-[30px] bg-blue-50 text-blue-500 text-[12px] font-medium leading-[1.4] h-[33px] hover:bg-blue-100 transition-colors cursor-pointer select-none whitespace-nowrap shrink-0"
                   >
-                    <span onClick={() => handleSelectKeyword(kw)}>{kw}</span>
+                    <span onClick={() => handleSelectKeyword(item.keyword)}>{item.keyword}</span>
                     <button
                       type="button"
-                      onClick={() => removeRecentSearch(kw)}
+                      onClick={() => removeRecentSearch(item)}
                       className="text-blue-400 hover:text-blue-600 flex items-center justify-center cursor-pointer w-[9.33px] h-[9.33px]"
-                      aria-label={`${kw} 삭제`}
+                      aria-label={`${item.keyword} 삭제`}
                     >
                       <svg
                         viewBox="0 0 24 24"
@@ -293,7 +384,7 @@ export default function ExplorePage() {
               <div className="mt-[24px] bg-[#F5F9FF] px-[20px] py-[16px] flex flex-col gap-[16px]">
                 <h4 className="font-semibold text-[16px] text-slate-800">추천 테마</h4>
                 <div className="flex flex-wrap gap-[8px]">
-                  {RECOMMENDED_THEMES.map((theme) => (
+                  {recommendedThemes.map((theme) => (
                     <button
                       key={theme}
                       type="button"
@@ -319,7 +410,7 @@ export default function ExplorePage() {
               <div className="mt-[32px] bg-[#F5F9FF] px-[20px] py-[16px] flex flex-col gap-[16px]">
                 <h4 className="font-semibold text-[16px] text-slate-800">추천 테마</h4>
                 <div className="flex flex-wrap gap-[8px]">
-                  {RECOMMENDED_THEMES.map((theme) => (
+                  {recommendedThemes.map((theme) => (
                     <button
                       key={theme}
                       type="button"
@@ -338,7 +429,7 @@ export default function ExplorePage() {
           <div className="mt-[24px] flex items-baseline gap-[8px] px-[20px]">
             <h4 className="font-semibold text-[16px] leading-[1.4] text-slate-800">실시간 공고</h4>
             <span className="font-medium text-[12px] leading-[1.4] text-slate-400">
-              {liveSearchData?.realtimePosts?.baseTime || '오늘 22시 기준'}
+              {displayBaseTime}
             </span>
           </div>
 
@@ -348,7 +439,7 @@ export default function ExplorePage() {
               return (
                 <div
                   key={item.postId || item.rank}
-                  onClick={() => handleSelectKeyword(item.title)}
+                  onClick={() => handleRealtimePostClick(item)}
                   className="flex items-center justify-between cursor-pointer group w-full"
                 >
                   <div className="flex items-center flex-1 min-w-0">
@@ -365,34 +456,29 @@ export default function ExplorePage() {
                     </span>
                   </div>
 
-                  {/* 순위 변동 표시 (UP/DOWN/NEW/STAY) */}
-                  <div className="flex items-center justify-center w-[16px] h-[16px] shrink-0">
-                    {item.fluctuation === 'UP' && (
-                      <svg
-                        width="8"
-                        height="6"
-                        viewBox="0 0 8 6"
-                        className="text-blue-500 fill-current"
-                      >
-                        <polygon points="4,0 8,6 0,6" />
-                      </svg>
-                    )}
-                    {item.fluctuation === 'DOWN' && (
-                      <svg
-                        width="8"
-                        height="6"
-                        viewBox="0 0 8 6"
-                        className="text-red-500 fill-current"
-                      >
-                        <polygon points="4,6 8,0 0,0" />
-                      </svg>
-                    )}
-                    {item.fluctuation === 'NEW' && (
-                      <span className="text-[10px] font-bold text-red-500">NEW</span>
-                    )}
-                    {item.fluctuation === 'SAME' && (
-                      <div className="w-[11px] h-[1.5px] bg-slate-300 rounded-full" />
-                    )}
+                  {/* 순위 변동 표시 (UP/DOWN/NEW/SAME/STAY) */}
+                  <div className="flex items-center justify-center w-[20px] h-[16px] shrink-0">
+                    {(() => {
+                      const fl = item.fluctuation?.toString().trim().toUpperCase();
+                      if (fl === 'UP' || fl === 'RISE') {
+                        return (
+                          <svg width="10" height="8" viewBox="0 0 10 8" className="text-red-500 fill-current">
+                            <polygon points="5,0 10,8 0,8" />
+                          </svg>
+                        );
+                      }
+                      if (fl === 'DOWN' || fl === 'FALL') {
+                        return (
+                          <svg width="10" height="8" viewBox="0 0 10 8" className="text-blue-500 fill-current">
+                            <polygon points="5,8 10,0 0,0" />
+                          </svg>
+                        );
+                      }
+                      if (fl === 'NEW') {
+                        return <span className="text-[10px] font-bold text-red-500 leading-none">NEW</span>;
+                      }
+                      return <div className="w-[10px] h-[2px] bg-slate-300 rounded-full" />;
+                    })()}
                   </div>
                 </div>
               );
@@ -404,7 +490,7 @@ export default function ExplorePage() {
         <div className="flex flex-col flex-1 pb-4">
           {/* 공모전 탭 선택 시 노출할 분야 세부 카테고리 칩 스크롤 (메뉴와 24px 거리, 칩 간 11.5px 간격, 아래와 20px 격리) */}
           {activeTab === 'contest' && (
-            <div className="flex items-center gap-[11.5px] overflow-x-auto bg-white pl-[20px] pr-[20px] pt-[24px] pb-[20px] border-b border-slate-100 scrollbar-none sticky top-[108px] z-10">
+            <div className="flex items-center gap-[11.5px] overflow-x-auto bg-white pl-[20px] pr-[20px] pt-[24px] pb-[20px] border-slate-100 scrollbar-none sticky top-[108px] z-10">
               {CATEGORIES.map((cat) => (
                 <div key={cat} className="shrink-0">
                   <Chip

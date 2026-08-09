@@ -23,3 +23,9 @@ export interface UserApplicationDetail {
   memo: string;
   post: Posting;
 }
+
+export interface GetHistoryListParams {
+  tab?: string;
+  page?: number;
+  size?: number;
+}

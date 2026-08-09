@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getNotificationSettings, updateNotificationSettings } from '@/apis/mypage';
 import { Layout, Switch } from '@/shared/components';
+import chevronLeftIcon from '@/assets/icons/chevron-left.svg';
+import { validateEmail } from '@/shared/utils/validation';
 import { useToastStore } from '@/store/toastStore';
 
 export default function NotificationSettings() {
@@ -16,9 +18,10 @@ export default function NotificationSettings() {
     queryFn: getNotificationSettings,
   });
 
-  // 이메일 수신 주소 로컬 입력 상태 및 편집 상태 관리
+  // 이메일 수신 주소 로컬 입력 상태 및 편집/에러 상태 관리
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [emailInput, setEmailInput] = useState(notificationSettings?.notificationEmail || '');
+  const [emailError, setEmailError] = useState('');
 
   useEffect(() => {
     if (notificationSettings) {
@@ -57,20 +60,20 @@ export default function NotificationSettings() {
   const handleSaveEmail = () => {
     if (!notificationSettings) return;
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailInput)) {
-      toast.error('올바른 이메일 형식을 입력해 주세요.');
+    const errorMsg = validateEmail(emailInput);
+    if (errorMsg) {
+      setEmailError(errorMsg);
       return;
     }
 
+    setEmailError('');
+
     const newSettings = {
       ...notificationSettings,
-      notificationEmail: emailInput,
+      notificationEmail: emailInput.trim(),
     };
 
-    updateSettings({
-      ...newSettings,
-    });
+    updateSettings(newSettings);
     setIsEditingEmail(false);
   };
 
@@ -103,16 +106,7 @@ export default function NotificationSettings() {
             onClick={() => navigate(-1)}
             className="w-[41px] h-[41px] flex items-center justify-center rounded-full text-gray-800 hover:bg-gray-50 active:scale-95 transition-all shrink-0"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6">
-              <path
-                d="M15 18L9 12L15 6"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.2"
-              />
-            </svg>
+            <img src={chevronLeftIcon} className="size-6" alt="뒤로가기" />
           </button>
           <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard select-none text-center">
             알림 설정
@@ -134,37 +128,55 @@ export default function NotificationSettings() {
             맞춤 공고 및 마감일 리마인드 메일을 받을 주소입니다.
           </p>
 
-          {/* 음영(shadow)을 없앤 이메일 박스 (w-362 h-59) */}
-          <div className="mt-[24px] w-full max-w-[362px] h-[59px] rounded-[16px] bg-blue-50/50 pt-[15px] pr-[15px] pb-[15px] pl-[20px] flex items-center justify-between transition-all mx-auto">
+          {/* 음영(shadow)을 없앤 이메일 박스 (w-362 min-h-[59px]) */}
+          <div className="mt-[24px] w-full max-w-[362px] min-h-[59px] rounded-[16px] bg-blue-50/50 p-[15px] flex items-center justify-between transition-all mx-auto">
             {isEditingEmail ? (
-              <div className="flex flex-1 items-center justify-between gap-2">
-                <input
-                  type="email"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  className="w-[180px] h-[33px] rounded-lg border border-gray-200 bg-white px-2.5 text-xs font-semibold text-gray-800 focus:border-blue-500 focus:outline-none"
-                  placeholder="이메일 입력"
-                  autoFocus
-                />
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmailInput(notificationSettings.notificationEmail);
-                      setIsEditingEmail(false);
+              <div className="flex flex-col gap-1.5 w-full">
+                <div className="flex flex-1 items-center justify-between gap-2">
+                  <input
+                    type="email"
+                    value={emailInput}
+                    onChange={(e) => {
+                      setEmailInput(e.target.value);
+                      if (emailError) setEmailError('');
                     }}
-                    className="h-[33px] px-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-[12px] text-gray-500 hover:bg-gray-100 transition-colors"
-                  >
-                    취소
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveEmail}
-                    className="h-[33px] px-2.5 text-xs font-bold bg-blue-600 rounded-[12px] text-white hover:bg-blue-700 shadow-sm transition-colors"
-                  >
-                    저장
-                  </button>
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveEmail();
+                    }}
+                    className={`w-[180px] h-[33px] rounded-lg border bg-white px-2.5 text-xs font-semibold text-gray-800 focus:outline-none transition-colors ${
+                      emailError
+                        ? 'border-red-500 text-red-900 focus:border-red-500'
+                        : 'border-gray-200 focus:border-blue-500'
+                    }`}
+                    placeholder="fitme@example.com"
+                    autoFocus
+                  />
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmailInput(notificationSettings.notificationEmail);
+                        setEmailError('');
+                        setIsEditingEmail(false);
+                      }}
+                      className="h-[33px] px-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-[12px] text-gray-500 hover:bg-gray-100 transition-colors"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveEmail}
+                      className="h-[33px] px-2.5 text-xs font-bold bg-blue-600 rounded-[12px] text-white hover:bg-blue-700 shadow-sm transition-colors"
+                    >
+                      저장
+                    </button>
+                  </div>
                 </div>
+                {emailError && (
+                  <p className="text-[11px] font-medium text-red-500 leading-tight pl-1">
+                    * {emailError}
+                  </p>
+                )}
               </div>
             ) : (
               <>

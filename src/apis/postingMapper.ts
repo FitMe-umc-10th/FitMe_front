@@ -1,15 +1,19 @@
 import type { HomePostingFeed, Posting, PostingType } from '@/types/posting';
 
 export interface ApiPostingSummary {
-  postId: number;
-  type: PostingType;
+  id?: number;
+  postId?: number;
+  type?: PostingType | null;
   title?: string | null;
   organizer?: string | null;
+  oraganizer?: string | null;
   organization?: string | null;
   thumbnailUrl?: string | null;
   deadlineDate?: string | null;
   deadlineLabel?: number | string | null;
+  isSaved?: boolean;
   saved?: boolean;
+  savedId?: number | null;
   category?: string | null;
   createdAt?: string | null;
   viewedAt?: string | null;
@@ -25,9 +29,11 @@ export interface ApiSavedPosting extends ApiPostingSummary {
 
 export interface ApiPageInfo {
   hasNext: boolean;
-  nextIdCursor?: number | null;
+  nextCursor?: string | null;
+  nextIdCursor?: number | string | null;
   nextDeadlineCursor?: string | null;
-  pageSize: number;
+  size?: number;
+  pageSize?: number;
 }
 
 export interface ApiListResponse<T> {
@@ -50,7 +56,8 @@ export interface ApiRecentViewedPostingsResponse {
 }
 
 export interface ApiPopularPostingsResponse {
-  popularPosts: ApiPostingSummary[];
+  posts?: ApiPostingSummary[];
+  popularPosts?: ApiPostingSummary[];
   hasNext: boolean;
   nextIdCursor?: number | null;
   nextDeadlineCursor?: string | null;
@@ -69,7 +76,9 @@ const getDeadlineFromLabel = (deadlineLabel?: number | string | null) => {
     return date.toISOString().slice(0, 10);
   }
 
-  if (deadlineLabel === '마감') return new Date().toISOString().slice(0, 10);
+  if (deadlineLabel === '마감' || deadlineLabel === 'D-Day') {
+    return new Date().toISOString().slice(0, 10);
+  }
 
   const matchedDays = deadlineLabel.match(/^D-(\d+)$/);
   if (!matchedDays) return DEFAULT_DEADLINE;
@@ -80,13 +89,18 @@ const getDeadlineFromLabel = (deadlineLabel?: number | string | null) => {
 };
 
 export const mapApiPostingToPosting = (posting: ApiPostingSummary): Posting => ({
-  id: posting.postId,
-  type: posting.type,
+  id: posting.postId ?? posting.id ?? 0,
+  savedId: posting.savedId ?? undefined,
+  type: posting.type ?? 'SCHOLARSHIP',
   title: posting.title?.trim() || '제목 없는 공고',
-  organization: posting.organizer?.trim() || posting.organization?.trim() || '기관 정보 없음',
+  organization:
+    posting.organizer?.trim() ||
+    posting.oraganizer?.trim() ||
+    posting.organization?.trim() ||
+    '기관 정보 없음',
   deadline: posting.deadlineDate ?? getDeadlineFromLabel(posting.deadlineLabel),
   posterUrl: posting.thumbnailUrl ?? '',
-  isSaved: posting.saved ?? false,
+  isSaved: posting.isSaved ?? posting.saved ?? false,
   category: posting.category ?? undefined,
   createdAt: posting.createdAt ?? undefined,
   viewedAt: posting.viewedAt ?? undefined,

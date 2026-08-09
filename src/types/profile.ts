@@ -64,6 +64,20 @@ export interface UserProfile {
   };
 }
 
+export interface RevertImageUrlDTO {
+  uploadUrl: string;
+  fileUrl: string;
+}
+
+export enum ImageType {
+  PNG = 'image/png',
+  JPEG = 'image/jpeg',
+  JPG = 'image/jpg',
+  GIF = 'image/gif',
+  BMP = 'image/bmp',
+  WEBP = 'image/webp',
+}
+
 export interface Notice {
   id: number;
   type: string; // 예: "안내"

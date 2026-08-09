@@ -15,9 +15,13 @@ import {
   type ApiPopularPostingsResponse,
   type ApiRecentViewedPostingsResponse,
   mapApiPostingList,
+  mapApiSavedPostingList,
+  mapApiSavedPostingToPosting,
+  type ApiSavedPosting,
 } from '@/apis/postingMapper';
 import { MOCK_POSTINGS } from '@/constants/mockData';
 import { getDDayDays } from '@/shared/utils/date';
+import type { ApiResponse } from '@/types/common';
 
 export interface GetExplorePostingsParams {
   keyword: string;
@@ -45,6 +49,23 @@ type MockSavedPostings = Record<number, boolean>;
 
 type ApiPostingType = PostingType | 'SCHOLARSHIP' | 'CONTEST' | string;
 
+type SavedPostingsPayload =
+  | ApiSavedPosting[]
+  | {
+      items?: ApiSavedPosting[];
+      savedPosts?: ApiSavedPosting[];
+      savedPostings?: ApiSavedPosting[];
+      postings?: ApiSavedPosting[];
+      content?: ApiSavedPosting[];
+    };
+
+type SavedPostMutationPayload = Partial<ApiSavedPosting> | number | string | null | undefined;
+
+export interface ToggleSaveResult {
+  isSaved: boolean;
+  savedId?: number;
+}
+
 interface ApiPostingDetail {
   id?: number;
   postId?: number;
@@ -55,16 +76,20 @@ interface ApiPostingDetail {
   title?: string;
   name?: string;
   organizer?: string;
+  oraganizer?: string;
   organization?: string;
   organizationName?: string;
   deadline?: string;
   deadlineDate?: string;
   endDate?: string;
+  applyStartDate?: string;
+  applyEndDate?: string;
   posterUrl?: string;
   imageUrl?: string;
   thumbnailUrl?: string;
   posterImageUrl?: string;
   isSaved?: boolean;
+  issaved?: boolean;
   saved?: boolean;
   category?: string;
   createdAt?: string;
@@ -98,6 +123,18 @@ interface ApiPostingDetail {
   eligibility?: string;
   headcount?: string;
   personnel?: string;
+  scholarshipDetail?: {
+    supportAmount?: string;
+    gradeRequirement?: string;
+    incomeRequirement?: string;
+    regionRequirement?: string;
+  };
+  contestDetail?: {
+    posterImageUrl?: string;
+    target?: string;
+    participantLimit?: string;
+    rewardTotal?: string;
+  };
 }
 
 const waitMockNetwork = (delayMs = MOCK_NETWORK_DELAY_MS) =>
@@ -117,14 +154,47 @@ const unwrapApiData = <T>(payload: unknown): T => {
   return payload as T;
 };
 
+const normalizeSavedPostingsPayload = (payload: SavedPostingsPayload): ApiSavedPosting[] => {
+  if (Array.isArray(payload)) return payload;
+
+  return (
+    payload.items ??
+    payload.savedPosts ??
+    payload.savedPostings ??
+    payload.postings ??
+    payload.content ??
+    []
+  );
+};
+
+const getSavedIdFromPayload = (payload: SavedPostMutationPayload, fallback?: number) => {
+  if (typeof payload === 'number') return payload;
+
+  if (typeof payload === 'string') {
+    const parsedSavedId = Number(payload);
+    return Number.isFinite(parsedSavedId) ? parsedSavedId : fallback;
+  }
+
+  if (payload && typeof payload.savedId === 'number') {
+    return payload.savedId;
+  }
+
+  return fallback;
+};
+
 const normalizePostingType = (type?: ApiPostingType): PostingType => {
   if (type === 'CONTEST') return 'CONTEST';
   return 'SCHOLARSHIP';
 };
 
 const formatPeriodDate = (posting: ApiPostingDetail) => {
-  const startDate = posting.startDate ?? posting.recruitmentStartDate;
-  const endDate = posting.deadline ?? posting.deadlineDate ?? posting.endDate ?? posting.recruitmentEndDate;
+  const startDate = posting.startDate ?? posting.applyStartDate ?? posting.recruitmentStartDate;
+  const endDate =
+    posting.deadline ??
+    posting.deadlineDate ??
+    posting.applyEndDate ??
+    posting.endDate ??
+    posting.recruitmentEndDate;
 
   if (startDate && endDate) return `${startDate} ~ ${endDate}`;
   return endDate ?? '';
@@ -134,10 +204,18 @@ const mapApiPostingDetailToPosting = (posting: ApiPostingDetail, fallbackType: P
   id: posting.postId ?? posting.id ?? posting.announcementId ?? 0,
   type: normalizePostingType(posting.type ?? posting.postType ?? posting.announcementType ?? fallbackType),
   title: posting.title ?? posting.name ?? '제목 정보 없음',
-  organization: posting.organizer ?? posting.organization ?? posting.organizationName ?? '기관 정보 없음',
-  deadline: posting.deadline ?? posting.deadlineDate ?? posting.endDate ?? posting.recruitmentEndDate ?? '',
-  posterUrl: posting.posterUrl ?? posting.imageUrl ?? posting.thumbnailUrl ?? posting.posterImageUrl ?? '',
-  isSaved: posting.isSaved ?? posting.saved ?? false,
+  organization:
+    posting.organizer ?? posting.oraganizer ?? posting.organization ?? posting.organizationName ?? '기관 정보 없음',
+  deadline:
+    posting.deadline ?? posting.deadlineDate ?? posting.applyEndDate ?? posting.endDate ?? posting.recruitmentEndDate ?? '',
+  posterUrl:
+    posting.posterUrl ??
+    posting.imageUrl ??
+    posting.thumbnailUrl ??
+    posting.posterImageUrl ??
+    posting.contestDetail?.posterImageUrl ??
+    '',
+  isSaved: posting.isSaved ?? posting.issaved ?? posting.saved ?? false,
   category: posting.category,
   createdAt: posting.createdAt,
   views: posting.views ?? posting.viewCount ?? 0,
@@ -152,13 +230,19 @@ const mapApiPostingDetailToPosting = (posting: ApiPostingDetail, fallbackType: P
     method: posting.applyMethod ?? posting.receptionMethod,
   },
   benefit: {
-    target: posting.benefitTarget ?? posting.award ?? posting.prize,
+    target: posting.benefitTarget ?? posting.contestDetail?.target ?? posting.award ?? posting.prize,
     grandPrize: posting.topPrize,
-    support: posting.supportBenefit ?? posting.extraBenefit,
+    support: posting.supportBenefit ?? posting.scholarshipDetail?.supportAmount ?? posting.contestDetail?.rewardTotal ?? posting.extraBenefit,
   },
   eligibility: {
-    education: posting.education ?? posting.qualification ?? posting.eligibility,
-    headcount: posting.headcount ?? posting.personnel,
+    education:
+      posting.education ??
+      posting.scholarshipDetail?.gradeRequirement ??
+      posting.scholarshipDetail?.incomeRequirement ??
+      posting.scholarshipDetail?.regionRequirement ??
+      posting.qualification ??
+      posting.eligibility,
+    headcount: posting.headcount ?? posting.contestDetail?.participantLimit ?? posting.personnel,
   },
 });
 
@@ -232,6 +316,16 @@ const sortSavedPostings = (postings: Posting[], sort?: GetSavedPostingsParams['s
     const savedIdB = b.savedId ?? b.id;
     return savedIdB - savedIdA;
   });
+};
+
+const getMockSavedPostings = (category?: PostingType | 'ALL', sort?: GetSavedPostingsParams['sort']) => {
+  const postings = applyMockSavedPostings();
+  const savedPostings = filterByPostingType(
+    postings.filter((posting) => posting.isSaved),
+    category,
+  );
+
+  return sortSavedPostings(savedPostings, sort);
 };
 
 // === 탐색/검색 화면 전용 페이지네이션 및 필터링 Mock API ===
@@ -328,7 +422,7 @@ export const getPopularPostings = async ({
   });
   const result = unwrapApiData<ApiPopularPostingsResponse>(data);
 
-  return mapApiPostingList(result.popularPosts ?? []);
+  return mapApiPostingList(result.posts ?? result.popularPosts ?? []);
 };
 
 export const getRecentViewedPostings = async ({
@@ -357,7 +451,7 @@ export const getClosingSoonPostings = async ({
   const { data } = await axiosInstance.get('/api/v1/post/closing-soon', {
     params: {
       userId,
-      postType,
+      type: postType,
       sort,
       size,
     },
@@ -417,15 +511,31 @@ export const getHomePostingFeed = async ({
 export const getSavedPostings = async ({
   category = 'ALL',
   sort = 'DEADLINE',
+  cursor,
+  size,
 }: GetSavedPostingsParams = {}): Promise<Posting[]> => {
-  await waitMockNetwork();
-  const postings = applyMockSavedPostings();
-  const savedPostings = filterByPostingType(
-    postings.filter((posting) => posting.isSaved),
-    category,
-  );
+  try {
+    const { data } = await axiosInstance.get<ApiResponse<SavedPostingsPayload> | SavedPostingsPayload>(
+      '/api/v1/saved-posts',
+      {
+        params: {
+          category,
+          sort,
+          cursor,
+          size,
+        },
+      },
+    );
 
-  return sortSavedPostings(savedPostings, sort);
+    return mapApiSavedPostingList(normalizeSavedPostingsPayload(unwrapApiData<SavedPostingsPayload>(data)));
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('저장 목록 API 호출 실패, mock 데이터로 대체합니다.', error);
+      return getMockSavedPostings(category, sort);
+    }
+
+    throw error;
+  }
 };
 
 export const getPostingById = async (postingId: number): Promise<Posting | null> => {
@@ -457,16 +567,50 @@ export const getDeadlinePostings = async (): Promise<Posting[]> => {
   return sortByDeadlineAsc(postings);
 };
 
-export const toggleSave = async (postingId: number, isSaved: boolean): Promise<boolean> => {
-  await waitMockNetwork(); // 네트워크 흉내
+export const toggleSave = async (
+  postingId: number,
+  isSaved: boolean,
+  savedId?: number,
+): Promise<ToggleSaveResult> => {
+  try {
+    if (isSaved) {
+      if (!savedId) {
+        throw new Error('저장 해제에 필요한 savedId가 없습니다.');
+      }
 
-  // 10% 확률로 실패 시나리오
-  if (Math.random() < 0.1) {
-    throw new Error('토글에 실패했습니다.');
+      const { data } = await axiosInstance.delete<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
+        `/api/v1/saved-posts/${savedId}`,
+      );
+      const deletedPosting = unwrapApiData<SavedPostMutationPayload>(data);
+
+      return {
+        isSaved: false,
+        savedId: getSavedIdFromPayload(deletedPosting, savedId),
+      };
+    }
+
+    const { data } = await axiosInstance.post<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
+      '/api/v1/saved-posts',
+      { postId: postingId },
+    );
+    const savedPostingPayload = unwrapApiData<ApiSavedPosting>(data);
+    const savedPosting = mapApiSavedPostingToPosting(savedPostingPayload);
+
+    return {
+      isSaved: true,
+      savedId: getSavedIdFromPayload(savedPostingPayload, savedPosting.savedId),
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 409) {
+      throw error;
+    }
+
+    if (!import.meta.env.DEV) {
+      throw error;
+    }
   }
 
-  // 메모리 상의 mock 데이터를 실제로 업데이트하여 refetch 시에도 상태가 보존되게 함
-  const target = applyMockSavedPostings().find((p) => p.id === postingId);
+  const target = applyMockSavedPostings().find((posting) => posting.id === postingId);
   const nextSavedState = !isSaved;
 
   if (target) {
@@ -476,5 +620,5 @@ export const toggleSave = async (postingId: number, isSaved: boolean): Promise<b
     writeMockSavedPosting(postingId, nextSavedState);
   }
 
-  return nextSavedState; // 정상 처리 시 반전된 값 반환
+  return { isSaved: nextSavedState, savedId: target?.savedId };
 };

@@ -1,20 +1,30 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { getUserProfileDetail, updateUserProfile } from '@/apis/mypage';
-import { Layout } from '@/shared/components';
+import {
+  getPresignedUrl,
+  uploadImageToS3,
+  getUserProfileDetail,
+  updateUserProfile,
+} from '@/apis/mypage';
+import { Layout, WebCameraModal } from '@/shared/components';
 import { useToastStore } from '@/store/toastStore';
+import { validateGpa } from '@/shared/utils/validation';
+import { dataURLtoFile } from '@/shared/utils/file';
 import defaultPersonImg from '@/assets/illustrations/default_person.svg';
+import chevronLeftIcon from '@/assets/icons/chevron-left.svg';
+import chevronRightIcon from '@/assets/icons/chevron-right.svg';
+import cameraIcon from '@/assets/icons/camera-icon.svg';
 
 const AVAILABLE_FIELDS = [
   { id: 1, name: '마케팅' },
   { id: 2, name: '기획/아이디어' },
   { id: 3, name: '디자인' },
   { id: 4, name: 'IT/개발' },
-  { id: 5, name: '어학' },
-  { id: 6, name: '이학' },
-  { id: 7, name: '공학' },
-  { id: 8, name: '예체능' },
+  // { id: 5, name: '어학' },
+  // { id: 6, name: '이학' },
+  // { id: 7, name: '공학' },
+  // { id: 8, name: '예체능' },
 ];
 const AVAILABLE_REGIONS = [
   '서울특별시 전체',
@@ -33,6 +43,9 @@ export default function ProfileEdit() {
   // 파일 선택기 ref
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // 실시간 웹 카메라 모달 제어 상태
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
 
   // 1. 기존 유저 정보 패치
   const { data: profileDetail, isLoading } = useQuery({
@@ -59,7 +72,16 @@ export default function ProfileEdit() {
     if (profileDetail) {
       setGpa(profileDetail.gpa);
       setIncomeBracket(profileDetail.incomeBracket);
-      setInterests(profileDetail.interests.map((interest) => interest.interestId));
+      if (Array.isArray(profileDetail.interests)) {
+        const selectedIds = profileDetail.interests
+          .filter((interest: any) =>
+            typeof interest === 'number'
+              ? true
+              : interest.selected === true || interest.selected === undefined,
+          )
+          .map((interest: any) => (typeof interest === 'number' ? interest : interest.interestId));
+        setInterests(selectedIds);
+      }
       setRegion(profileDetail.region);
       setProfileImg(profileDetail.profileImageUrl);
     }
@@ -86,10 +108,24 @@ export default function ProfileEdit() {
     );
   };
 
-  // 이미지 파일 선택 처리
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  // 이미지 Presigned URL 발급 및 S3 업로드 프로세서
+  const processAndUploadImage = async (file: File) => {
+    try {
+      const fileName = file.name;
+      const contentType = file.type || 'image/jpeg';
+
+      // 1. Presigned URL 발급
+      const presignedData = await getPresignedUrl(fileName, contentType, file.size);
+
+      // 2. S3 직접 업로드 (PUT)
+      await uploadImageToS3(presignedData.uploadUrl, file, contentType);
+
+      // 3. 최종 저장용 fileUrl을 프로필 이미지 상태로 저장
+      setProfileImg(presignedData.fileUrl);
+      toast.success('프로필 이미지가 성공적으로 업로드되었습니다.');
+    } catch (err) {
+      console.error('S3 이미지 업로드 실패 (로컬 프리뷰 폴백):', err);
+      // S3 API 미구현 시 로컬 FileReader 프리뷰로 안전하게 폴백
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImg(reader.result as string);
@@ -99,14 +135,29 @@ export default function ProfileEdit() {
     }
   };
 
+  // 갤러리/파일 선택기 이미지 업로드 핸들러
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processAndUploadImage(file);
+    }
+  };
+
+  // 실시간 카메라 캡처 이미지 업로드 핸들러
+  const handleCameraCapture = (dataUrl: string) => {
+    const file = dataURLtoFile(dataUrl, `camera_${Date.now()}.jpg`);
+    processAndUploadImage(file);
+  };
+
   // 바텀시트 확인 버튼 핸들러 (사진 업로드 전용)
   const handleConfirmUpload = () => {
     if (selectedUploadOption === 'gallery') {
       fileInputRef.current?.click();
+      setActiveBottomSheet(null);
     } else if (selectedUploadOption === 'camera') {
-      cameraInputRef.current?.click();
+      setIsCameraModalOpen(true);
+      setActiveBottomSheet(null);
     }
-    setActiveBottomSheet(null);
   };
 
   // 프로필 정보 폼 서브밋 핸들러
@@ -114,8 +165,9 @@ export default function ProfileEdit() {
     e.preventDefault();
     const gpaNum = typeof gpa === 'string' ? parseFloat(gpa) || 0 : gpa;
 
-    if (gpaNum < 0 || gpaNum > 4.5) {
-      toast.error('학점은 0 ~ 4.5 사이로 입력해 주세요.');
+    const gpaErrorMsg = validateGpa(gpaNum);
+    if (gpaErrorMsg) {
+      toast.error(gpaErrorMsg);
       return;
     }
 
@@ -161,16 +213,7 @@ export default function ProfileEdit() {
             onClick={() => navigate(-1)}
             className="w-[41px] h-[41px] flex items-center justify-center rounded-full text-gray-800 hover:bg-gray-50 active:scale-95 transition-all shrink-0"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6">
-              <path
-                d="M15 18L9 12L15 6"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.2"
-              />
-            </svg>
+            <img src={chevronLeftIcon} className="size-6" alt="뒤로가기" />
           </button>
           <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 select-none text-center">
             내 프로필
@@ -196,7 +239,7 @@ export default function ProfileEdit() {
                     e.currentTarget.src = defaultPersonImg;
                   }}
                   alt="프로필 미리보기"
-                  className="size-full object-cover ince"
+                  className="size-full object-cover"
                 />
               </div>
               {/* 카메라 토글 버튼 */}
@@ -208,24 +251,7 @@ export default function ProfileEdit() {
                 }}
                 className="absolute bottom-0 right-0 w-[26px] h-[26px] flex items-center justify-center rounded-full bg-white border-[2px] border-gray-200 p-[1px] shadow-sm hover:bg-gray-50 active:scale-95 transition-all text-gray-500 z-10"
               >
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3">
-                  <path
-                    d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.8"
-                  />
-                  <path
-                    d="M3 9C3 7.89543 3.89543 7 5 7H7.5L9.3 4.6C9.6 4.2 10.1 4 10.6 4H13.4C13.9 4 14.4 4.2 14.7 4.6L16.5 7H19C20.1046 7 21 7.89543 21 9V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V9Z"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.8"
-                  />
-                </svg>
+                <img src={cameraIcon} className="size-3" alt="카메라" />
               </button>
             </div>
             <h2 className="mt-[12px] text-lg font-semibold text-gray-800 leading-tight">
@@ -275,15 +301,7 @@ export default function ProfileEdit() {
                 >
                   <span className="text-sm font-bold text-gray-800">{incomeBracket}구간</span>
                   <div className="text-gray-400">
-                    <svg
-                      className="size-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
+                    <img src={chevronRightIcon} className="size-4" alt="" />
                   </div>
                 </button>
               </div>
@@ -336,15 +354,7 @@ export default function ProfileEdit() {
               >
                 <span className="text-sm font-medium text-gray-800">{region}</span>
                 <div className="text-gray-400">
-                  <svg
-                    className="size-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
+                  <img src={chevronRightIcon} className="size-4" alt="" />
                 </div>
               </button>
             </div>
@@ -512,6 +522,13 @@ export default function ProfileEdit() {
           </div>
         </div>
       )}
+
+      {/* 웹 카메라 직접 촬영 팝업 모달 (모듈화) */}
+      <WebCameraModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        onCapture={handleCameraCapture}
+      />
     </Layout>
   );
 }

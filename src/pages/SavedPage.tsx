@@ -130,7 +130,12 @@ function SavedPostingCard({
         </div>
 
         <div className="absolute right-3 top-[22px]">
-          <SavedHeartButton postingId={posting.id} isSaved={posting.isSaved} onSaveFailure={onSaveFailure} />
+          <SavedHeartButton
+            postingId={posting.id}
+            savedId={posting.savedId}
+            isSaved={posting.isSaved}
+            onSaveFailure={onSaveFailure}
+          />
         </div>
 
         <h2 className="absolute left-3 right-3 top-[67.14px] truncate text-[14px] font-bold leading-[19px] text-[#262626]">
@@ -148,14 +153,17 @@ function SavedPostingCard({
 
 function SavedHeartButton({
   postingId,
+  savedId,
   isSaved,
   onSaveFailure,
 }: {
   postingId: number;
+  savedId?: number;
   isSaved: boolean;
   onSaveFailure: () => void;
 }) {
   const { mutate, isPending } = useToggleSave(postingId, {
+    savedId,
     showErrorToast: false,
     onError: onSaveFailure,
   });

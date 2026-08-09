@@ -10,7 +10,7 @@ export default function NotificationList() {
   // 1. 알림 데이터 조회
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['deadlineNotifications'],
-    queryFn: getDeadlineNotifications,
+    queryFn: () => getDeadlineNotifications(15),
   });
 
   const handleNotificationClick = (postId: number) => {
