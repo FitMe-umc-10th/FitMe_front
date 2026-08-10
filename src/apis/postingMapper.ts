@@ -19,6 +19,7 @@ export interface ApiPostingSummary {
   viewedAt?: string | null;
   viewCount?: number | null;
   savedCount?: number | null;
+  active?: boolean | null;
   isMatched?: boolean | null;
 }
 
@@ -107,6 +108,7 @@ export const mapApiPostingToPosting = (posting: ApiPostingSummary): Posting => (
   viewCount: posting.viewCount ?? undefined,
   views: posting.viewCount ?? undefined,
   savedCount: posting.savedCount ?? undefined,
+  active: posting.active ?? undefined,
   isMatched: posting.isMatched ?? undefined,
 });
 

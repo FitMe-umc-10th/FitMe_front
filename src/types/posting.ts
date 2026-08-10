@@ -20,6 +20,7 @@ export interface Posting {
   // 이미지 및 상태 정보
   posterUrl?: string;
   isSaved: boolean;
+  active?: boolean;
   isMatched?: boolean;
   category?: string;
 

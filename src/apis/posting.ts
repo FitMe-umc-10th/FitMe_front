@@ -64,9 +64,32 @@ export interface ToggleSaveResult {
   savedId?: number;
 }
 
+export type PostingApplicationStatus =
+  | 'NONE'
+  | 'PENDING_RESULT'
+  | 'DOCUMENT_PASSED'
+  | 'FINAL_PASSED';
+
+export interface PostingApplicationResult {
+  userApplicationId: number;
+  postId?: number;
+  status: PostingApplicationStatus;
+  isApplied: boolean;
+  applicationUrl?: string;
+}
+
+interface ApiPostingApplication {
+  userApplicationId?: number;
+  postId?: number;
+  status?: PostingApplicationStatus | string;
+  isApplied?: boolean;
+  applicationUrl?: string;
+}
+
 interface ApiPostingDetail {
   id?: number;
   postId?: number;
+  savedId?: number;
   announcementId?: number;
   type?: ApiPostingType;
   postType?: ApiPostingType;
@@ -94,6 +117,7 @@ interface ApiPostingDetail {
   viewCount?: number;
   views?: number;
   savedCount?: number;
+  active?: boolean;
   viewedAt?: string;
   recentViewedAt?: string;
   isMatched?: boolean;
@@ -180,6 +204,37 @@ const getSavedIdFromPayload = (payload: SavedPostMutationPayload, fallback?: num
   return fallback;
 };
 
+const findSavedIdByPostingId = async (postingId: number) => {
+  const { data } = await axiosInstance.get<ApiResponse<SavedPostingsPayload> | SavedPostingsPayload>(
+    '/api/v1/saved-posts',
+    {
+      params: {
+        category: 'ALL',
+        sort: 'DEADLINE',
+        size: 100,
+      },
+    },
+  );
+  const savedPostings = normalizeSavedPostingsPayload(unwrapApiData<SavedPostingsPayload>(data));
+  const savedPosting = savedPostings.find((posting) => posting.postId === postingId || posting.id === postingId);
+
+  return savedPosting?.savedId;
+};
+
+const mapApiPostingApplication = (application: ApiPostingApplication): PostingApplicationResult => {
+  if (typeof application.userApplicationId !== 'number') {
+    throw new Error('지원 이력 ID가 응답에 없습니다.');
+  }
+
+  return {
+    userApplicationId: application.userApplicationId,
+    postId: application.postId,
+    status: (application.status ?? 'NONE') as PostingApplicationStatus,
+    isApplied: application.isApplied ?? false,
+    applicationUrl: application.applicationUrl,
+  };
+};
+
 const normalizePostingType = (type?: ApiPostingType): PostingType => {
   if (type === 'CONTEST') return 'CONTEST';
   return 'SCHOLARSHIP';
@@ -213,12 +268,14 @@ const mapApiPostingDetailToPosting = (posting: ApiPostingDetail, fallbackType: P
     posting.posterImageUrl ??
     posting.contestDetail?.posterImageUrl ??
     '',
+  savedId: posting.savedId,
   isSaved: posting.isSaved ?? posting.issaved ?? posting.saved ?? false,
   category: posting.category,
   createdAt: posting.createdAt,
   views: posting.views ?? posting.viewCount ?? 0,
   viewCount: posting.viewCount ?? posting.views ?? 0,
   savedCount: posting.savedCount ?? 0,
+  active: posting.active,
   viewedAt: posting.viewedAt ?? posting.recentViewedAt,
   isMatched: posting.isMatched ?? posting.matched,
   aiSummary: posting.aiSummary ?? posting.summary ?? posting.aiDescription,
@@ -267,14 +324,6 @@ const readMockSavedPostings = (): MockSavedPostings => {
   }
 };
 
-const writeMockSavedPosting = (postingId: number, isSaved: boolean) => {
-  const savedPostings = readMockSavedPostings();
-  window.localStorage.setItem(
-    MOCK_SAVED_POSTINGS_KEY,
-    JSON.stringify({ ...savedPostings, [postingId]: isSaved }),
-  );
-};
-
 const applyMockSavedPostings = () => {
   const savedPostings = readMockSavedPostings();
 
@@ -298,33 +347,6 @@ const sortByDeadlineAsc = (postings: Posting[]) =>
 
     return safeDeadlineA - safeDeadlineB;
   });
-
-const filterByPostingType = (postings: Posting[], type?: PostingType | 'ALL') => {
-  if (!type || type === 'ALL') return postings;
-  return postings.filter((posting) => posting.type === type);
-};
-
-const sortSavedPostings = (postings: Posting[], sort?: GetSavedPostingsParams['sort']) => {
-  if (sort === 'DEADLINE') {
-    return sortByDeadlineAsc(postings);
-  }
-
-  return [...postings].sort((a, b) => {
-    const savedIdA = a.savedId ?? a.id;
-    const savedIdB = b.savedId ?? b.id;
-    return savedIdB - savedIdA;
-  });
-};
-
-const getMockSavedPostings = (category?: PostingType | 'ALL', sort?: GetSavedPostingsParams['sort']) => {
-  const postings = applyMockSavedPostings();
-  const savedPostings = filterByPostingType(
-    postings.filter((posting) => posting.isSaved),
-    category,
-  );
-
-  return sortSavedPostings(savedPostings, sort);
-};
 
 // === 탐색/검색 화면 전용 페이지네이션 및 필터링 Mock API ===
 export const getExplorePostings = async ({
@@ -517,28 +539,50 @@ export const getSavedPostings = async ({
 
     return mapApiSavedPostingList(normalizeSavedPostingsPayload(unwrapApiData<SavedPostingsPayload>(data)));
   } catch (error) {
-    if (import.meta.env.DEV) {
-      console.warn('저장 목록 API 호출 실패, mock 데이터로 대체합니다.', error);
-      return getMockSavedPostings(category, sort);
-    }
-
+    console.error('저장 목록 API 호출 실패', error);
     throw error;
   }
 };
 
-export const getPostingById = async (postingId: number): Promise<Posting | null> => {
-  try {
-    return await getPostingDetailByType(postingId, 'SCHOLARSHIP');
-  } catch (scholarshipError) {
-    if (!isNotFoundError(scholarshipError)) throw scholarshipError;
+const getPostingDetailLookupOrder = (preferredType?: PostingType): PostingType[] => {
+  if (preferredType === 'CONTEST') return ['CONTEST', 'SCHOLARSHIP'];
+  return ['SCHOLARSHIP', 'CONTEST'];
+};
 
+export const getPostingById = async (
+  postingId: number,
+  preferredType?: PostingType,
+): Promise<Posting | null> => {
+  for (const postingType of getPostingDetailLookupOrder(preferredType)) {
     try {
-      return await getPostingDetailByType(postingId, 'CONTEST');
-    } catch (contestError) {
-      if (isNotFoundError(contestError)) return null;
-      throw contestError;
+      return await getPostingDetailByType(postingId, postingType);
+    } catch (error) {
+      if (!isNotFoundError(error)) throw error;
     }
   }
+
+  return null;
+};
+
+export const startPostingApplication = async (
+  postingId: number,
+): Promise<PostingApplicationResult> => {
+  const { data } = await axiosInstance.patch<ApiResponse<ApiPostingApplication> | ApiPostingApplication>(
+    `/api/v1/posts/${postingId}/application`,
+  );
+
+  return mapApiPostingApplication(unwrapApiData<ApiPostingApplication>(data));
+};
+
+export const completePostingApplication = async (
+  userApplicationId: number,
+): Promise<PostingApplicationResult> => {
+  const { data } = await axiosInstance.patch<ApiResponse<ApiPostingApplication> | ApiPostingApplication>(
+    `/api/v1/user-applications/${userApplicationId}/status`,
+    { status: 'PENDING_RESULT' },
+  );
+
+  return mapApiPostingApplication(unwrapApiData<ApiPostingApplication>(data));
 };
 
 export const getMockPostingById = async (postingId: number): Promise<Posting | null> => {
@@ -562,18 +606,20 @@ export const toggleSave = async (
 ): Promise<ToggleSaveResult> => {
   try {
     if (isSaved) {
-      if (!savedId) {
+      const targetSavedId = savedId ?? (await findSavedIdByPostingId(postingId));
+
+      if (!targetSavedId) {
         throw new Error('저장 해제에 필요한 savedId가 없습니다.');
       }
 
       const { data } = await axiosInstance.delete<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
-        `/api/v1/saved-posts/${savedId}`,
+        `/api/v1/saved-posts/${targetSavedId}`,
       );
       const deletedPosting = unwrapApiData<SavedPostMutationPayload>(data);
 
       return {
         isSaved: false,
-        savedId: getSavedIdFromPayload(deletedPosting, savedId),
+        savedId: getSavedIdFromPayload(deletedPosting, targetSavedId),
       };
     }
 
@@ -589,24 +635,6 @@ export const toggleSave = async (
       savedId: getSavedIdFromPayload(savedPostingPayload, savedPosting.savedId),
     };
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 409) {
-      throw error;
-    }
-
-    if (!import.meta.env.DEV) {
-      throw error;
-    }
+    throw error;
   }
-
-  const target = applyMockSavedPostings().find((posting) => posting.id === postingId);
-  const nextSavedState = !isSaved;
-
-  if (target) {
-    target.isSaved = nextSavedState;
-    target.savedId = nextSavedState ? target.savedId ?? postingId : undefined;
-    target.savedCount = Math.max(0, (target.savedCount ?? 0) + (nextSavedState ? 1 : -1));
-    writeMockSavedPosting(postingId, nextSavedState);
-  }
-
-  return { isSaved: nextSavedState, savedId: target?.savedId };
 };
