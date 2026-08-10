@@ -381,23 +381,19 @@ export const getSavedPostings = async ({
   cursor,
   size,
 }: GetSavedPostingsParams = {}): Promise<Posting[]> => {
-  try {
-    const { data } = await axiosInstance.get<ApiResponse<SavedPostingsPayload> | SavedPostingsPayload>(
-      '/api/v1/saved-posts',
-      {
-        params: {
-          category,
-          sort,
-          cursor,
-          size,
-        },
+  const { data } = await axiosInstance.get<ApiResponse<SavedPostingsPayload> | SavedPostingsPayload>(
+    '/api/v1/saved-posts',
+    {
+      params: {
+        category,
+        sort,
+        cursor,
+        size,
       },
-    );
+    },
+  );
 
-    return mapApiSavedPostingList(normalizeSavedPostingsPayload(unwrapApiData<SavedPostingsPayload>(data)));
-  } catch (error) {
-    throw error;
-  }
+  return mapApiSavedPostingList(normalizeSavedPostingsPayload(unwrapApiData<SavedPostingsPayload>(data)));
 };
 
 const getPostingDetailLookupOrder = (preferredType?: PostingType): PostingType[] => {
@@ -446,37 +442,33 @@ export const toggleSave = async (
   isSaved: boolean,
   savedId?: number,
 ): Promise<ToggleSaveResult> => {
-  try {
-    if (isSaved) {
-      const targetSavedId = savedId ?? (await findSavedIdByPostingId(postingId));
+  if (isSaved) {
+    const targetSavedId = savedId ?? (await findSavedIdByPostingId(postingId));
 
-      if (!targetSavedId) {
-        throw new Error('저장 해제에 필요한 savedId가 없습니다.');
-      }
-
-      const { data } = await axiosInstance.delete<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
-        `/api/v1/saved-posts/${targetSavedId}`,
-      );
-      const deletedPosting = unwrapApiData<SavedPostMutationPayload>(data);
-
-      return {
-        isSaved: false,
-        savedId: getSavedIdFromPayload(deletedPosting, targetSavedId),
-      };
+    if (!targetSavedId) {
+      throw new Error('저장 해제에 필요한 savedId가 없습니다.');
     }
 
-    const { data } = await axiosInstance.post<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
-      '/api/v1/saved-posts',
-      { postId: postingId },
+    const { data } = await axiosInstance.delete<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
+      `/api/v1/saved-posts/${targetSavedId}`,
     );
-    const savedPostingPayload = unwrapApiData<ApiSavedPosting>(data);
-    const savedPosting = mapApiSavedPostingToPosting(savedPostingPayload);
+    const deletedPosting = unwrapApiData<SavedPostMutationPayload>(data);
 
     return {
-      isSaved: true,
-      savedId: getSavedIdFromPayload(savedPostingPayload, savedPosting.savedId),
+      isSaved: false,
+      savedId: getSavedIdFromPayload(deletedPosting, targetSavedId),
     };
-  } catch (error) {
-    throw error;
   }
+
+  const { data } = await axiosInstance.post<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
+    '/api/v1/saved-posts',
+    { postId: postingId },
+  );
+  const savedPostingPayload = unwrapApiData<ApiSavedPosting>(data);
+  const savedPosting = mapApiSavedPostingToPosting(savedPostingPayload);
+
+  return {
+    isSaved: true,
+    savedId: getSavedIdFromPayload(savedPostingPayload, savedPosting.savedId),
+  };
 };
