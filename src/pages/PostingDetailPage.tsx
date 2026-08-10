@@ -22,8 +22,6 @@ import type { Posting } from '@/types/posting';
 const DETAIL_SUMMARY =
   '마케팅 분야에 높은 관심을 가지고 계신 학습님께 적합한 공모전입니다. 총 12개의 대기업이 제시한 실무 과제에 대해 마케팅 전략 및 아이디어를 제안해볼 수 있는 기회이고, 실제 기업의 비즈니스 과제를 분석하여 창의적인 마케팅 솔루션을 기획하는 경험을 쌓을 수 있습니다.';
 
-const MOCK_OFFICIAL_APPLY_URL = 'https://www.cjenm.com/ko/';
-
 const DETAIL_INFO = {
   period: {
     date: '2026. 05. 01. (월) ~ 2026. 05. 31. (수) 18시',
@@ -396,7 +394,13 @@ export default function PostingDetailPage() {
           onClick: async () => {
             try {
               const application = await startPostingApplication(posting.id);
-              const applyUrl = application.applicationUrl || posting.applyUrl || MOCK_OFFICIAL_APPLY_URL;
+              const applyUrl = application.applicationUrl || posting.applyUrl;
+
+              if (!applyUrl) {
+                showToast('지원 링크를 찾을 수 없습니다.', 'error');
+                closeModal();
+                return;
+              }
 
               setPendingApplication(application);
               setIsWaitingForApplyReturn(true);

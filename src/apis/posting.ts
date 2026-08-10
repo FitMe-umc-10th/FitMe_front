@@ -338,16 +338,6 @@ const applyMockSavedPostings = () => {
   return MOCK_POSTINGS;
 };
 
-const sortByDeadlineAsc = (postings: Posting[]) =>
-  [...postings].sort((a, b) => {
-    const deadlineA = new Date(a.deadline ?? '').getTime();
-    const deadlineB = new Date(b.deadline ?? '').getTime();
-    const safeDeadlineA = Number.isNaN(deadlineA) ? Number.POSITIVE_INFINITY : deadlineA;
-    const safeDeadlineB = Number.isNaN(deadlineB) ? Number.POSITIVE_INFINITY : deadlineB;
-
-    return safeDeadlineA - safeDeadlineB;
-  });
-
 // === 탐색/검색 화면 전용 페이지네이션 및 필터링 Mock API ===
 export const getExplorePostings = async ({
   keyword,
@@ -583,20 +573,6 @@ export const completePostingApplication = async (
   );
 
   return mapApiPostingApplication(unwrapApiData<ApiPostingApplication>(data));
-};
-
-export const getMockPostingById = async (postingId: number): Promise<Posting | null> => {
-  await new Promise((r) => setTimeout(r, 300));
-  const postings = applyMockSavedPostings();
-
-  return postings.find((posting) => posting.id === postingId) ?? null;
-};
-
-export const getDeadlinePostings = async (): Promise<Posting[]> => {
-  await waitMockNetwork();
-  const postings = applyMockSavedPostings();
-
-  return sortByDeadlineAsc(postings);
 };
 
 export const toggleSave = async (
