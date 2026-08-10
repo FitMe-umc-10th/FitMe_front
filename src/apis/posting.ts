@@ -64,6 +64,28 @@ export interface ToggleSaveResult {
   savedId?: number;
 }
 
+export type PostingApplicationStatus =
+  | 'NONE'
+  | 'PENDING_RESULT'
+  | 'DOCUMENT_PASSED'
+  | 'FINAL_PASSED';
+
+export interface PostingApplicationResult {
+  userApplicationId: number;
+  postId?: number;
+  status: PostingApplicationStatus;
+  isApplied: boolean;
+  applicationUrl?: string;
+}
+
+interface ApiPostingApplication {
+  userApplicationId?: number;
+  postId?: number;
+  status?: PostingApplicationStatus | string;
+  isApplied?: boolean;
+  applicationUrl?: string;
+}
+
 interface ApiPostingDetail {
   id?: number;
   postId?: number;
@@ -178,6 +200,20 @@ const getSavedIdFromPayload = (payload: SavedPostMutationPayload, fallback?: num
   }
 
   return fallback;
+};
+
+const mapApiPostingApplication = (application: ApiPostingApplication): PostingApplicationResult => {
+  if (typeof application.userApplicationId !== 'number') {
+    throw new Error('지원 이력 ID가 응답에 없습니다.');
+  }
+
+  return {
+    userApplicationId: application.userApplicationId,
+    postId: application.postId,
+    status: (application.status ?? 'NONE') as PostingApplicationStatus,
+    isApplied: application.isApplied ?? false,
+    applicationUrl: application.applicationUrl,
+  };
 };
 
 const normalizePostingType = (type?: ApiPostingType): PostingType => {
@@ -539,6 +575,27 @@ export const getPostingById = async (postingId: number): Promise<Posting | null>
       throw contestError;
     }
   }
+};
+
+export const startPostingApplication = async (
+  postingId: number,
+): Promise<PostingApplicationResult> => {
+  const { data } = await axiosInstance.patch<ApiResponse<ApiPostingApplication> | ApiPostingApplication>(
+    `/api/v1/posts/${postingId}/application`,
+  );
+
+  return mapApiPostingApplication(unwrapApiData<ApiPostingApplication>(data));
+};
+
+export const completePostingApplication = async (
+  userApplicationId: number,
+): Promise<PostingApplicationResult> => {
+  const { data } = await axiosInstance.patch<ApiResponse<ApiPostingApplication> | ApiPostingApplication>(
+    `/api/v1/user-applications/${userApplicationId}/status`,
+    { status: 'PENDING_RESULT' },
+  );
+
+  return mapApiPostingApplication(unwrapApiData<ApiPostingApplication>(data));
 };
 
 export const getMockPostingById = async (postingId: number): Promise<Posting | null> => {
