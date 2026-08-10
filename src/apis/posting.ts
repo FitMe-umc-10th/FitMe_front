@@ -117,6 +117,7 @@ interface ApiPostingDetail {
   viewCount?: number;
   views?: number;
   savedCount?: number;
+  active?: boolean;
   viewedAt?: string;
   recentViewedAt?: string;
   isMatched?: boolean;
@@ -274,6 +275,7 @@ const mapApiPostingDetailToPosting = (posting: ApiPostingDetail, fallbackType: P
   views: posting.views ?? posting.viewCount ?? 0,
   viewCount: posting.viewCount ?? posting.views ?? 0,
   savedCount: posting.savedCount ?? 0,
+  active: posting.active,
   viewedAt: posting.viewedAt ?? posting.recentViewedAt,
   isMatched: posting.isMatched ?? posting.matched,
   aiSummary: posting.aiSummary ?? posting.summary ?? posting.aiDescription,
