@@ -396,7 +396,6 @@ export const getSavedPostings = async ({
 
     return mapApiSavedPostingList(normalizeSavedPostingsPayload(unwrapApiData<SavedPostingsPayload>(data)));
   } catch (error) {
-    console.error('저장 목록 API 호출 실패', error);
     throw error;
   }
 };
