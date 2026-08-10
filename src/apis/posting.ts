@@ -324,14 +324,6 @@ const readMockSavedPostings = (): MockSavedPostings => {
   }
 };
 
-const writeMockSavedPosting = (postingId: number, isSaved: boolean) => {
-  const savedPostings = readMockSavedPostings();
-  window.localStorage.setItem(
-    MOCK_SAVED_POSTINGS_KEY,
-    JSON.stringify({ ...savedPostings, [postingId]: isSaved }),
-  );
-};
-
 const applyMockSavedPostings = () => {
   const savedPostings = readMockSavedPostings();
 
@@ -355,33 +347,6 @@ const sortByDeadlineAsc = (postings: Posting[]) =>
 
     return safeDeadlineA - safeDeadlineB;
   });
-
-const filterByPostingType = (postings: Posting[], type?: PostingType | 'ALL') => {
-  if (!type || type === 'ALL') return postings;
-  return postings.filter((posting) => posting.type === type);
-};
-
-const sortSavedPostings = (postings: Posting[], sort?: GetSavedPostingsParams['sort']) => {
-  if (sort === 'DEADLINE') {
-    return sortByDeadlineAsc(postings);
-  }
-
-  return [...postings].sort((a, b) => {
-    const savedIdA = a.savedId ?? a.id;
-    const savedIdB = b.savedId ?? b.id;
-    return savedIdB - savedIdA;
-  });
-};
-
-const getMockSavedPostings = (category?: PostingType | 'ALL', sort?: GetSavedPostingsParams['sort']) => {
-  const postings = applyMockSavedPostings();
-  const savedPostings = filterByPostingType(
-    postings.filter((posting) => posting.isSaved),
-    category,
-  );
-
-  return sortSavedPostings(savedPostings, sort);
-};
 
 // === 탐색/검색 화면 전용 페이지네이션 및 필터링 Mock API ===
 export const getExplorePostings = async ({
@@ -574,28 +539,29 @@ export const getSavedPostings = async ({
 
     return mapApiSavedPostingList(normalizeSavedPostingsPayload(unwrapApiData<SavedPostingsPayload>(data)));
   } catch (error) {
-    if (import.meta.env.DEV) {
-      console.warn('저장 목록 API 호출 실패, mock 데이터로 대체합니다.', error);
-      return getMockSavedPostings(category, sort);
-    }
-
+    console.error('저장 목록 API 호출 실패', error);
     throw error;
   }
 };
 
-export const getPostingById = async (postingId: number): Promise<Posting | null> => {
-  try {
-    return await getPostingDetailByType(postingId, 'SCHOLARSHIP');
-  } catch (scholarshipError) {
-    if (!isNotFoundError(scholarshipError)) throw scholarshipError;
+const getPostingDetailLookupOrder = (preferredType?: PostingType): PostingType[] => {
+  if (preferredType === 'CONTEST') return ['CONTEST', 'SCHOLARSHIP'];
+  return ['SCHOLARSHIP', 'CONTEST'];
+};
 
+export const getPostingById = async (
+  postingId: number,
+  preferredType?: PostingType,
+): Promise<Posting | null> => {
+  for (const postingType of getPostingDetailLookupOrder(preferredType)) {
     try {
-      return await getPostingDetailByType(postingId, 'CONTEST');
-    } catch (contestError) {
-      if (isNotFoundError(contestError)) return null;
-      throw contestError;
+      return await getPostingDetailByType(postingId, postingType);
+    } catch (error) {
+      if (!isNotFoundError(error)) throw error;
     }
   }
+
+  return null;
 };
 
 export const startPostingApplication = async (
@@ -669,24 +635,6 @@ export const toggleSave = async (
       savedId: getSavedIdFromPayload(savedPostingPayload, savedPosting.savedId),
     };
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 409) {
-      throw error;
-    }
-
-    if (!import.meta.env.DEV) {
-      throw error;
-    }
+    throw error;
   }
-
-  const target = applyMockSavedPostings().find((posting) => posting.id === postingId);
-  const nextSavedState = !isSaved;
-
-  if (target) {
-    target.isSaved = nextSavedState;
-    target.savedId = nextSavedState ? target.savedId ?? postingId : undefined;
-    target.savedCount = Math.max(0, (target.savedCount ?? 0) + (nextSavedState ? 1 : -1));
-    writeMockSavedPosting(postingId, nextSavedState);
-  }
-
-  return { isSaved: nextSavedState, savedId: target?.savedId };
 };
