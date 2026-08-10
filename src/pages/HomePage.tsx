@@ -110,7 +110,7 @@ export default function HomePage() {
     <Layout
       header={
         <Header
-          leftSlot={<Logo blink />}
+          leftSlot={<Logo />}
           className="h-[72px] border-b-0 px-5 pt-3"
           rightSlot={<NotificationButton hasUnreadNotification={unreadNotificationCount > 0} />}
         />
