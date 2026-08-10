@@ -1,7 +1,6 @@
 import axios from 'axios';
 import type {
   GetClosingSoonPostingsParams,
-  GetHomePostingFeedParams,
   GetHomePostingListParams,
   GetRecentViewedPostingsParams,
   GetSavedPostingsParams,
@@ -40,7 +39,6 @@ export interface ExplorePostingsResponse {
 
 const MOCK_SAVED_POSTINGS_KEY = 'fitme:mockSavedPostings';
 const MOCK_NETWORK_DELAY_MS = 300;
-const DEFAULT_HOME_USER_ID = 1;
 const DEFAULT_HOME_POPULAR_SIZE = 8;
 const DEFAULT_HOME_RECENT_VIEWED_SIZE = 10;
 const DEFAULT_HOME_CLOSING_SOON_SIZE = 5;
@@ -457,11 +455,7 @@ export const getClosingSoonPostings = async ({
   return mapApiPostingList(result ?? []);
 };
 
-export const getHomePostingFeed = async ({
-  userId = DEFAULT_HOME_USER_ID,
-}: GetHomePostingFeedParams = {}): Promise<HomePostingFeed> => {
-  void userId;
-
+export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
   const [popularResult, recentViewedResult, scholarshipDeadlineResult, contestDeadlineResult] =
     await Promise.allSettled([
       getPopularPostings({ size: DEFAULT_HOME_POPULAR_SIZE }),

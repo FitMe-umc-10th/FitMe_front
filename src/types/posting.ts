@@ -81,10 +81,6 @@ export interface GetHomePostingListParams {
   size?: number;
 }
 
-export interface GetHomePostingFeedParams {
-  userId?: number | null;
-}
-
 export interface GetRecentViewedPostingsParams {
   page?: number;
   size?: number;

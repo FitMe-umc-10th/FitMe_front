@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getDeadlineNotifications } from '@/apis/deadlineNotification';
+import { getDeadlineNotificationCount } from '@/apis/deadlineNotification';
 import { getHomePostingFeed } from '@/apis/posting';
 import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import notificationBellIcon from '@/assets/icons/notification-bell.svg';
@@ -11,7 +11,6 @@ import EmptyState from '@/shared/components/EmptyState';
 import PostingCard from '@/shared/components/PostingCard';
 import Skeleton from '@/shared/components/Skeleton';
 import { ErrorState, Header, Layout, Logo, Tab, TabBar } from '@/shared/components';
-import { useAuthStore } from '@/store/authStore';
 import type { Posting, PostingType } from '@/types/posting';
 
 type SectionHeaderProps = {
@@ -82,20 +81,17 @@ function HorizontalPostingList({ postings }: { postings: Posting[] }) {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const userId = useAuthStore((state) => state.userId);
   const [activeDeadlineTab, setActiveDeadlineTab] = useState<PostingType>('SCHOLARSHIP');
   const [isRecentViewedExpanded, setIsRecentViewedExpanded] = useState(false);
 
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: [...postingQueryKeys.home, userId],
-    queryFn: () => getHomePostingFeed({ userId }),
+    queryKey: postingQueryKeys.home,
+    queryFn: getHomePostingFeed,
   });
-  const { data: deadlineNotifications } = useQuery({
-    queryKey: ['deadlineNotifications'],
-    queryFn: () => getDeadlineNotifications(15),
+  const { data: unreadNotificationCount = 0 } = useQuery({
+    queryKey: ['deadlineNotifications', 'unreadCount'],
+    queryFn: getDeadlineNotificationCount,
   });
-  const unreadNotificationCount =
-    deadlineNotifications?.notifications?.filter((n) => !n.isRead).length ?? 0;
 
   const deadlinePostings = data?.deadlinePostings[activeDeadlineTab] ?? [];
   const recentViewedPostings = data?.recentViewedPostings ?? [];
