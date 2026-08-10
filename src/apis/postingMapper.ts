@@ -6,10 +6,11 @@ export interface ApiPostingSummary {
   type?: PostingType | null;
   title?: string | null;
   organizer?: string | null;
+  oraganizer?: string | null;
   organization?: string | null;
   thumbnailUrl?: string | null;
   deadlineDate?: string | null;
-  deadlineLabel?: string | null;
+  deadlineLabel?: number | string | null;
   isSaved?: boolean;
   saved?: boolean;
   savedId?: number | null;
@@ -48,9 +49,36 @@ export interface ApiHomePostingFeed {
 
 const DEFAULT_DEADLINE = '2099-12-31';
 
-const getDeadlineFromLabel = (deadlineLabel?: string | null) => {
-  if (!deadlineLabel) return DEFAULT_DEADLINE;
-  if (deadlineLabel === '마감') return new Date().toISOString().slice(0, 10);
+export interface ApiRecentViewedPostingsResponse {
+  hasNext: boolean;
+  nextCursor?: number | null;
+  posts: ApiPostingSummary[];
+}
+
+export interface ApiPopularPostingsResponse {
+  posts?: ApiPostingSummary[];
+  popularPosts?: ApiPostingSummary[];
+  hasNext: boolean;
+  nextIdCursor?: number | null;
+  nextDeadlineCursor?: string | null;
+}
+
+export type ApiClosingSoonPostingsResponse = ApiPostingSummary[];
+
+const getDeadlineFromLabel = (deadlineLabel?: number | string | null) => {
+  if (deadlineLabel === undefined || deadlineLabel === null || deadlineLabel === '') {
+    return DEFAULT_DEADLINE;
+  }
+
+  if (typeof deadlineLabel === 'number') {
+    const date = new Date();
+    date.setDate(date.getDate() + deadlineLabel);
+    return date.toISOString().slice(0, 10);
+  }
+
+  if (deadlineLabel === '마감' || deadlineLabel === 'D-Day') {
+    return new Date().toISOString().slice(0, 10);
+  }
 
   const matchedDays = deadlineLabel.match(/^D-(\d+)$/);
   if (!matchedDays) return DEFAULT_DEADLINE;
@@ -65,7 +93,11 @@ export const mapApiPostingToPosting = (posting: ApiPostingSummary): Posting => (
   savedId: posting.savedId ?? undefined,
   type: posting.type ?? 'SCHOLARSHIP',
   title: posting.title?.trim() || '제목 없는 공고',
-  organization: posting.organizer?.trim() || posting.organization?.trim() || '기관 정보 없음',
+  organization:
+    posting.organizer?.trim() ||
+    posting.oraganizer?.trim() ||
+    posting.organization?.trim() ||
+    '기관 정보 없음',
   deadline: posting.deadlineDate ?? getDeadlineFromLabel(posting.deadlineLabel),
   posterUrl: posting.thumbnailUrl ?? '',
   isSaved: posting.isSaved ?? posting.saved ?? false,

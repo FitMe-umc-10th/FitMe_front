@@ -9,9 +9,10 @@ interface PostingCardProps {
   posting: Posting;
   variant: 'horizontal' | 'vertical' | 'popular';
   onClick?: () => void;
+  carouselIndexLabel?: string;
 }
 
-export default function PostingCard({ posting, variant, onClick }: PostingCardProps) {
+export default function PostingCard({ posting, variant, onClick, carouselIndexLabel }: PostingCardProps) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -53,12 +54,18 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
     return (
       <div
         onClick={handleClick}
-        className="relative flex h-[239px] w-[292px] cursor-pointer select-none flex-col justify-end overflow-hidden rounded-[18px] border border-[#EEF0F3] bg-[#D9F0FF] px-5 pb-5 pt-4 shadow-[0_8px_18px_rgba(15,23,42,0.12)] transition-all duration-200 hover:shadow-[0_10px_22px_rgba(15,23,42,0.14)]"
+        className="relative flex h-[239px] w-[292px] cursor-pointer select-none flex-col justify-end overflow-hidden rounded-2xl border border-[#EEF0F3] bg-[#D9F0FF] px-5 py-4 shadow-[0_8px_18px_rgba(15,23,42,0.12)] transition-all duration-200 hover:shadow-[0_10px_22px_rgba(15,23,42,0.14)]"
       >
         <div className="absolute inset-0 -z-10 h-full w-full">
           <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
           <div className="absolute inset-0 bg-gradient-to-t from-white/45 via-white/5 to-transparent" />
         </div>
+
+        {carouselIndexLabel && (
+          <div className="absolute right-5 top-4 flex h-5 min-w-7 items-center justify-center rounded-full bg-[#A5A5A5] px-[5px] text-[12px] font-medium leading-none text-white">
+            {carouselIndexLabel}
+          </div>
+        )}
 
         <div className="mt-auto flex items-end justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -87,18 +94,18 @@ export default function PostingCard({ posting, variant, onClick }: PostingCardPr
   return (
     <div
       onClick={handleClick}
-      className="grid h-[128px] cursor-pointer select-none grid-cols-[176px_187px] gap-0 bg-white transition-all duration-200"
+      className="grid h-[128px] w-full max-w-[363px] cursor-pointer select-none grid-cols-[48.49%_51.51%] gap-0 overflow-hidden rounded-[16px] bg-white shadow-[0_4px_14px_rgba(15,23,42,0.07)] transition-all duration-200"
     >
-      <div className="h-[128px] overflow-hidden rounded-l-[16px] bg-[#E6EEF8]">
+      <div className="h-[128px] overflow-hidden bg-[#E6EEF8]">
         <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
       </div>
 
-      <div className="relative h-[128px] w-[187px] min-w-0 bg-white px-3 py-5">
-        <div className="absolute left-3 top-[22px]">
+      <div className="relative h-[128px] min-w-0 bg-white px-3 py-5">
+        <div className="absolute left-3 top-[30px]">
           <DayBadge deadline={posting.deadline} />
         </div>
 
-        <div className="absolute right-3 top-[22px]">
+        <div className="absolute right-3 top-[30px]">
           <HeartButton postingId={posting.id} savedId={posting.savedId} isSaved={posting.isSaved} />
         </div>
 

@@ -1,6 +1,8 @@
 import axios from 'axios';
 import type {
+  GetClosingSoonPostingsParams,
   GetHomePostingListParams,
+  GetRecentViewedPostingsParams,
   GetSavedPostingsParams,
   HomePostingFeed,
   Posting,
@@ -8,6 +10,10 @@ import type {
 } from '@/types/posting';
 import { axiosInstance } from '@/apis/axiosInstance';
 import {
+  type ApiClosingSoonPostingsResponse,
+  type ApiPopularPostingsResponse,
+  type ApiRecentViewedPostingsResponse,
+  mapApiPostingList,
   mapApiSavedPostingList,
   mapApiSavedPostingToPosting,
   type ApiSavedPosting,
@@ -33,7 +39,9 @@ export interface ExplorePostingsResponse {
 
 const MOCK_SAVED_POSTINGS_KEY = 'fitme:mockSavedPostings';
 const MOCK_NETWORK_DELAY_MS = 300;
-const DEFAULT_HOME_POSTING_SIZE = 5;
+const DEFAULT_HOME_POPULAR_SIZE = 8;
+const DEFAULT_HOME_RECENT_VIEWED_SIZE = 10;
+const DEFAULT_HOME_CLOSING_SOON_SIZE = 5;
 
 type MockSavedPostings = Record<number, boolean>;
 
@@ -66,16 +74,20 @@ interface ApiPostingDetail {
   title?: string;
   name?: string;
   organizer?: string;
+  oraganizer?: string;
   organization?: string;
   organizationName?: string;
   deadline?: string;
   deadlineDate?: string;
   endDate?: string;
+  applyStartDate?: string;
+  applyEndDate?: string;
   posterUrl?: string;
   imageUrl?: string;
   thumbnailUrl?: string;
   posterImageUrl?: string;
   isSaved?: boolean;
+  issaved?: boolean;
   saved?: boolean;
   category?: string;
   createdAt?: string;
@@ -109,6 +121,18 @@ interface ApiPostingDetail {
   eligibility?: string;
   headcount?: string;
   personnel?: string;
+  scholarshipDetail?: {
+    supportAmount?: string;
+    gradeRequirement?: string;
+    incomeRequirement?: string;
+    regionRequirement?: string;
+  };
+  contestDetail?: {
+    posterImageUrl?: string;
+    target?: string;
+    participantLimit?: string;
+    rewardTotal?: string;
+  };
 }
 
 const waitMockNetwork = (delayMs = MOCK_NETWORK_DELAY_MS) =>
@@ -162,8 +186,13 @@ const normalizePostingType = (type?: ApiPostingType): PostingType => {
 };
 
 const formatPeriodDate = (posting: ApiPostingDetail) => {
-  const startDate = posting.startDate ?? posting.recruitmentStartDate;
-  const endDate = posting.deadline ?? posting.deadlineDate ?? posting.endDate ?? posting.recruitmentEndDate;
+  const startDate = posting.startDate ?? posting.applyStartDate ?? posting.recruitmentStartDate;
+  const endDate =
+    posting.deadline ??
+    posting.deadlineDate ??
+    posting.applyEndDate ??
+    posting.endDate ??
+    posting.recruitmentEndDate;
 
   if (startDate && endDate) return `${startDate} ~ ${endDate}`;
   return endDate ?? '';
@@ -173,10 +202,18 @@ const mapApiPostingDetailToPosting = (posting: ApiPostingDetail, fallbackType: P
   id: posting.postId ?? posting.id ?? posting.announcementId ?? 0,
   type: normalizePostingType(posting.type ?? posting.postType ?? posting.announcementType ?? fallbackType),
   title: posting.title ?? posting.name ?? '제목 정보 없음',
-  organization: posting.organizer ?? posting.organization ?? posting.organizationName ?? '기관 정보 없음',
-  deadline: posting.deadline ?? posting.deadlineDate ?? posting.endDate ?? posting.recruitmentEndDate ?? '',
-  posterUrl: posting.posterUrl ?? posting.imageUrl ?? posting.thumbnailUrl ?? posting.posterImageUrl ?? '',
-  isSaved: posting.isSaved ?? posting.saved ?? false,
+  organization:
+    posting.organizer ?? posting.oraganizer ?? posting.organization ?? posting.organizationName ?? '기관 정보 없음',
+  deadline:
+    posting.deadline ?? posting.deadlineDate ?? posting.applyEndDate ?? posting.endDate ?? posting.recruitmentEndDate ?? '',
+  posterUrl:
+    posting.posterUrl ??
+    posting.imageUrl ??
+    posting.thumbnailUrl ??
+    posting.posterImageUrl ??
+    posting.contestDetail?.posterImageUrl ??
+    '',
+  isSaved: posting.isSaved ?? posting.issaved ?? posting.saved ?? false,
   category: posting.category,
   createdAt: posting.createdAt,
   views: posting.views ?? posting.viewCount ?? 0,
@@ -191,13 +228,19 @@ const mapApiPostingDetailToPosting = (posting: ApiPostingDetail, fallbackType: P
     method: posting.applyMethod ?? posting.receptionMethod,
   },
   benefit: {
-    target: posting.benefitTarget ?? posting.award ?? posting.prize,
+    target: posting.benefitTarget ?? posting.contestDetail?.target ?? posting.award ?? posting.prize,
     grandPrize: posting.topPrize,
-    support: posting.supportBenefit ?? posting.extraBenefit,
+    support: posting.supportBenefit ?? posting.scholarshipDetail?.supportAmount ?? posting.contestDetail?.rewardTotal ?? posting.extraBenefit,
   },
   eligibility: {
-    education: posting.education ?? posting.qualification ?? posting.eligibility,
-    headcount: posting.headcount ?? posting.personnel,
+    education:
+      posting.education ??
+      posting.scholarshipDetail?.gradeRequirement ??
+      posting.scholarshipDetail?.incomeRequirement ??
+      posting.scholarshipDetail?.regionRequirement ??
+      posting.qualification ??
+      posting.eligibility,
+    headcount: posting.headcount ?? posting.contestDetail?.participantLimit ?? posting.personnel,
   },
 });
 
@@ -255,16 +298,6 @@ const sortByDeadlineAsc = (postings: Posting[]) =>
 
     return safeDeadlineA - safeDeadlineB;
   });
-
-const getMatchedDeadlinePostings = (postings: Posting[], type: PostingType) => {
-  const matchedPostings = postings.filter((posting) => posting.type === type && posting.isMatched);
-
-  if (matchedPostings.length > 0) {
-    return sortByDeadlineAsc(matchedPostings);
-  }
-
-  return [...postings].sort((a, b) => (b.savedCount ?? 0) - (a.savedCount ?? 0)).slice(0, 5);
-};
 
 const filterByPostingType = (postings: Posting[], type?: PostingType | 'ALL') => {
   if (!type || type === 'ALL') return postings;
@@ -376,60 +409,89 @@ export const getPostings = async (): Promise<Posting[]> => {
 };
 
 export const getPopularPostings = async ({
-  size = DEFAULT_HOME_POSTING_SIZE,
+  cursor,
+  size = DEFAULT_HOME_POPULAR_SIZE,
 }: GetHomePostingListParams = {}): Promise<Posting[]> => {
-  await waitMockNetwork();
-  const postings = applyMockSavedPostings();
+  const { data } = await axiosInstance.get('/api/v1/posts/popular', {
+    params: {
+      cursor,
+      size,
+    },
+  });
+  const result = unwrapApiData<ApiPopularPostingsResponse>(data);
 
-  return [...postings]
-    .sort((a, b) => (b.viewCount ?? b.views ?? 0) - (a.viewCount ?? a.views ?? 0))
-    .slice(0, size);
+  return mapApiPostingList(result.posts ?? result.popularPosts ?? []);
 };
 
 export const getRecentViewedPostings = async ({
-  size,
-}: GetHomePostingListParams = {}): Promise<Posting[]> => {
-  await waitMockNetwork();
-  const postings = applyMockSavedPostings();
-  const recentViewedPostings = postings
-    .filter((posting) => posting.viewedAt)
-    .sort((a, b) => new Date(b.viewedAt ?? '').getTime() - new Date(a.viewedAt ?? '').getTime());
+  page = 0,
+  size = DEFAULT_HOME_RECENT_VIEWED_SIZE,
+}: GetRecentViewedPostingsParams = {}): Promise<Posting[]> => {
+  const { data } = await axiosInstance.get('/api/v1/posts/recent-views', {
+    params: {
+      page,
+      size,
+    },
+  });
+  const result = unwrapApiData<ApiRecentViewedPostingsResponse>(data);
 
-  return typeof size === 'number' ? recentViewedPostings.slice(0, size) : recentViewedPostings;
+  return mapApiPostingList(result.posts ?? []);
 };
 
-/**
- * [MOCK API] 마감 임박 공고 목록 조회 (프론트 Mock 전용)
- * TODO: 실제 백엔드 API 연동 시 아래 주석 코드로 교체하세요:
- * const { data } = await axiosInstance.get('/api/v1/post/closing-soon', { params: { type, sort: 'FIT', size: 5 } });
- * return data;
- */
-export const getClosingSoonPostings = async (type: PostingType): Promise<Posting[]> => {
-  await waitMockNetwork();
-  const postings = applyMockSavedPostings();
+export const getClosingSoonPostings = async ({
+  type,
+  sort = 'FIT',
+  size = DEFAULT_HOME_CLOSING_SOON_SIZE,
+}: GetClosingSoonPostingsParams): Promise<Posting[]> => {
+  const { data } = await axiosInstance.get('/api/v1/posts/closing-soon', {
+    params: {
+      postType: type === 'ALL' ? undefined : type,
+      sort,
+      size,
+    },
+  });
+  const result = unwrapApiData<ApiClosingSoonPostingsResponse>(data);
 
-  return getMatchedDeadlinePostings(postings, type);
+  return mapApiPostingList(result ?? []);
 };
 
-/**
- * [MOCK API] 홈 피드 공고 데이터 통합 조회
- * TODO: 실제 백엔드 API 연동 시 GET /api/v1/post/popular, /api/v1/post/recent-views, /api/v1/post/closing-soon 통신으로 전환하세요.
- */
 export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
-  const [popularPostings, recentViewedPostings, scholarshipDeadlinePostings, contestDeadlinePostings] =
-    await Promise.all([
-      getPopularPostings({ size: DEFAULT_HOME_POSTING_SIZE }),
-      getRecentViewedPostings({ size: DEFAULT_HOME_POSTING_SIZE }),
-      getClosingSoonPostings('SCHOLARSHIP'),
-      getClosingSoonPostings('CONTEST'),
+  const [popularResult, recentViewedResult, scholarshipDeadlineResult, contestDeadlineResult] =
+    await Promise.allSettled([
+      getPopularPostings({ size: DEFAULT_HOME_POPULAR_SIZE }),
+      getRecentViewedPostings({ page: 0, size: DEFAULT_HOME_RECENT_VIEWED_SIZE }),
+      getClosingSoonPostings({
+        type: 'SCHOLARSHIP',
+        size: DEFAULT_HOME_CLOSING_SOON_SIZE,
+      }),
+      getClosingSoonPostings({
+        type: 'CONTEST',
+        size: DEFAULT_HOME_CLOSING_SOON_SIZE,
+      }),
     ]);
 
+  const results = [
+    popularResult,
+    recentViewedResult,
+    scholarshipDeadlineResult,
+    contestDeadlineResult,
+  ];
+
+  const firstRejectedResult = results.find((result) => result.status === 'rejected');
+
+  if (results.every((result) => result.status === 'rejected') && firstRejectedResult?.status === 'rejected') {
+    throw firstRejectedResult.reason;
+  }
+
+  const getSettledPostings = (result: PromiseSettledResult<Posting[]>) =>
+    result.status === 'fulfilled' ? result.value : [];
+
   return {
-    popularPostings,
-    recentViewedPostings,
+    popularPostings: getSettledPostings(popularResult),
+    recentViewedPostings: getSettledPostings(recentViewedResult),
     deadlinePostings: {
-      SCHOLARSHIP: scholarshipDeadlinePostings,
-      CONTEST: contestDeadlinePostings,
+      SCHOLARSHIP: getSettledPostings(scholarshipDeadlineResult),
+      CONTEST: getSettledPostings(contestDeadlineResult),
     },
   };
 };
