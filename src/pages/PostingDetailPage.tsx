@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getPostingById } from '@/apis/posting';
+import {
+  completePostingApplication,
+  getPostingById,
+  startPostingApplication,
+  type PostingApplicationResult,
+} from '@/apis/posting';
 import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import organizationIcon from '@/assets/icons/organization.svg';
 import DayBadge from '@/shared/components/DayBadge';
@@ -11,13 +16,13 @@ import Skeleton from '@/shared/components/Skeleton';
 import { useToggleSave } from '@/shared/hooks/useToggleSave';
 import { Layout } from '@/shared/components';
 import { useModalStore } from '@/store/modalStore';
+import { useToastStore } from '@/store/toastStore';
 import type { Posting } from '@/types/posting';
 
 const DETAIL_SUMMARY =
   '마케팅 분야에 높은 관심을 가지고 계신 학습님께 적합한 공모전입니다. 총 12개의 대기업이 제시한 실무 과제에 대해 마케팅 전략 및 아이디어를 제안해볼 수 있는 기회이고, 실제 기업의 비즈니스 과제를 분석하여 창의적인 마케팅 솔루션을 기획하는 경험을 쌓을 수 있습니다.';
 
 const MOCK_OFFICIAL_APPLY_URL = 'https://www.cjenm.com/ko/';
-const MOCK_APPLICATION_HISTORY_KEY = 'fitme:mockApplicationHistory';
 
 const DETAIL_INFO = {
   period: {
@@ -42,25 +47,6 @@ const DETAIL_TABS = [
 ] as const;
 
 type DetailTab = (typeof DETAIL_TABS)[number]['value'];
-type ApplicationStatus = '-' | '결과 대기 중';
-
-type MockApplicationHistory = Record<number, ApplicationStatus>;
-
-const readMockApplicationHistory = (): MockApplicationHistory => {
-  try {
-    const history = window.localStorage.getItem(MOCK_APPLICATION_HISTORY_KEY);
-    if (!history) return {};
-
-    return JSON.parse(history) as MockApplicationHistory;
-  } catch {
-    return {};
-  }
-};
-
-const writeMockApplicationHistory = (postingId: number, status: ApplicationStatus) => {
-  const history = readMockApplicationHistory();
-  window.localStorage.setItem(MOCK_APPLICATION_HISTORY_KEY, JSON.stringify({ ...history, [postingId]: status }));
-};
 
 function formatCount(count?: number) {
   if (typeof count !== 'number') return '0';
@@ -352,8 +338,10 @@ export default function PostingDetailPage() {
   const isValidPostingId = Number.isFinite(parsedPostingId);
   const [activeTab, setActiveTab] = useState<DetailTab>('period');
   const [isWaitingForApplyReturn, setIsWaitingForApplyReturn] = useState(false);
+  const [pendingApplication, setPendingApplication] = useState<PostingApplicationResult | null>(null);
   const openModal = useModalStore((state) => state.openModal);
   const closeModal = useModalStore((state) => state.closeModal);
+  const showToast = useToastStore((state) => state.showToast);
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: postingQueryKeys.detail(parsedPostingId),
@@ -361,7 +349,7 @@ export default function PostingDetailPage() {
     enabled: isValidPostingId,
   });
 
-  const openApplyCompleteModal = useCallback((posting: Posting) => {
+  const openApplyCompleteModal = useCallback((application: PostingApplicationResult) => {
     openModal({
       title: '지원을 완료하셨나요?',
       description: "[예] 버튼을 누르시면, '이력' 탭 상태값이 결과 대기 중으로 변경돼요.\n[아니오] 버튼을 누르시면, '이력' 탭에서 수동으로 설정해야 해요.",
@@ -369,23 +357,30 @@ export default function PostingDetailPage() {
         {
           label: '아니오, 아직이에요',
           variant: 'secondary',
-          onClick: closeModal,
+          onClick: () => {
+            setPendingApplication(null);
+            closeModal();
+          },
         },
         {
           label: '네, 완료했어요.',
           variant: 'primary',
-          onClick: () => {
-            writeMockApplicationHistory(posting.id, '결과 대기 중');
+          onClick: async () => {
+            try {
+              await completePostingApplication(application.userApplicationId);
+              setPendingApplication(null);
+              showToast('지원 상태가 결과 대기 중으로 변경됐어요.', 'success');
+            } catch {
+              showToast('지원 상태 변경에 실패했어요.', 'error');
+            }
             closeModal();
           },
         },
       ],
     });
-  }, [closeModal, openModal]);
+  }, [closeModal, openModal, showToast]);
 
   const handleApplyClick = (posting: Posting) => {
-    const applyUrl = posting.applyUrl || MOCK_OFFICIAL_APPLY_URL;
-
     openModal({
       title: '공식 홈페이지로 이동하시겠어요?',
       description: "지원을 완료하신 후, 핏미에 돌아와\n진행 상태를 꼭 '결과 대기 중'으로 변경해주세요!",
@@ -398,11 +393,18 @@ export default function PostingDetailPage() {
         {
           label: '이동하기',
           variant: 'primary',
-          onClick: () => {
-            writeMockApplicationHistory(posting.id, '-');
+          onClick: async () => {
+            try {
+              const application = await startPostingApplication(posting.id);
+              const applyUrl = application.applicationUrl || posting.applyUrl || MOCK_OFFICIAL_APPLY_URL;
+
+              setPendingApplication(application);
+              setIsWaitingForApplyReturn(true);
+              window.open(applyUrl, '_blank', 'noopener,noreferrer');
+            } catch {
+              showToast('지원 이력 생성에 실패했어요.', 'error');
+            }
             closeModal();
-            setIsWaitingForApplyReturn(true);
-            window.open(applyUrl, '_blank', 'noopener,noreferrer');
           },
         },
       ],
@@ -410,13 +412,13 @@ export default function PostingDetailPage() {
   };
 
   useEffect(() => {
-    if (!isWaitingForApplyReturn || !data) return;
+    if (!isWaitingForApplyReturn || !pendingApplication) return;
 
     const handleReturnToApp = () => {
       if (document.visibilityState === 'hidden') return;
 
       setIsWaitingForApplyReturn(false);
-      openApplyCompleteModal(data);
+      openApplyCompleteModal(pendingApplication);
     };
 
     window.addEventListener('focus', handleReturnToApp);
@@ -426,7 +428,7 @@ export default function PostingDetailPage() {
       window.removeEventListener('focus', handleReturnToApp);
       document.removeEventListener('visibilitychange', handleReturnToApp);
     };
-  }, [data, isWaitingForApplyReturn, openApplyCompleteModal]);
+  }, [isWaitingForApplyReturn, openApplyCompleteModal, pendingApplication]);
 
   return (
     <Layout header={<DetailHeader />} className="bg-white">
