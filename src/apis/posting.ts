@@ -89,6 +89,7 @@ interface ApiPostingApplication {
 interface ApiPostingDetail {
   id?: number;
   postId?: number;
+  savedId?: number;
   announcementId?: number;
   type?: ApiPostingType;
   postType?: ApiPostingType;
@@ -202,6 +203,23 @@ const getSavedIdFromPayload = (payload: SavedPostMutationPayload, fallback?: num
   return fallback;
 };
 
+const findSavedIdByPostingId = async (postingId: number) => {
+  const { data } = await axiosInstance.get<ApiResponse<SavedPostingsPayload> | SavedPostingsPayload>(
+    '/api/v1/saved-posts',
+    {
+      params: {
+        category: 'ALL',
+        sort: 'DEADLINE',
+        size: 100,
+      },
+    },
+  );
+  const savedPostings = normalizeSavedPostingsPayload(unwrapApiData<SavedPostingsPayload>(data));
+  const savedPosting = savedPostings.find((posting) => posting.postId === postingId || posting.id === postingId);
+
+  return savedPosting?.savedId;
+};
+
 const mapApiPostingApplication = (application: ApiPostingApplication): PostingApplicationResult => {
   if (typeof application.userApplicationId !== 'number') {
     throw new Error('지원 이력 ID가 응답에 없습니다.');
@@ -249,6 +267,7 @@ const mapApiPostingDetailToPosting = (posting: ApiPostingDetail, fallbackType: P
     posting.posterImageUrl ??
     posting.contestDetail?.posterImageUrl ??
     '',
+  savedId: posting.savedId,
   isSaved: posting.isSaved ?? posting.issaved ?? posting.saved ?? false,
   category: posting.category,
   createdAt: posting.createdAt,
@@ -619,18 +638,20 @@ export const toggleSave = async (
 ): Promise<ToggleSaveResult> => {
   try {
     if (isSaved) {
-      if (!savedId) {
+      const targetSavedId = savedId ?? (await findSavedIdByPostingId(postingId));
+
+      if (!targetSavedId) {
         throw new Error('저장 해제에 필요한 savedId가 없습니다.');
       }
 
       const { data } = await axiosInstance.delete<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
-        `/api/v1/saved-posts/${savedId}`,
+        `/api/v1/saved-posts/${targetSavedId}`,
       );
       const deletedPosting = unwrapApiData<SavedPostMutationPayload>(data);
 
       return {
         isSaved: false,
-        savedId: getSavedIdFromPayload(deletedPosting, savedId),
+        savedId: getSavedIdFromPayload(deletedPosting, targetSavedId),
       };
     }
 
