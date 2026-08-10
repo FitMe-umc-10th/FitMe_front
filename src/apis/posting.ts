@@ -18,32 +18,11 @@ import {
   mapApiSavedPostingToPosting,
   type ApiSavedPosting,
 } from '@/apis/postingMapper';
-import { MOCK_POSTINGS } from '@/constants/mockData';
-import { getDDayDays } from '@/shared/utils/date';
 import type { ApiResponse } from '@/types/common';
 
-export interface GetExplorePostingsParams {
-  keyword: string;
-  type: 'all' | 'scholarship' | 'contest';
-  category?: string;
-  sortBy: 'deadline' | 'latest' | 'popular';
-  page: number;
-  limit: number;
-}
-
-export interface ExplorePostingsResponse {
-  postings: Posting[];
-  nextPage?: number;
-  total: number;
-}
-
-const MOCK_SAVED_POSTINGS_KEY = 'fitme:mockSavedPostings';
-const MOCK_NETWORK_DELAY_MS = 300;
 const DEFAULT_HOME_POPULAR_SIZE = 8;
 const DEFAULT_HOME_RECENT_VIEWED_SIZE = 10;
 const DEFAULT_HOME_CLOSING_SOON_SIZE = 5;
-
-type MockSavedPostings = Record<number, boolean>;
 
 type ApiPostingType = PostingType | 'SCHOLARSHIP' | 'CONTEST' | string;
 
@@ -158,11 +137,6 @@ interface ApiPostingDetail {
     rewardTotal?: string;
   };
 }
-
-const waitMockNetwork = (delayMs = MOCK_NETWORK_DELAY_MS) =>
-  new Promise((resolve) => {
-    window.setTimeout(resolve, delayMs);
-  });
 
 const unwrapApiData = <T>(payload: unknown): T => {
   if (payload && typeof payload === 'object') {
@@ -312,113 +286,6 @@ const getPostingDetailByType = async (postingId: number, type: PostingType): Pro
 };
 
 const isNotFoundError = (error: unknown) => axios.isAxiosError(error) && error.response?.status === 404;
-
-const readMockSavedPostings = (): MockSavedPostings => {
-  try {
-    const savedPostings = window.localStorage.getItem(MOCK_SAVED_POSTINGS_KEY);
-    if (!savedPostings) return {};
-
-    return JSON.parse(savedPostings) as MockSavedPostings;
-  } catch {
-    return {};
-  }
-};
-
-const applyMockSavedPostings = () => {
-  const savedPostings = readMockSavedPostings();
-
-  MOCK_POSTINGS.forEach((posting) => {
-    const savedState = savedPostings[posting.id];
-    if (typeof savedState === 'boolean') {
-      posting.isSaved = savedState;
-    }
-    posting.savedId = posting.isSaved ? posting.savedId ?? posting.id : undefined;
-  });
-
-  return MOCK_POSTINGS;
-};
-
-// === 탐색/검색 화면 전용 페이지네이션 및 필터링 Mock API ===
-export const getExplorePostings = async ({
-  keyword,
-  type,
-  category,
-  sortBy,
-  page,
-  limit,
-}: GetExplorePostingsParams): Promise<ExplorePostingsResponse> => {
-  await waitMockNetwork(400); // 400ms 네트워크 지연 흉내
-
-  let filtered = [...applyMockSavedPostings()];
-
-  // 1. 타입 필터링 (장학금 / 공모전)
-  if (type === 'scholarship') {
-    filtered = filtered.filter((p) => p.type === 'SCHOLARSHIP');
-  } else if (type === 'contest') {
-    filtered = filtered.filter((p) => p.type === 'CONTEST');
-  }
-
-  // 2. 카테고리 필터링 (공모전 분야 선택 시)
-  if (type === 'contest' && category) {
-    filtered = filtered.filter((p) => p.category === category);
-  }
-
-  // 3. 검색어 필터링 (기관명 또는 제목 포함 여부, 대소문자 무시)
-  if (keyword.trim()) {
-    const query = keyword.toLowerCase().trim();
-    filtered = filtered.filter(
-      (p) =>
-        p.title.toLowerCase().includes(query) ||
-        (p.organization ?? '').toLowerCase().includes(query)
-    );
-  }
-
-  // 4. 정렬
-  if (sortBy === 'deadline') {
-    // 마감 임박순
-    filtered.sort((a, b) => {
-      const daysA = getDDayDays(a.deadline);
-      const daysB = getDDayDays(b.deadline);
-      if (daysA === null && daysB === null) return 0;
-      if (daysA === null) return 1;
-      if (daysB === null) return -1;
-      const isClosedA = daysA < 0;
-      const isClosedB = daysB < 0;
-
-      // 마감된 것은 가장 아래로 내림
-      if (isClosedA && !isClosedB) return 1;
-      if (!isClosedA && isClosedB) return -1;
-      return daysA - daysB;
-    });
-  } else if (sortBy === 'latest') {
-    // 최신 등록순
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.createdAt || '1970-01-01').getTime();
-      const dateB = new Date(b.createdAt || '1970-01-01').getTime();
-      return dateB - dateA;
-    });
-  } else if (sortBy === 'popular') {
-    // 인기순 (조회수순)
-    filtered.sort((a, b) => (b.views || b.viewCount || 0) - (a.views || a.viewCount || 0));
-  }
-
-  // 5. 페이지네이션 슬라이싱
-  const start = page * limit;
-  const end = start + limit;
-  const pagedPostings = filtered.slice(start, end);
-  const nextPage = end < filtered.length ? page + 1 : undefined;
-
-  return {
-    postings: pagedPostings,
-    nextPage,
-    total: filtered.length,
-  };
-};
-
-export const getPostings = async (): Promise<Posting[]> => {
-  await waitMockNetwork(); // 네트워크 흉내
-  return applyMockSavedPostings();
-};
 
 export const getPopularPostings = async ({
   cursor,
