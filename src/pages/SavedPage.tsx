@@ -1,19 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 import { getSavedPostings } from '@/apis/posting';
 import { postingQueryKeys } from '@/apis/postingQueryKeys';
-import organizationIcon from '@/assets/icons/organization.svg';
-import savedTabHeartIcon from '@/assets/icons/saved-tab-heart.svg';
-import DayBadge from '@/shared/components/DayBadge';
 import Dropdown from '@/shared/components/Dropdown';
 import EmptyState from '@/shared/components/EmptyState';
 import ErrorState from '@/shared/components/ErrorState';
-import PostingThumbnail from '@/shared/components/PostingThumbnail';
+import PostingCard from '@/shared/components/PostingCard';
 import Skeleton from '@/shared/components/Skeleton';
 import { Layout, Tab, TabBar } from '@/shared/components';
-import { useToggleSave } from '@/shared/hooks/useToggleSave';
-import type { GetSavedPostingsParams, Posting, PostingCategoryFilter, PostingSort } from '@/types/posting';
+import type { GetSavedPostingsParams, PostingCategoryFilter, PostingSort } from '@/types/posting';
 
 type SavedTab = PostingCategoryFilter;
 type SavedSortType = PostingSort;
@@ -25,8 +20,8 @@ const savedTabs: { label: string; value: SavedTab }[] = [
 ];
 
 const savedSortOptions = [
-  { label: '마감임박순', value: 'DEADLINE' },
   { label: '최근 저장순', value: 'RECENT' },
+  { label: '마감 임박순', value: 'DEADLINE' },
 ];
 
 export default function SavedPage() {
@@ -48,12 +43,14 @@ export default function SavedPage() {
     <Layout tabBar={<TabBar />} className="bg-white">
       {isFailureToastOpen && <SavedFailureToast onClose={() => setIsFailureToastOpen(false)} />}
 
-      <header className="flex h-14 shrink-0 items-center justify-center bg-white">
-        <h1 className="text-[16px] font-bold text-[#262626]">저장</h1>
-      </header>
+      <div className="bg-white pt-11">
+        <div className="flex h-[91px] shrink-0 flex-col items-start gap-5">
+          <header className="flex h-7 w-full items-center px-5">
+            <h1 className="w-[35px] text-center text-[20px] font-semibold leading-[140%] text-[#000B24]">저장</h1>
+          </header>
 
-      <div className="-mx-0">
-        <Tab tabs={savedTabs} active={activeTab} onChange={setActiveTab} variant="content" />
+          <Tab tabs={savedTabs} active={activeTab} onChange={setActiveTab} variant="content" />
+        </div>
       </div>
 
       {isPending && (
@@ -74,7 +71,7 @@ export default function SavedPage() {
       )}
 
       {isEmpty && (
-        <section className="flex min-h-[calc(100dvh-56px-43px-80px)] items-center justify-center px-5 pb-16">
+        <section className="flex min-h-[calc(100dvh-135px-80px)] items-center justify-center px-5 pb-16">
           <EmptyState
             illustration="heart-plus"
             message="아직 저장한 공고가 없어요"
@@ -88,14 +85,21 @@ export default function SavedPage() {
       {!isPending && !isError && savedPostings.length > 0 && (
         <section className="px-5 pb-6 pt-4">
           <div className="mb-[13px] flex justify-start">
-            <Dropdown options={savedSortOptions} value={sort} onChange={(value) => setSort(value as SavedSortType)} />
+            <Dropdown
+              options={savedSortOptions}
+              value={sort}
+              onChange={(value) => setSort(value as SavedSortType)}
+              variant="bottomSheet"
+            />
           </div>
 
           <div className="flex flex-col gap-[20px]">
             {savedPostings.map((posting) => (
-              <SavedPostingCard
+              <PostingCard
                 key={posting.id}
                 posting={posting}
+                variant="horizontal"
+                showSaveErrorToast={false}
                 onSaveFailure={() => setIsFailureToastOpen(true)}
               />
             ))}
@@ -103,89 +107,6 @@ export default function SavedPage() {
         </section>
       )}
     </Layout>
-  );
-}
-
-function SavedPostingCard({
-  posting,
-  onSaveFailure,
-}: {
-  posting: Posting;
-  onSaveFailure: () => void;
-}) {
-  const navigate = useNavigate();
-
-  return (
-    <article
-      onClick={() => navigate(`/postings/${posting.id}`)}
-      className="grid h-[128px] cursor-pointer grid-cols-[176px_187px] gap-0 bg-white"
-    >
-      <div className="h-[128px] overflow-hidden rounded-l-[16px] bg-[#E6EEF8]">
-        <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
-      </div>
-
-      <div className="relative h-[128px] w-[187px] min-w-0 bg-white px-3 py-5">
-        <div className="absolute left-3 top-[22px]">
-          <DayBadge deadline={posting.deadline} />
-        </div>
-
-        <div className="absolute right-3 top-[22px]">
-          <SavedHeartButton
-            postingId={posting.id}
-            savedId={posting.savedId}
-            isSaved={posting.isSaved}
-            onSaveFailure={onSaveFailure}
-          />
-        </div>
-
-        <h2 className="absolute left-3 right-3 top-[67.14px] truncate text-[14px] font-bold leading-[19px] text-[#262626]">
-          {posting.title}
-        </h2>
-
-        <div className="absolute left-3 right-3 top-[92.86px] flex items-center gap-[3px] text-[11px] font-medium leading-none text-[#A5A5A5]">
-          <img src={organizationIcon} alt="" aria-hidden="true" className="size-[13px] shrink-0" />
-          <span className="truncate">{posting.organization}</span>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function SavedHeartButton({
-  postingId,
-  savedId,
-  isSaved,
-  onSaveFailure,
-}: {
-  postingId: number;
-  savedId?: number;
-  isSaved: boolean;
-  onSaveFailure: () => void;
-}) {
-  const { mutate, isPending } = useToggleSave(postingId, {
-    savedId,
-    showErrorToast: false,
-    onError: onSaveFailure,
-  });
-
-  const handleClick = (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (isPending) return;
-    mutate(isSaved);
-  };
-
-  return (
-    <button
-      type="button"
-      aria-label={isSaved ? '저장 해제' : '저장'}
-      disabled={isPending}
-      onClick={handleClick}
-      className="flex size-[14px] items-center justify-center rounded-full transition-transform active:scale-90 disabled:opacity-50"
-    >
-      <img src={savedTabHeartIcon} alt="" aria-hidden="true" className="size-[14px]" />
-    </button>
   );
 }
 

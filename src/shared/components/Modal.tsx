@@ -18,7 +18,7 @@ type ModalProps = {
 
 const buttonClassByVariant: Record<NonNullable<ModalButton['variant']>, string> = {
   primary: 'bg-[#4A90E2] text-white',
-  secondary: 'bg-[#F0F0F0] text-[#808080]',
+  secondary: 'bg-[#F0F0F0] text-[#666666]',
   danger: 'bg-red-500 text-white',
 };
 
@@ -37,6 +37,7 @@ export function Modal({ isOpen, onClose, title, description, buttons, children }
   if (!isOpen) return null;
 
   const modalButtons = buttons ?? [{ label: '확인', onClick: onClose, variant: 'primary' }];
+  const isApplyCompleteModal = title === '지원을 완료하셨나요?';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -44,14 +45,24 @@ export function Modal({ isOpen, onClose, title, description, buttons, children }
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="flex h-[182px] w-full max-w-[328px] flex-col rounded-[18px] bg-white px-[18px] pb-5 pt-[38px] text-center shadow-xl"
+        className="flex h-[182px] w-full max-w-[328px] flex-col rounded-[18px] bg-white px-[18px] pb-5 pt-[34px] text-center shadow-xl"
       >
-        <h2 id="modal-title" className="text-[15px] font-extrabold leading-[21px] text-[#1E1E1E]">
+        <h2 id="modal-title" className="text-[16.3725px] font-bold leading-5 text-[#333333] [font-family:Inter]">
           {title}
         </h2>
-        {description && <p className="mt-[7px] whitespace-pre-line text-[11px] font-medium leading-[17px] text-[#8C8C8C]">{description}</p>}
+        {description && (
+          <p
+            className={`mt-[11px] whitespace-pre-line font-normal text-[#666666] [font-family:Inter] ${
+              isApplyCompleteModal
+                ? 'mx-auto w-full text-center text-[11px] leading-[13px]'
+                : 'text-center text-[12.7342px] leading-[15px]'
+            }`}
+          >
+            {description}
+          </p>
+        )}
         {children && <div className="mt-4">{children}</div>}
-        <div className="mt-auto flex justify-center gap-2">
+        <div className="mt-auto flex justify-center gap-[9px]">
           {modalButtons.map((button) => {
             const variant = button.variant ?? 'primary';
 
@@ -60,7 +71,7 @@ export function Modal({ isOpen, onClose, title, description, buttons, children }
                 key={button.label}
                 type="button"
                 onClick={button.onClick ?? onClose}
-                className={`h-[44px] w-[141px] rounded-[7.28px] text-[13px] font-extrabold transition-opacity hover:opacity-90 ${buttonClassByVariant[variant]}`}
+                className={`h-[44px] w-[141px] rounded-[7.28px] text-[13.6438px] font-bold leading-[17px] transition-opacity [font-family:Inter] hover:opacity-90 ${buttonClassByVariant[variant]}`}
               >
                 {button.label}
               </button>

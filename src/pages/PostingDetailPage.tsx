@@ -57,12 +57,12 @@ function DetailHeader() {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-30 flex h-[56px] items-center justify-center bg-white px-4">
+    <header className="sticky top-0 z-30 mx-auto flex h-[41px] w-full max-w-[402px] items-center justify-center bg-white">
       <button
         type="button"
         aria-label="뒤로가기"
         onClick={() => navigate(-1)}
-        className="absolute left-2 flex size-[41px] items-center justify-center rounded-full transition-colors hover:bg-gray-100"
+        className="absolute left-0 flex h-[41px] w-[45px] items-center justify-center rounded-full pl-1 transition-colors hover:bg-gray-100"
       >
         <svg viewBox="0 0 41 41" aria-hidden="true" className="size-[41px]">
           <path
@@ -75,11 +75,13 @@ function DetailHeader() {
           />
         </svg>
       </button>
-      <h1 className="text-[15px] font-extrabold text-[#111827]">공고 상세</h1>
+      <h1 className="h-7 w-[74px] text-center text-[20px] font-semibold leading-[140%] text-[#000B24]">
+        공고 상세
+      </h1>
       <button
         type="button"
         aria-label="공유하기"
-        className="absolute right-3 flex size-10 items-center justify-center rounded-full text-[#333333] transition-colors hover:bg-gray-100"
+        className="absolute right-4 flex size-[31px] items-center justify-center rounded-full text-[#262626] transition-colors hover:bg-gray-100"
       >
         <svg viewBox="0 0 31 31" aria-hidden="true" className="size-[31px]">
           <path
@@ -152,7 +154,7 @@ function MetricIcon({ type }: { type: 'view' | 'heart' }) {
 
 function TypeBadge({ posting }: { posting: Posting }) {
   return (
-    <span className="inline-flex h-[24px] items-center justify-center rounded-full bg-[#EEF6FF] px-3 text-[11px] font-bold text-[#4C96FF]">
+    <span className="inline-flex h-[27px] w-14 items-center justify-center rounded-2xl bg-[#EFF6FF] px-3 py-1 text-[12px] font-medium leading-[160%] text-[#0059FF] [font-family:Pretendard]">
       {posting.type === 'SCHOLARSHIP' ? '장학금' : '공모전'}
     </span>
   );
@@ -166,7 +168,7 @@ function DetailInfoTabs({
   onChange: (tab: DetailTab) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 text-center text-[14px] font-semibold">
+    <div className="flex h-[38px] w-full items-center gap-[62px] border-b border-[#D9D9D9] pl-5 text-center">
       {DETAIL_TABS.map((tab) => {
         const isActive = activeTab === tab.value;
 
@@ -175,10 +177,10 @@ function DetailInfoTabs({
             key={tab.value}
             type="button"
             onClick={() => onChange(tab.value)}
-            className={`h-[38px] border-b px-7 py-2 leading-[22px] ${
+            className={`flex h-[38px] w-[79px] items-center justify-center border-b-[1.5px] px-0 py-2 text-center text-[16px] leading-[140%] [font-family:Pretendard] ${
               isActive
-                ? 'border-[#0059FF] text-[#1E1E1E]'
-                : 'border-[#D9D9D9] text-[#A5A5A5]'
+                ? 'border-[#0059FF] font-semibold text-[#1E1E1E]'
+                : 'border-transparent font-medium text-[#A5A5A5]'
             }`}
           >
             {tab.label}
@@ -206,18 +208,18 @@ function DetailInfoContent({ activeTab, posting }: { activeTab: DetailTab; posti
 
   if (activeTab === 'benefit') {
     return (
-      <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">대상</dt>
-          <dd className="font-semibold text-[#333333]">{benefit.target}</dd>
+      <dl className="flex h-[98px] w-full flex-col items-start gap-2 pl-5 pt-0 text-[14px] leading-[140%]">
+        <div className="flex items-start gap-5">
+          <dt className="w-[74px] shrink-0 font-semibold text-[#5184F9]">대상</dt>
+          <dd className="font-medium text-[#262626]">{benefit.target}</dd>
         </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">최우수상</dt>
-          <dd className="font-semibold text-[#333333]">{benefit.grandPrize}</dd>
+        <div className="flex items-start gap-5">
+          <dt className="w-[74px] shrink-0 font-semibold text-[#5184F9]">최우수상</dt>
+          <dd className="font-medium text-[#262626]">{benefit.grandPrize}</dd>
         </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">입상자 전원</dt>
-          <dd className="font-semibold text-[#333333]">{benefit.support}</dd>
+        <div className="flex items-start gap-5">
+          <dt className="w-[74px] shrink-0 font-semibold text-[#5184F9]">입상자 전원</dt>
+          <dd className="font-medium text-[#262626]">{benefit.support}</dd>
         </div>
       </dl>
     );
@@ -225,28 +227,28 @@ function DetailInfoContent({ activeTab, posting }: { activeTab: DetailTab; posti
 
   if (activeTab === 'eligibility') {
     return (
-      <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">학력</dt>
-          <dd className="font-semibold text-[#333333]">{eligibility.education}</dd>
+      <dl className="flex h-[98px] w-full flex-col items-start gap-2 pl-5 pt-0 text-[14px] leading-[140%]">
+        <div className="flex items-start gap-5">
+          <dt className="w-[74px] shrink-0 font-semibold text-[#5184F9]">학력</dt>
+          <dd className="font-medium text-[#262626]">{eligibility.education}</dd>
         </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">인원 규모</dt>
-          <dd className="font-semibold text-[#333333]">{eligibility.headcount}</dd>
+        <div className="flex items-start gap-5">
+          <dt className="w-[74px] shrink-0 font-semibold text-[#5184F9]">인원 규모</dt>
+          <dd className="font-medium text-[#262626]">{eligibility.headcount}</dd>
         </div>
       </dl>
     );
   }
 
   return (
-    <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-      <div className="grid grid-cols-[74px_1fr] gap-2">
-        <dt className="font-bold text-[#4C96FF]">일시</dt>
-        <dd className="font-semibold text-[#333333]">{period.date}</dd>
+    <dl className="flex h-[98px] w-full flex-col items-start gap-2 pl-5 pt-0 text-[14px] leading-[140%]">
+      <div className="flex items-start gap-5">
+        <dt className="w-[52px] shrink-0 font-semibold text-[#5184F9]">일시</dt>
+        <dd className="font-medium text-[#262626]">{period.date}</dd>
       </div>
-      <div className="grid grid-cols-[74px_1fr] gap-2">
-        <dt className="font-bold text-[#4C96FF]">접수 방법</dt>
-        <dd className="font-semibold text-[#333333]">{period.method}</dd>
+      <div className="flex items-start gap-5">
+        <dt className="w-[52px] shrink-0 font-semibold text-[#5184F9]">접수 방법</dt>
+        <dd className="font-medium text-[#262626]">{period.method}</dd>
       </div>
     </dl>
   );
@@ -432,7 +434,7 @@ export default function PostingDetailPage() {
 
   return (
     <Layout header={<DetailHeader />} className="bg-white">
-      <section className="min-h-[calc(100dvh-56px)] pb-[112px]">
+      <section className="mx-auto min-h-[calc(100dvh-56px)] w-full max-w-[402px] pb-[112px]">
         {isPending && <Skeleton variant="list" count={2} />}
         {!isValidPostingId && (
           <DetailUnavailableState
@@ -459,45 +461,60 @@ export default function PostingDetailPage() {
           />
         )}
         {data && (
-          <article>
-            <div className="h-[190px] w-full bg-[#E8EEF5]">
+          <article className="flex flex-col items-start gap-6">
+            <div className="h-[200px] w-full bg-[#E8EEF5]">
               <PostingThumbnail src={data.posterUrl} alt={data.title} />
             </div>
 
-            <div className="space-y-4 px-5 py-5">
-              <div className="flex items-center gap-2">
-                <TypeBadge posting={data} />
-                <DayBadge deadline={data.deadline} />
-              </div>
-
-              <div className="space-y-2">
-                <h2 className="text-[18px] font-extrabold leading-[1.45] text-[#202124]">{data.title}</h2>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-1 text-[12px] font-medium text-[#A1A1A1]">
-                    <img src={organizationIcon} alt="" aria-hidden="true" className="size-[13px] shrink-0" />
-                    <span className="truncate">{data.organization}</span>
+            <div className="flex min-h-[422.5px] w-full flex-col items-center justify-center gap-5">
+              <div className="flex h-[94.5px] w-full flex-col items-start gap-5">
+                <div className="flex w-full flex-col items-start gap-3 px-5">
+                  <div className="flex h-[27.5px] items-center gap-2">
+                    <TypeBadge posting={data} />
+                    <DayBadge deadline={data.deadline} variant="detail" />
                   </div>
-                  <div className="flex shrink-0 items-center gap-3 text-[12px] font-medium text-[#8C8C8C]">
-                    <span className="flex items-center gap-1">
-                      <MetricIcon type="view" />
-                      {formatCount(data.viewCount)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MetricIcon type="heart" />
-                      {formatCount(data.savedCount)}
-                    </span>
+
+                  <div className="flex w-full flex-col items-start gap-2">
+                    <h2 className="w-full text-[20px] font-semibold leading-[140%] text-[#000B24]">
+                      {data.title}
+                    </h2>
+                    <div className="flex w-full items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-1 text-[10px] font-medium leading-[160%] text-[#8C8C8C]">
+                        <img
+                          src={organizationIcon}
+                          alt=""
+                          aria-hidden="true"
+                          className="size-[12.35px] shrink-0"
+                        />
+                        <span className="truncate">{data.organization}</span>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2 text-[12px] font-medium leading-[160%] text-[#8C8C8C]">
+                        <span className="flex items-center gap-1">
+                          <MetricIcon type="view" />
+                          {formatCount(data.viewCount)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MetricIcon type="heart" />
+                          {formatCount(data.savedCount)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <section className="min-h-[116px] rounded-2xl border border-[#B2D4FF] bg-gradient-to-b from-[#E2EFFF] to-white px-4 py-4">
-                <h3 className="mb-2 text-[13px] font-extrabold text-[#247BFF]">AI 공모전 정보 요약</h3>
-                <p className="text-[12px] font-medium leading-[1.75] text-[#404040]">
-                  {data.aiSummary || DETAIL_SUMMARY}
-                </p>
+              <section className="flex min-h-[124px] w-[362px] flex-col items-center justify-center gap-1 rounded-2xl bg-[linear-gradient(95.86deg,#EFF6FF_0%,#F5FFFA_100%)] px-4 py-3">
+                <h3 className="flex h-5 w-[330px] items-center text-[14px] font-semibold leading-[140%] tracking-[-0.241437px] text-[#67A6FF]">
+                  FitMe 공모전 정보 요약
+                </h3>
+                <div className="flex min-h-[76px] w-[330px] flex-col items-start gap-1">
+                  <p className="flex min-h-[76px] w-[330px] items-center whitespace-pre-line text-[12px] font-medium leading-[19.2px] text-[#404040] [font-family:Pretendard]">
+                    {data.aiSummary || DETAIL_SUMMARY}
+                  </p>
+                </div>
               </section>
 
-              <section className="pt-1">
+              <section className="flex h-[164px] w-full flex-col items-start gap-7">
                 <DetailInfoTabs activeTab={activeTab} onChange={setActiveTab} />
                 <DetailInfoContent activeTab={activeTab} posting={data} />
               </section>
