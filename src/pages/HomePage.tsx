@@ -17,6 +17,7 @@ type SectionHeaderProps = {
   title: string;
   actionLabel?: string;
   onAction?: () => void;
+  compact?: boolean;
 };
 
 const deadlineTabs: { label: string; value: PostingType }[] = [
@@ -24,18 +25,32 @@ const deadlineTabs: { label: string; value: PostingType }[] = [
   { label: '공모전', value: 'CONTEST' },
 ];
 
-function SectionHeader({ title, actionLabel = '더보기', onAction }: SectionHeaderProps) {
+function SectionHeader({ title, actionLabel = '더보기', onAction, compact = false }: SectionHeaderProps) {
   return (
-    <div className="relative z-10 flex items-center justify-between gap-3">
-      <h2 className="text-[17px] font-extrabold leading-snug text-[#202124]">{title}</h2>
+    <div
+      className={`relative z-10 flex items-center justify-between gap-3 ${
+        compact ? 'h-6 w-full items-end px-5' : ''
+      }`}
+    >
+      <h2
+        className={
+          compact
+            ? 'text-[14px] font-semibold leading-[140%] tracking-[-0.241437px] text-[#262626]'
+            : 'text-[18px] font-semibold leading-[140%] text-[#262626]'
+        }
+      >
+        {title}
+      </h2>
       {onAction && (
         <button
           type="button"
           onClick={onAction}
-          className="flex shrink-0 items-center gap-0.5 text-[12px] font-medium text-[#A1A1A1] transition-colors hover:text-[#6B7280]"
+          className={`flex shrink-0 items-center gap-0.5 text-[12px] font-medium transition-colors hover:text-[#6B7280] ${
+            compact ? 'text-[#8C8C8C]' : 'text-[#A1A1A1]'
+          }`}
         >
           <span>{actionLabel}</span>
-          <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4">
+          <svg viewBox="0 0 24 24" aria-hidden="true" className={compact ? 'size-6' : 'size-4'}>
             <path
               d="M9 18L15 12L9 6"
               fill="none"
@@ -99,8 +114,9 @@ export default function HomePage() {
   const recentViewedSectionHeight = isRecentViewedExpanded
     ? 'h-[368px]'
     : hasRecentViewedPostings
-      ? 'h-[268px]'
+      ? 'h-[280px]'
       : 'h-[177px]';
+  const isRecentViewedListMode = hasRecentViewedPostings && !isRecentViewedExpanded;
 
   return (
     <Layout
@@ -128,7 +144,14 @@ export default function HomePage() {
           <SectionHeader title="실시간 인기 공고" />
           {isPending && <Skeleton variant="popular" count={2} />}
           {data && (
-            <Carousel showIndicator showProgress loop spotlight storageKey="home-popular-carousel-index">
+            <Carousel
+              showIndicator
+              showProgress
+              loop
+              spotlight
+              storageKey="home-popular-carousel-index"
+              autoPlayInterval={3000}
+            >
               {data.popularPostings.map((posting) => (
                 <PostingCard key={posting.id} posting={posting} variant="popular" />
               ))}
@@ -137,23 +160,26 @@ export default function HomePage() {
         </section>
 
         <section
-          className={`relative -mx-5 overflow-hidden bg-[#EEF6FF] px-5 pt-5 ${recentViewedSectionHeight}`}
+          className={`relative -mx-5 overflow-hidden ${
+            isRecentViewedListMode
+              ? 'flex flex-col items-start gap-4 bg-[linear-gradient(180deg,#EFF6FF_0%,#F5FFFA_100%)] pt-3'
+              : 'bg-[#EEF6FF] px-5 pt-5'
+          } ${recentViewedSectionHeight}`}
         >
           <SectionHeader
             title="현수님의 최근 조회 목록"
             actionLabel={isRecentViewedExpanded ? '작게 보기' : '더보기'}
+            compact={isRecentViewedListMode}
             onAction={() => {
               setIsRecentViewedExpanded(!isRecentViewedExpanded);
             }}
           />
           {isPending && <Skeleton variant="card" count={2} />}
           {data && hasRecentViewedPostings && !isRecentViewedExpanded && (
-            <div className="mt-5">
-              <Carousel storageKey="home-recent-carousel-index">
-                {recentViewedPostings.map((posting) => (
-                  <PostingCard key={posting.id} posting={posting} variant="vertical" />
-                ))}
-              </Carousel>
+            <div className="scrollbar-none flex h-[228px] w-full gap-3 overflow-x-auto px-5 pb-7">
+              {recentViewedPostings.map((posting) => (
+                <PostingCard key={posting.id} posting={posting} variant="vertical" />
+              ))}
             </div>
           )}
           {data && hasRecentViewedPostings && isRecentViewedExpanded && (

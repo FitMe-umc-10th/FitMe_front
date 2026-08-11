@@ -4,10 +4,21 @@ interface HeartButtonProps {
   postingId: number;
   savedId?: number;
   isSaved: boolean;
+  showErrorToast?: boolean;
+  tone?: 'default' | 'muted';
+  onError?: (currentSavedState: boolean) => void;
 }
 
-export default function HeartButton({ postingId, savedId, isSaved }: HeartButtonProps) {
-  const { mutate, isPending } = useToggleSave(postingId, { savedId });
+export default function HeartButton({
+  postingId,
+  savedId,
+  isSaved,
+  showErrorToast,
+  tone = 'default',
+  onError,
+}: HeartButtonProps) {
+  const { mutate, isPending } = useToggleSave(postingId, { savedId, showErrorToast, onError });
+  const savedColor = tone === 'muted' ? '#D9D9D9' : '#F95178';
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -33,7 +44,7 @@ export default function HeartButton({ postingId, savedId, isSaved }: HeartButton
         >
           <path
             d="M8.00503 14L1.2151 7.55146C-2.47508 3.68234 2.94949 -3.74638 8.00503 2.26366C13.0606 -3.74638 18.4605 3.70813 14.795 7.55146L8.00503 14Z"
-            fill="#F95178"
+            fill={savedColor}
           />
         </svg>
       ) : (

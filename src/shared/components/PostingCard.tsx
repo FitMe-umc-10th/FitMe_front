@@ -10,10 +10,26 @@ interface PostingCardProps {
   variant: 'horizontal' | 'vertical' | 'popular';
   onClick?: () => void;
   carouselIndexLabel?: string;
+  onSaveFailure?: () => void;
+  showSaveErrorToast?: boolean;
 }
 
-export default function PostingCard({ posting, variant, onClick, carouselIndexLabel }: PostingCardProps) {
+export default function PostingCard({
+  posting,
+  variant,
+  onClick,
+  carouselIndexLabel,
+  onSaveFailure,
+  showSaveErrorToast,
+}: PostingCardProps) {
   const navigate = useNavigate();
+  const heartButtonProps = {
+    postingId: posting.id,
+    savedId: posting.savedId,
+    isSaved: posting.isSaved,
+    showErrorToast: showSaveErrorToast,
+    onError: onSaveFailure,
+  };
 
   const handleClick = () => {
     if (onClick) {
@@ -27,23 +43,27 @@ export default function PostingCard({ posting, variant, onClick, carouselIndexLa
     return (
       <div
         onClick={handleClick}
-        className="flex h-[196px] w-[154px] cursor-pointer select-none flex-col overflow-hidden rounded-2xl border border-[#EEF0F3] bg-white shadow-[0_4px_14px_rgba(15,23,42,0.07)] transition-all duration-200 hover:shadow-[0_6px_18px_rgba(15,23,42,0.1)]"
+        className="flex h-[204px] w-[162px] shrink-0 cursor-pointer select-none flex-col overflow-hidden rounded-2xl bg-white drop-shadow-[0_0_8px_rgba(0,0,0,0.08)] transition-all duration-200"
       >
-        <div className="relative h-[104px] w-full flex-shrink-0 border-b border-[#EEF0F3] bg-[#E6EEF8]">
+        <div className="relative h-[115px] w-[162px] shrink-0 overflow-hidden rounded-t-2xl bg-[#E6EEF8]">
           <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-col justify-between px-3 pb-3 pt-2">
-          <div className="flex items-center justify-between">
-            <DayBadge deadline={posting.deadline} />
-            <HeartButton postingId={posting.id} savedId={posting.savedId} isSaved={posting.isSaved} />
+        <div className="flex h-[89px] w-[162px] flex-col items-start gap-2 rounded-b-2xl bg-white px-3 pb-3 pt-2">
+          <div className="flex h-6 w-full items-center justify-between">
+            <DayBadge deadline={posting.deadline} variant="vertical" />
+            <HeartButton {...heartButtonProps} />
           </div>
 
-          <h3 className="truncate text-[13px] font-bold leading-[1.35] text-[#1F2937]">{posting.title}</h3>
+          <div className="flex w-full flex-col items-start gap-0.5">
+            <h3 className="h-5 w-full truncate text-[14px] font-semibold leading-[140%] text-[#1E1E1E]">
+              {posting.title}
+            </h3>
 
-          <div className="flex items-center gap-1 text-[10px] text-[#A1A1A1]">
-            <img src={organizationIcon} alt="" aria-hidden="true" className="size-3 shrink-0" />
-            <span className="truncate">{posting.organization}</span>
+            <div className="flex h-[15px] w-full items-center gap-1 text-[10px] font-medium leading-[160%] text-[#A5A5A5]">
+              <img src={organizationIcon} alt="" aria-hidden="true" className="size-2.5 shrink-0" />
+              <span className="truncate">{posting.organization}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -54,37 +74,37 @@ export default function PostingCard({ posting, variant, onClick, carouselIndexLa
     return (
       <div
         onClick={handleClick}
-        className="relative flex h-[239px] w-[292px] cursor-pointer select-none flex-col justify-end overflow-hidden rounded-2xl border border-[#EEF0F3] bg-[#D9F0FF] px-5 py-4 shadow-[0_8px_18px_rgba(15,23,42,0.12)] transition-all duration-200 hover:shadow-[0_10px_22px_rgba(15,23,42,0.14)]"
+        className="relative flex h-[202.16px] w-[243px] cursor-pointer select-none flex-col items-end justify-between overflow-hidden rounded-[13.3151px] bg-[#D9F0FF] px-[16.6438px] py-[13.3151px] transition-all duration-300 ease-out"
       >
-        <div className="absolute inset-0 -z-10 h-full w-full">
+        <div className="absolute inset-0 z-0 h-full w-full">
           <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/45 via-white/5 to-transparent" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.8)_0%,rgba(0,0,0,0)_64.35%)]" />
         </div>
 
         {carouselIndexLabel && (
-          <div className="absolute right-5 top-4 flex h-5 min-w-7 items-center justify-center rounded-full bg-[#A5A5A5] px-[5px] text-[12px] font-medium leading-none text-white">
+          <div className="relative z-10 flex h-[17px] w-[24.98px] items-center justify-center rounded-full bg-[#A5A5A5] px-[5px] text-center text-[8.32192px] font-normal leading-[17px] tracking-[-0.203525px] text-white">
             {carouselIndexLabel}
           </div>
         )}
 
-        <div className="mt-auto flex items-end justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <div className="mb-2">
-              <DayBadge deadline={posting.deadline} variant="glass" />
-            </div>
+        <div className="relative z-10 flex h-[91.96px] w-full flex-col items-start gap-[6.66px]">
+          <DayBadge deadline={posting.deadline} variant="glassDark" />
 
-            <h3 className="mb-2 line-clamp-2 text-[20px] font-extrabold leading-[1.3] text-[#202124]">
+          <div className="flex h-[61.3px] w-full flex-col items-start gap-[3.33px]">
+            <h3 className="line-clamp-2 h-[38px] w-full text-[13.3151px] font-semibold leading-[140%] text-white">
               {posting.title}
             </h3>
 
-            <div className="flex items-center gap-1 text-[12px] text-[#6B7280]">
-              <img src={organizationIcon} alt="" aria-hidden="true" className="size-3.5 shrink-0" />
-              <span className="truncate">{posting.organization}</span>
-            </div>
-          </div>
+            <div className="flex h-[19.97px] w-full items-center justify-between">
+              <div className="flex min-w-0 items-center gap-[4.16px] text-[8.32192px] font-medium leading-[160%] text-[#BFBFBF]">
+                <img src={organizationIcon} alt="" aria-hidden="true" className="size-[8.32px] shrink-0" />
+                <span className="truncate">{posting.organization}</span>
+              </div>
 
-          <div className="mb-0.5 flex-shrink-0">
-            <HeartButton postingId={posting.id} savedId={posting.savedId} isSaved={posting.isSaved} />
+              <div className="flex size-6 shrink-0 items-center justify-center">
+                <HeartButton {...heartButtonProps} tone="muted" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -94,28 +114,31 @@ export default function PostingCard({ posting, variant, onClick, carouselIndexLa
   return (
     <div
       onClick={handleClick}
-      className="grid h-[128px] w-full max-w-[363px] cursor-pointer select-none grid-cols-[48.49%_51.51%] gap-0 overflow-hidden rounded-[16px] bg-white shadow-[0_4px_14px_rgba(15,23,42,0.07)] transition-all duration-200"
+      className="grid h-[128.01px] w-full max-w-[363px] cursor-pointer select-none grid-cols-[175.14px_187px] gap-0 overflow-hidden rounded-[16px] bg-white drop-shadow-[0_0_8px_rgba(0,0,0,0.08)] transition-all duration-200"
     >
-      <div className="h-[128px] overflow-hidden bg-[#E6EEF8]">
+      <div className="h-[128.01px] overflow-hidden rounded-l-[16px] bg-[#E6EEF8]">
         <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
       </div>
 
-      <div className="relative h-[128px] min-w-0 bg-white px-3 py-5">
-        <div className="absolute left-3 top-[30px]">
-          <DayBadge deadline={posting.deadline} />
+      <div className="flex h-[128px] w-[187px] min-w-0 flex-col items-start justify-center gap-4 rounded-r-[16px] bg-white px-3 py-5">
+        <div className="flex h-6 w-[163px] flex-col items-start gap-[50px]">
+          <div className="flex h-6 w-[146px] items-center justify-between">
+            <DayBadge deadline={posting.deadline} variant="compact" />
+            <div className="flex size-6 items-center justify-center [&>button]:p-1">
+              <HeartButton {...heartButtonProps} />
+            </div>
+          </div>
         </div>
 
-        <div className="absolute right-3 top-[30px]">
-          <HeartButton postingId={posting.id} savedId={posting.savedId} isSaved={posting.isSaved} />
-        </div>
+        <div className="flex h-[39px] w-[163px] flex-col items-start gap-1">
+          <h3 className="h-5 w-[163px] truncate text-[14px] font-semibold leading-[140%] tracking-[-0.241437px] text-[#1E1E1E]">
+            {posting.title}
+          </h3>
 
-        <h3 className="absolute left-3 right-3 top-[67.14px] truncate text-[14px] font-bold leading-[19px] text-[#262626]">
-          {posting.title}
-        </h3>
-
-        <div className="absolute left-3 right-3 top-[92.86px] flex items-center gap-[3px] text-[11px] font-medium leading-none text-[#A5A5A5]">
-          <img src={organizationIcon} alt="" aria-hidden="true" className="size-[13px] shrink-0" />
-          <span className="truncate">{posting.organization}</span>
+          <div className="flex h-[15px] w-[163.35px] items-center gap-1 text-[10px] font-medium leading-[160%] text-[#A5A5A5]">
+            <img src={organizationIcon} alt="" aria-hidden="true" className="size-[12.35px] shrink-0" />
+            <span className="w-[147px] truncate">{posting.organization}</span>
+          </div>
         </div>
       </div>
     </div>

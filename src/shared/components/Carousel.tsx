@@ -7,6 +7,7 @@ interface CarouselProps {
   loop?: boolean;
   spotlight?: boolean;
   storageKey?: string;
+  autoPlayInterval?: number;
 }
 
 export default function Carousel({
@@ -16,9 +17,12 @@ export default function Carousel({
   loop = false,
   spotlight = false,
   storageKey,
+  autoPlayInterval,
 }: CarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const interactionTimeoutRef = useRef<number | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isInteracting, setIsInteracting] = useState(false);
   const childrenArray = React.Children.toArray(children).filter(Boolean);
   const count = childrenArray.length;
   const indexStorageKey = storageKey ? `${storageKey}:index` : undefined;
@@ -56,7 +60,9 @@ export default function Carousel({
       : targetChild.offsetLeft;
 
     container.scrollTo({ left: targetLeft, behavior });
-    setCurrentIndex(targetIndex);
+    if (behavior === 'auto') {
+      setCurrentIndex(targetIndex);
+    }
   }, [count, loop]);
 
   // 무한 루프일 때 자식 배열 구성: [마지막 아이템, ...기본 아이템들, 첫 번째 아이템]
@@ -91,6 +97,28 @@ export default function Carousel({
     }
   };
 
+  const pauseAutoPlay = () => {
+    if (interactionTimeoutRef.current) {
+      clearTimeout(interactionTimeoutRef.current);
+    }
+    setIsInteracting(true);
+  };
+
+  const resumeAutoPlay = () => {
+    if (interactionTimeoutRef.current) {
+      clearTimeout(interactionTimeoutRef.current);
+    }
+
+    interactionTimeoutRef.current = window.setTimeout(() => {
+      setIsInteracting(false);
+    }, 800);
+  };
+
+  const handleWheel = () => {
+    pauseAutoPlay();
+    resumeAutoPlay();
+  };
+
   const handleScroll = () => {
     const container = containerRef.current;
     if (!container) return;
@@ -101,6 +129,8 @@ export default function Carousel({
     if (scrollStorageKey) {
       window.sessionStorage.setItem(scrollStorageKey, String(scrollLeft));
     }
+
+    if (loop && spotlight && count > 1) return;
 
     const childrenElements = container.children;
     if (childrenElements.length === 0) return;
@@ -201,6 +231,42 @@ export default function Carousel({
     };
   }, [loop, count, spotlight]);
 
+  useEffect(() => {
+    if (!autoPlayInterval || autoPlayInterval <= 0 || count <= 1 || isInteracting) return;
+
+    const intervalId = window.setInterval(() => {
+      if (document.hidden) return;
+
+      if (loop && currentIndex === count - 1) {
+        const container = containerRef.current;
+        const clonedFirstChild = container?.children[count + 1] as HTMLElement | undefined;
+
+        if (container && clonedFirstChild) {
+          const targetLeft = clonedFirstChild.offsetLeft + clonedFirstChild.offsetWidth / 2 - container.clientWidth / 2;
+          container.scrollTo({ left: targetLeft, behavior: 'smooth' });
+          return;
+        }
+      }
+
+      const nextIndex = currentIndex + 1 >= count ? (loop ? 0 : currentIndex) : currentIndex + 1;
+      if (nextIndex === currentIndex) return;
+
+      scrollToIndex(nextIndex, 'smooth');
+    }, autoPlayInterval);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [autoPlayInterval, count, currentIndex, isInteracting, loop, scrollToIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (interactionTimeoutRef.current) {
+        clearTimeout(interactionTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const getRealIndex = (displayIndex: number) => {
     if (!loop || count <= 1) return displayIndex;
     if (displayIndex === 0) return count - 1;
@@ -210,7 +276,7 @@ export default function Carousel({
 
   // 무한 루프 시 좌우 여백을 두어 인접 카드가 Figma 시안처럼 살짝 보이도록 맞춘다.
   const paddingClass = loop ? `${spotlight ? 'px-[35px] py-5' : 'px-[38px] py-3'}` : 'pb-1';
-  const gapClass = spotlight ? 'gap-[10px]' : 'gap-4';
+  const gapClass = spotlight ? 'gap-3' : 'gap-4';
   const wrapperClass = 'w-full';
   const scrollPaddingStyle = loop
     ? {
@@ -225,6 +291,11 @@ export default function Carousel({
       <div
         ref={containerRef}
         onScroll={handleScroll}
+        onPointerDown={pauseAutoPlay}
+        onPointerUp={resumeAutoPlay}
+        onPointerCancel={resumeAutoPlay}
+        onPointerLeave={resumeAutoPlay}
+        onWheel={handleWheel}
         className={`flex items-center overflow-x-auto scrollbar-none snap-x snap-mandatory ${gapClass} ${paddingClass}`}
         style={scrollPaddingStyle}
       >
@@ -234,12 +305,9 @@ export default function Carousel({
           const isActive = spotlight
             ? index === activeDisplayIndex
             : realIndex === currentIndex;
-          const inactiveOriginClass = index < activeDisplayIndex ? 'origin-right' : 'origin-left';
           const spotlightClass = spotlight
             ? `transform-gpu transition-all duration-300 ease-out ${
-                isActive
-                  ? 'z-10 scale-100 opacity-100'
-                  : `z-0 scale-x-[0.8322] scale-y-[0.8403] opacity-100 ${inactiveOriginClass}`
+                isActive ? 'z-10 opacity-100' : 'z-0 opacity-100'
               }`
             : '';
 
@@ -266,16 +334,23 @@ export default function Carousel({
       )}
 
       {showProgress && count > 0 && (
-        <div className="mt-2 flex items-center justify-center gap-2" aria-hidden="true">
+        <div className="mt-2 flex items-center justify-center gap-2">
           {Array.from({ length: count }).map((_, index) => {
             const isActive = index === currentIndex;
 
             return (
-              <span
+              <button
                 key={index}
-                className={`h-2 rounded-full transition-all duration-200 ${
+                type="button"
+                onClick={() => {
+                  pauseAutoPlay();
+                  scrollToIndex(index, 'smooth');
+                  resumeAutoPlay();
+                }}
+                className={`h-2 shrink-0 rounded-full p-0 transition-all duration-200 ${
                   isActive ? 'w-9 bg-[#A8D2FF]' : 'w-2 bg-[#F0F0F0]'
                 }`}
+                aria-label={`${index + 1}번째 공고로 이동`}
               />
             );
           })}
