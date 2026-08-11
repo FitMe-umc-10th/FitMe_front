@@ -28,6 +28,46 @@ export interface ApiSavedPosting extends ApiPostingSummary {
   savedAt?: string | null;
 }
 
+export type ApiSavedPostingsPayload =
+  | ApiSavedPosting[]
+  | {
+      items?: ApiSavedPosting[];
+      savedPosts?: ApiSavedPosting[];
+      savedPostings?: ApiSavedPosting[];
+      postings?: ApiSavedPosting[];
+      content?: ApiSavedPosting[];
+    };
+
+export type ApiSavedPostMutationPayload = Partial<ApiSavedPosting> | number | string | null | undefined;
+
+export const normalizeSavedPostingsPayload = (payload: ApiSavedPostingsPayload): ApiSavedPosting[] => {
+  if (Array.isArray(payload)) return payload;
+
+  return (
+    payload.items ??
+    payload.savedPosts ??
+    payload.savedPostings ??
+    payload.postings ??
+    payload.content ??
+    []
+  );
+};
+
+export const getSavedIdFromPayload = (payload: ApiSavedPostMutationPayload, fallback?: number) => {
+  if (typeof payload === 'number') return payload;
+
+  if (typeof payload === 'string') {
+    const parsedSavedId = Number(payload);
+    return Number.isFinite(parsedSavedId) ? parsedSavedId : fallback;
+  }
+
+  if (payload && typeof payload.savedId === 'number') {
+    return payload.savedId;
+  }
+
+  return fallback;
+};
+
 const DEFAULT_DEADLINE = '2099-12-31';
 
 export interface ApiRecentViewedPostingsResponse {

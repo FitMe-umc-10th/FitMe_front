@@ -15,12 +15,16 @@ import {
   type ApiPostingDetail,
   type ApiPopularPostingsResponse,
   type ApiRecentViewedPostingsResponse,
+  type ApiSavedPostMutationPayload,
+  type ApiSavedPostingsPayload,
   type PostingApplicationResult,
+  getSavedIdFromPayload,
   mapApiPostingApplication,
   mapApiPostingDetailToPosting,
   mapApiPostingList,
   mapApiSavedPostingList,
   mapApiSavedPostingToPosting,
+  normalizeSavedPostingsPayload,
   type ApiSavedPosting,
 } from '@/apis/postingMapper';
 import type { ApiResponse } from '@/types/common';
@@ -30,18 +34,6 @@ export type { PostingApplicationResult, PostingApplicationStatus } from '@/apis/
 const DEFAULT_HOME_POPULAR_SIZE = 8;
 const DEFAULT_HOME_RECENT_VIEWED_SIZE = 10;
 const DEFAULT_HOME_CLOSING_SOON_SIZE = 5;
-
-type SavedPostingsPayload =
-  | ApiSavedPosting[]
-  | {
-      items?: ApiSavedPosting[];
-      savedPosts?: ApiSavedPosting[];
-      savedPostings?: ApiSavedPosting[];
-      postings?: ApiSavedPosting[];
-      content?: ApiSavedPosting[];
-    };
-
-type SavedPostMutationPayload = Partial<ApiSavedPosting> | number | string | null | undefined;
 
 export interface ToggleSaveResult {
   isSaved: boolean;
@@ -60,36 +52,8 @@ const unwrapApiData = <T>(payload: unknown): T => {
   return payload as T;
 };
 
-const normalizeSavedPostingsPayload = (payload: SavedPostingsPayload): ApiSavedPosting[] => {
-  if (Array.isArray(payload)) return payload;
-
-  return (
-    payload.items ??
-    payload.savedPosts ??
-    payload.savedPostings ??
-    payload.postings ??
-    payload.content ??
-    []
-  );
-};
-
-const getSavedIdFromPayload = (payload: SavedPostMutationPayload, fallback?: number) => {
-  if (typeof payload === 'number') return payload;
-
-  if (typeof payload === 'string') {
-    const parsedSavedId = Number(payload);
-    return Number.isFinite(parsedSavedId) ? parsedSavedId : fallback;
-  }
-
-  if (payload && typeof payload.savedId === 'number') {
-    return payload.savedId;
-  }
-
-  return fallback;
-};
-
 const findSavedIdByPostingId = async (postingId: number) => {
-  const { data } = await axiosInstance.get<ApiResponse<SavedPostingsPayload> | SavedPostingsPayload>(
+  const { data } = await axiosInstance.get<ApiResponse<ApiSavedPostingsPayload> | ApiSavedPostingsPayload>(
     '/api/v1/saved-posts',
     {
       params: {
@@ -99,7 +63,7 @@ const findSavedIdByPostingId = async (postingId: number) => {
       },
     },
   );
-  const savedPostings = normalizeSavedPostingsPayload(unwrapApiData<SavedPostingsPayload>(data));
+  const savedPostings = normalizeSavedPostingsPayload(unwrapApiData<ApiSavedPostingsPayload>(data));
   const savedPosting = savedPostings.find((posting) => posting.postId === postingId || posting.id === postingId);
 
   return savedPosting?.savedId;
@@ -211,7 +175,7 @@ export const getSavedPostings = async ({
   cursor,
   size,
 }: GetSavedPostingsParams = {}): Promise<Posting[]> => {
-  const { data } = await axiosInstance.get<ApiResponse<SavedPostingsPayload> | SavedPostingsPayload>(
+  const { data } = await axiosInstance.get<ApiResponse<ApiSavedPostingsPayload> | ApiSavedPostingsPayload>(
     '/api/v1/saved-posts',
     {
       params: {
@@ -223,7 +187,7 @@ export const getSavedPostings = async ({
     },
   );
 
-  return mapApiSavedPostingList(normalizeSavedPostingsPayload(unwrapApiData<SavedPostingsPayload>(data)));
+  return mapApiSavedPostingList(normalizeSavedPostingsPayload(unwrapApiData<ApiSavedPostingsPayload>(data)));
 };
 
 const getPostingDetailLookupOrder = (preferredType?: PostingType): PostingType[] => {
@@ -282,7 +246,7 @@ export const toggleSave = async (
     const { data } = await axiosInstance.delete<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
       `/api/v1/saved-posts/${targetSavedId}`,
     );
-    const deletedPosting = unwrapApiData<SavedPostMutationPayload>(data);
+    const deletedPosting = unwrapApiData<ApiSavedPostMutationPayload>(data);
 
     return {
       isSaved: false,
