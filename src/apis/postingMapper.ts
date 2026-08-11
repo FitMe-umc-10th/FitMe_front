@@ -181,17 +181,18 @@ export interface ApiPostingDetail {
   headcount?: string;
   personnel?: string;
   scholarshipDetail?: {
-    supportAmount?: string;
-    gradeRequirement?: string;
-    incomeRequirement?: string;
-    regionRequirement?: string;
-  };
+    supportAmount?: string | null;
+    gradeRequirement?: string | null;
+    incomeRequirement?: string | null;
+    regionRequirement?: string | null;
+    universityRequirement?: string | null;
+  } | null;
   contestDetail?: {
-    posterImageUrl?: string;
-    target?: string;
-    participantLimit?: string;
-    rewardTotal?: string;
-  };
+    posterImageUrl?: string | null;
+    target?: string | null;
+    participantLimit?: string | null;
+    rewardTotal?: string | null;
+  } | null;
 }
 
 const getDeadlineFromLabel = (deadlineLabel?: number | string | null) => {
@@ -338,6 +339,7 @@ export const mapApiPostingDetailToPosting = (
       posting.scholarshipDetail?.gradeRequirement ??
       posting.scholarshipDetail?.incomeRequirement ??
       posting.scholarshipDetail?.regionRequirement ??
+      posting.scholarshipDetail?.universityRequirement ??
       posting.qualification ??
       posting.eligibility,
     headcount: posting.headcount ?? posting.contestDetail?.participantLimit ?? posting.personnel,
