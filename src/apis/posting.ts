@@ -28,6 +28,7 @@ import {
   type ApiSavedPosting,
 } from '@/apis/postingMapper';
 import type { ApiResponse } from '@/types/common';
+import { unwrapApiData } from '@/shared/utils/api';
 
 export type { PostingApplicationResult, PostingApplicationStatus } from '@/apis/postingMapper';
 
@@ -39,18 +40,6 @@ export interface ToggleSaveResult {
   isSaved: boolean;
   savedId?: number;
 }
-
-const unwrapApiData = <T>(payload: unknown): T => {
-  if (payload && typeof payload === 'object') {
-    const record = payload as Record<string, unknown>;
-
-    if ('result' in record) return record.result as T;
-    if ('data' in record) return record.data as T;
-    if ('content' in record) return record.content as T;
-  }
-
-  return payload as T;
-};
 
 const findSavedIdByPostingId = async (postingId: number) => {
   const { data } = await axiosInstance.get<ApiResponse<ApiSavedPostingsPayload> | ApiSavedPostingsPayload>(
