@@ -286,6 +286,44 @@ const formatPeriodDate = (posting: ApiPostingDetail) => {
   return endDate ?? '';
 };
 
+const getPostingDetailDeadline = (posting: ApiPostingDetail) =>
+  posting.deadline ??
+  posting.deadlineDate ??
+  posting.applyEndDate ??
+  posting.endDate ??
+  posting.recruitmentEndDate ??
+  '';
+
+const getPostingDetailPosterUrl = (posting: ApiPostingDetail) =>
+  posting.posterUrl ??
+  posting.imageUrl ??
+  posting.thumbnailUrl ??
+  posting.posterImageUrl ??
+  posting.contestDetail?.posterImageUrl ??
+  '';
+
+const getPostingDetailBenefit = (posting: ApiPostingDetail): Posting['benefit'] => ({
+  target: posting.benefitTarget ?? posting.contestDetail?.target ?? posting.award ?? posting.prize,
+  grandPrize: posting.topPrize,
+  support:
+    posting.supportBenefit ??
+    posting.scholarshipDetail?.supportAmount ??
+    posting.contestDetail?.rewardTotal ??
+    posting.extraBenefit,
+});
+
+const getPostingDetailEligibility = (posting: ApiPostingDetail): Posting['eligibility'] => ({
+  education:
+    posting.education ??
+    posting.scholarshipDetail?.gradeRequirement ??
+    posting.scholarshipDetail?.incomeRequirement ??
+    posting.scholarshipDetail?.regionRequirement ??
+    posting.scholarshipDetail?.universityRequirement ??
+    posting.qualification ??
+    posting.eligibility,
+  headcount: posting.headcount ?? posting.contestDetail?.participantLimit ?? posting.personnel,
+});
+
 export const mapApiPostingDetailToPosting = (
   posting: ApiPostingDetail,
   fallbackType: PostingType,
@@ -294,20 +332,8 @@ export const mapApiPostingDetailToPosting = (
   type: normalizePostingType(posting.type ?? posting.postType ?? posting.announcementType ?? fallbackType),
   title: getFirstText(posting.title, posting.name) ?? '제목 정보 없음',
   organization: getPostingOrganization(posting),
-  deadline:
-    posting.deadline ??
-    posting.deadlineDate ??
-    posting.applyEndDate ??
-    posting.endDate ??
-    posting.recruitmentEndDate ??
-    '',
-  posterUrl:
-    posting.posterUrl ??
-    posting.imageUrl ??
-    posting.thumbnailUrl ??
-    posting.posterImageUrl ??
-    posting.contestDetail?.posterImageUrl ??
-    '',
+  deadline: getPostingDetailDeadline(posting),
+  posterUrl: getPostingDetailPosterUrl(posting),
   savedId: posting.savedId,
   isSaved: posting.isSaved ?? posting.issaved ?? posting.saved ?? false,
   category: posting.category,
@@ -324,24 +350,6 @@ export const mapApiPostingDetailToPosting = (
     date: formatPeriodDate(posting),
     method: getFirstText(posting.applyMethod, posting.receptionMethod),
   },
-  benefit: {
-    target: posting.benefitTarget ?? posting.contestDetail?.target ?? posting.award ?? posting.prize,
-    grandPrize: posting.topPrize,
-    support:
-      posting.supportBenefit ??
-      posting.scholarshipDetail?.supportAmount ??
-      posting.contestDetail?.rewardTotal ??
-      posting.extraBenefit,
-  },
-  eligibility: {
-    education:
-      posting.education ??
-      posting.scholarshipDetail?.gradeRequirement ??
-      posting.scholarshipDetail?.incomeRequirement ??
-      posting.scholarshipDetail?.regionRequirement ??
-      posting.scholarshipDetail?.universityRequirement ??
-      posting.qualification ??
-      posting.eligibility,
-    headcount: posting.headcount ?? posting.contestDetail?.participantLimit ?? posting.personnel,
-  },
+  benefit: getPostingDetailBenefit(posting),
+  eligibility: getPostingDetailEligibility(posting),
 });
