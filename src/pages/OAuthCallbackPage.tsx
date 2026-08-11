@@ -55,9 +55,6 @@ export default function OAuthCallbackPage() {
     const isOnboarded = pick('isOnboarded') === 'true';
     const name = pick('name') ?? ''; // 현재 백엔드가 name을 안 보내므로 보통 빈 값
 
-    // 디버그가 필요할 때만 사용 (배포 시에는 주석 유지)
-    // console.log('[OAuth callback] href:', window.location.href);
-
     // 토큰이 없으면 비정상 → 로그인 화면으로 되돌림
     if (!accessToken) {
       toastError('로그인 정보를 받지 못했습니다. 다시 시도해주세요.');

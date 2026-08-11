@@ -2,6 +2,12 @@ import type { ApiResponse } from '@/types/common';
 import { axiosInstance } from './axiosInstance';
 import type { DeadlineNotificationDTO, UnreadCountResponse } from '@/types/deadlineNotification';
 
+const EMPTY_DEADLINE_NOTIFICATIONS: DeadlineNotificationDTO = {
+  hasNext: false,
+  nextCursor: null,
+  notifications: [],
+};
+
 export const getDeadlineNotifications = async (
   size: number = 15,
   cursor?: number,
@@ -22,16 +28,8 @@ export const getDeadlineNotifications = async (
       nextCursor: result?.nextCursor ?? null,
       notifications: result?.notifications ?? [],
     };
-  } catch (error) {
-    console.warn(
-      '[deadlineNotifications] 알림 목록 조회 실패 안전 폴백 처리입니다.',
-      error,
-    );
-    return {
-      hasNext: false,
-      nextCursor: null,
-      notifications: [],
-    };
+  } catch {
+    return EMPTY_DEADLINE_NOTIFICATIONS;
   }
 };
 

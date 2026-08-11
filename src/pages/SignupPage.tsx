@@ -32,7 +32,7 @@ export default function SignupPage() {
     mode: 'onChange',
   });
 
-  // 이메일 인증 (mock) — RHF 밖 상태
+  // 이메일 인증 — RHF 밖 상태
   const [codeSent, setCodeSent] = useState(false); // 인증번호 전송됨
   const [code, setCode] = useState(''); // 입력한 인증번호
   const [isVerified, setIsVerified] = useState(false); // 인증 완료
