@@ -1,4 +1,4 @@
-import type { HomePostingFeed, Posting, PostingType } from '@/types/posting';
+import type { Posting, PostingType } from '@/types/posting';
 
 export interface ApiPostingSummary {
   id?: number;
@@ -26,26 +26,6 @@ export interface ApiPostingSummary {
 export interface ApiSavedPosting extends ApiPostingSummary {
   savedId: number;
   savedAt?: string | null;
-}
-
-export interface ApiPageInfo {
-  hasNext: boolean;
-  nextCursor?: string | null;
-  nextIdCursor?: number | string | null;
-  nextDeadlineCursor?: string | null;
-  size?: number;
-  pageSize?: number;
-}
-
-export interface ApiListResponse<T> {
-  items: T[];
-  pageInfo?: ApiPageInfo;
-}
-
-export interface ApiHomePostingFeed {
-  popularPostings: ApiPostingSummary[];
-  recentViewedPostings: ApiPostingSummary[];
-  deadlinePostings: Record<PostingType, ApiPostingSummary[]>;
 }
 
 const DEFAULT_DEADLINE = '2099-12-31';
@@ -315,14 +295,5 @@ export const mapApiPostingDetailToPosting = (
       posting.qualification ??
       posting.eligibility,
     headcount: posting.headcount ?? posting.contestDetail?.participantLimit ?? posting.personnel,
-  },
-});
-
-export const mapApiHomePostingFeed = (feed: ApiHomePostingFeed): HomePostingFeed => ({
-  popularPostings: mapApiPostingList(feed.popularPostings),
-  recentViewedPostings: mapApiPostingList(feed.recentViewedPostings),
-  deadlinePostings: {
-    SCHOLARSHIP: mapApiPostingList(feed.deadlinePostings.SCHOLARSHIP),
-    CONTEST: mapApiPostingList(feed.deadlinePostings.CONTEST),
   },
 });
