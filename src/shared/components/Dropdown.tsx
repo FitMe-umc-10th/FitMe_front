@@ -6,7 +6,7 @@ interface Option {
 }
 
 interface DropdownProps {
-  options: DropdownOption[];
+  options: Option[];
   value?: string;
   onChange: (value: string) => void;
   placeholder?: string;
