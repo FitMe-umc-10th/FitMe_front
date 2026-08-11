@@ -79,6 +79,17 @@ const getPostingDetailByType = async (postingId: number, type: PostingType): Pro
 
 const isNotFoundError = (error: unknown) => axios.isAxiosError(error) && error.response?.status === 404;
 
+const getSettledPostings = (result: PromiseSettledResult<Posting[]>) =>
+  result.status === 'fulfilled' ? result.value : [];
+
+const throwIfEveryPostingRequestFailed = (results: PromiseSettledResult<Posting[]>[]) => {
+  const firstRejectedResult = results.find((result) => result.status === 'rejected');
+
+  if (results.every((result) => result.status === 'rejected') && firstRejectedResult?.status === 'rejected') {
+    throw firstRejectedResult.reason;
+  }
+};
+
 export const getPopularPostings = async ({
   cursor,
   size = DEFAULT_HOME_POPULAR_SIZE,
@@ -148,14 +159,7 @@ export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
     contestDeadlineResult,
   ];
 
-  const firstRejectedResult = results.find((result) => result.status === 'rejected');
-
-  if (results.every((result) => result.status === 'rejected') && firstRejectedResult?.status === 'rejected') {
-    throw firstRejectedResult.reason;
-  }
-
-  const getSettledPostings = (result: PromiseSettledResult<Posting[]>) =>
-    result.status === 'fulfilled' ? result.value : [];
+  throwIfEveryPostingRequestFailed(results);
 
   return {
     popularPostings: getSettledPostings(popularResult),
