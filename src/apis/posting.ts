@@ -41,18 +41,23 @@ export interface ToggleSaveResult {
   savedId?: number;
 }
 
-const findSavedIdByPostingId = async (postingId: number) => {
+const fetchSavedPostings = async (params: GetSavedPostingsParams = {}) => {
   const { data } = await axiosInstance.get<ApiResponse<ApiSavedPostingsPayload> | ApiSavedPostingsPayload>(
     '/api/v1/saved-posts',
     {
-      params: {
-        category: 'ALL',
-        sort: 'DEADLINE',
-        size: 100,
-      },
+      params,
     },
   );
-  const savedPostings = normalizeSavedPostingsPayload(unwrapApiData<ApiSavedPostingsPayload>(data));
+
+  return normalizeSavedPostingsPayload(unwrapApiData<ApiSavedPostingsPayload>(data));
+};
+
+const findSavedIdByPostingId = async (postingId: number) => {
+  const savedPostings = await fetchSavedPostings({
+    category: 'ALL',
+    sort: 'DEADLINE',
+    size: 100,
+  });
   const savedPosting = savedPostings.find((posting) => posting.postId === postingId || posting.id === postingId);
 
   return savedPosting?.savedId;
@@ -164,19 +169,9 @@ export const getSavedPostings = async ({
   cursor,
   size,
 }: GetSavedPostingsParams = {}): Promise<Posting[]> => {
-  const { data } = await axiosInstance.get<ApiResponse<ApiSavedPostingsPayload> | ApiSavedPostingsPayload>(
-    '/api/v1/saved-posts',
-    {
-      params: {
-        category,
-        sort,
-        cursor,
-        size,
-      },
-    },
-  );
+  const savedPostings = await fetchSavedPostings({ category, sort, cursor, size });
 
-  return mapApiSavedPostingList(normalizeSavedPostingsPayload(unwrapApiData<ApiSavedPostingsPayload>(data)));
+  return mapApiSavedPostingList(savedPostings);
 };
 
 const getPostingDetailLookupOrder = (preferredType?: PostingType): PostingType[] => {
