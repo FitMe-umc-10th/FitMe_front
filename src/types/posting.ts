@@ -20,6 +20,7 @@ export interface Posting {
   // 이미지 및 상태 정보
   posterUrl?: string;
   isSaved: boolean;
+  active?: boolean;
   isMatched?: boolean;
   category?: string;
 
@@ -77,5 +78,17 @@ export interface GetSavedPostingsParams extends CursorPageParams {
 }
 
 export interface GetHomePostingListParams {
+  cursor?: number;
+  size?: number;
+}
+
+export interface GetRecentViewedPostingsParams {
+  page?: number;
+  size?: number;
+}
+
+export interface GetClosingSoonPostingsParams {
+  type: PostingCategoryFilter;
+  sort?: 'FIT' | 'DEADLINE' | 'RECENT';
   size?: number;
 }

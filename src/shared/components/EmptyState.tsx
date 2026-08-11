@@ -2,13 +2,14 @@ import emptyBookmarkedListDot from '@/assets/illustrations/empty-bookmarked-list
 import emptyBookmarkedListFlag from '@/assets/illustrations/empty-bookmarked-list-flag.svg';
 import emptyMatchedList from '@/assets/illustrations/empty-matched-list.svg';
 import emptySavedAnnounce from '@/assets/illustrations/empty-saved-announce.svg';
+import emptyRecentViewed from '@/assets/illustrations/empty-recent-viewed.svg';
 import emptyNotification from '@/assets/illustrations/empty-notification.svg';
 import emptyWaitingList from '@/assets/empty_waiting_list.svg';
 
 interface EmptyStateProps {
   message: string;
   subMessage?: string;
-  illustration?: 'heart-plus' | 'heart-wave' | 'bookmark' | 'clock' | 'bell' | 'none';
+  illustration?: 'heart-plus' | 'heart-wave' | 'recent-viewed' | 'bookmark' | 'clock' | 'bell' | 'none';
   messageClassName?: string;
   subMessageClassName?: string;
   cta?: {
@@ -49,6 +50,14 @@ export default function EmptyState({
             src={emptyMatchedList}
             className="w-[92px] h-[92px] mb-4 object-contain"
             alt="매칭된 공고 없음"
+          />
+        );
+      case 'recent-viewed':
+        return (
+          <img
+            src={emptyRecentViewed}
+            className="mb-[6px] h-[84px] w-[104px] object-contain"
+            alt="최근 조회한 공고 없음"
           />
         );
       case 'bookmark':

@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getPostingById } from '@/apis/posting';
+import {
+  completePostingApplication,
+  getPostingById,
+  startPostingApplication,
+  type PostingApplicationResult,
+} from '@/apis/posting';
 import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import organizationIcon from '@/assets/icons/organization.svg';
 import DayBadge from '@/shared/components/DayBadge';
@@ -11,13 +16,11 @@ import Skeleton from '@/shared/components/Skeleton';
 import { useToggleSave } from '@/shared/hooks/useToggleSave';
 import { Layout } from '@/shared/components';
 import { useModalStore } from '@/store/modalStore';
+import { useToastStore } from '@/store/toastStore';
 import type { Posting } from '@/types/posting';
 
 const DETAIL_SUMMARY =
   '마케팅 분야에 높은 관심을 가지고 계신 학습님께 적합한 공모전입니다. 총 12개의 대기업이 제시한 실무 과제에 대해 마케팅 전략 및 아이디어를 제안해볼 수 있는 기회이고, 실제 기업의 비즈니스 과제를 분석하여 창의적인 마케팅 솔루션을 기획하는 경험을 쌓을 수 있습니다.';
-
-const MOCK_OFFICIAL_APPLY_URL = 'https://www.cjenm.com/ko/';
-const MOCK_APPLICATION_HISTORY_KEY = 'fitme:mockApplicationHistory';
 
 const DETAIL_INFO = {
   period: {
@@ -42,24 +45,9 @@ const DETAIL_TABS = [
 ] as const;
 
 type DetailTab = (typeof DETAIL_TABS)[number]['value'];
-type ApplicationStatus = '-' | '결과 대기 중';
-
-type MockApplicationHistory = Record<number, ApplicationStatus>;
-
-const readMockApplicationHistory = (): MockApplicationHistory => {
-  try {
-    const history = window.localStorage.getItem(MOCK_APPLICATION_HISTORY_KEY);
-    if (!history) return {};
-
-    return JSON.parse(history) as MockApplicationHistory;
-  } catch {
-    return {};
-  }
-};
-
-const writeMockApplicationHistory = (postingId: number, status: ApplicationStatus) => {
-  const history = readMockApplicationHistory();
-  window.localStorage.setItem(MOCK_APPLICATION_HISTORY_KEY, JSON.stringify({ ...history, [postingId]: status }));
+type DetailInfoRow = {
+  label: string;
+  value: string;
 };
 
 function formatCount(count?: number) {
@@ -71,12 +59,12 @@ function DetailHeader() {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-30 flex h-[56px] items-center justify-center bg-white px-4">
+    <header className="sticky top-0 z-30 mx-auto flex h-[41px] w-full max-w-[402px] items-center justify-center bg-white">
       <button
         type="button"
         aria-label="뒤로가기"
         onClick={() => navigate(-1)}
-        className="absolute left-2 flex size-[41px] items-center justify-center rounded-full transition-colors hover:bg-gray-100"
+        className="absolute left-0 flex h-[41px] w-[45px] items-center justify-center rounded-full pl-1 transition-colors hover:bg-gray-100"
       >
         <svg viewBox="0 0 41 41" aria-hidden="true" className="size-[41px]">
           <path
@@ -89,11 +77,13 @@ function DetailHeader() {
           />
         </svg>
       </button>
-      <h1 className="text-[15px] font-extrabold text-[#111827]">공고 상세</h1>
+      <h1 className="h-7 w-[74px] text-center text-[20px] font-semibold leading-[140%] text-[#000B24]">
+        공고 상세
+      </h1>
       <button
         type="button"
         aria-label="공유하기"
-        className="absolute right-3 flex size-10 items-center justify-center rounded-full text-[#333333] transition-colors hover:bg-gray-100"
+        className="absolute right-4 flex size-[31px] items-center justify-center rounded-full text-[#262626] transition-colors hover:bg-gray-100"
       >
         <svg viewBox="0 0 31 31" aria-hidden="true" className="size-[31px]">
           <path
@@ -166,7 +156,7 @@ function MetricIcon({ type }: { type: 'view' | 'heart' }) {
 
 function TypeBadge({ posting }: { posting: Posting }) {
   return (
-    <span className="inline-flex h-[24px] items-center justify-center rounded-full bg-[#EEF6FF] px-3 text-[11px] font-bold text-[#4C96FF]">
+    <span className="inline-flex h-[27px] w-14 items-center justify-center rounded-2xl bg-[#EFF6FF] px-3 py-1 text-[12px] font-medium leading-[160%] text-[#0059FF] [font-family:Pretendard]">
       {posting.type === 'SCHOLARSHIP' ? '장학금' : '공모전'}
     </span>
   );
@@ -180,7 +170,7 @@ function DetailInfoTabs({
   onChange: (tab: DetailTab) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 text-center text-[14px] font-semibold">
+    <div className="flex h-[38px] w-full items-center gap-[62px] border-b border-[#D9D9D9] pl-5 text-center">
       {DETAIL_TABS.map((tab) => {
         const isActive = activeTab === tab.value;
 
@@ -189,10 +179,10 @@ function DetailInfoTabs({
             key={tab.value}
             type="button"
             onClick={() => onChange(tab.value)}
-            className={`h-[38px] border-b px-7 py-2 leading-[22px] ${
+            className={`flex h-[38px] w-[79px] items-center justify-center border-b-[1.5px] px-0 py-2 text-center text-[16px] leading-[140%] [font-family:Pretendard] ${
               isActive
-                ? 'border-[#0059FF] text-[#1E1E1E]'
-                : 'border-[#D9D9D9] text-[#A5A5A5]'
+                ? 'border-[#0059FF] font-semibold text-[#1E1E1E]'
+                : 'border-transparent font-medium text-[#A5A5A5]'
             }`}
           >
             {tab.label}
@@ -200,6 +190,19 @@ function DetailInfoTabs({
         );
       })}
     </div>
+  );
+}
+
+function DetailInfoList({ rows }: { rows: DetailInfoRow[] }) {
+  return (
+    <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
+      {rows.map((row) => (
+        <div key={row.label} className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">{row.label}</dt>
+          <dd className="font-semibold text-[#333333]">{row.value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -220,49 +223,34 @@ function DetailInfoContent({ activeTab, posting }: { activeTab: DetailTab; posti
 
   if (activeTab === 'benefit') {
     return (
-      <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">대상</dt>
-          <dd className="font-semibold text-[#333333]">{benefit.target}</dd>
-        </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">최우수상</dt>
-          <dd className="font-semibold text-[#333333]">{benefit.grandPrize}</dd>
-        </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">입상자 전원</dt>
-          <dd className="font-semibold text-[#333333]">{benefit.support}</dd>
-        </div>
-      </dl>
+      <DetailInfoList
+        rows={[
+          { label: '대상', value: benefit.target },
+          { label: '최우수상', value: benefit.grandPrize },
+          { label: '입상자 전원', value: benefit.support },
+        ]}
+      />
     );
   }
 
   if (activeTab === 'eligibility') {
     return (
-      <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">학력</dt>
-          <dd className="font-semibold text-[#333333]">{eligibility.education}</dd>
-        </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">인원 규모</dt>
-          <dd className="font-semibold text-[#333333]">{eligibility.headcount}</dd>
-        </div>
-      </dl>
+      <DetailInfoList
+        rows={[
+          { label: '학력', value: eligibility.education },
+          { label: '인원 규모', value: eligibility.headcount },
+        ]}
+      />
     );
   }
 
   return (
-    <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-      <div className="grid grid-cols-[74px_1fr] gap-2">
-        <dt className="font-bold text-[#4C96FF]">일시</dt>
-        <dd className="font-semibold text-[#333333]">{period.date}</dd>
-      </div>
-      <div className="grid grid-cols-[74px_1fr] gap-2">
-        <dt className="font-bold text-[#4C96FF]">접수 방법</dt>
-        <dd className="font-semibold text-[#333333]">{period.method}</dd>
-      </div>
-    </dl>
+    <DetailInfoList
+      rows={[
+        { label: '일시', value: period.date },
+        { label: '접수 방법', value: period.method },
+      ]}
+    />
   );
 }
 
@@ -352,8 +340,10 @@ export default function PostingDetailPage() {
   const isValidPostingId = Number.isFinite(parsedPostingId);
   const [activeTab, setActiveTab] = useState<DetailTab>('period');
   const [isWaitingForApplyReturn, setIsWaitingForApplyReturn] = useState(false);
+  const [pendingApplication, setPendingApplication] = useState<PostingApplicationResult | null>(null);
   const openModal = useModalStore((state) => state.openModal);
   const closeModal = useModalStore((state) => state.closeModal);
+  const showToast = useToastStore((state) => state.showToast);
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: postingQueryKeys.detail(parsedPostingId),
@@ -361,7 +351,7 @@ export default function PostingDetailPage() {
     enabled: isValidPostingId,
   });
 
-  const openApplyCompleteModal = useCallback((posting: Posting) => {
+  const openApplyCompleteModal = useCallback((application: PostingApplicationResult) => {
     openModal({
       title: '지원을 완료하셨나요?',
       description: "[예] 버튼을 누르시면, '이력' 탭 상태값이 결과 대기 중으로 변경돼요.\n[아니오] 버튼을 누르시면, '이력' 탭에서 수동으로 설정해야 해요.",
@@ -369,23 +359,30 @@ export default function PostingDetailPage() {
         {
           label: '아니오, 아직이에요',
           variant: 'secondary',
-          onClick: closeModal,
+          onClick: () => {
+            setPendingApplication(null);
+            closeModal();
+          },
         },
         {
           label: '네, 완료했어요.',
           variant: 'primary',
-          onClick: () => {
-            writeMockApplicationHistory(posting.id, '결과 대기 중');
+          onClick: async () => {
+            try {
+              await completePostingApplication(application.userApplicationId);
+              setPendingApplication(null);
+              showToast('지원 상태가 결과 대기 중으로 변경됐어요.', 'success');
+            } catch {
+              showToast('지원 상태 변경에 실패했어요.', 'error');
+            }
             closeModal();
           },
         },
       ],
     });
-  }, [closeModal, openModal]);
+  }, [closeModal, openModal, showToast]);
 
   const handleApplyClick = (posting: Posting) => {
-    const applyUrl = posting.applyUrl || MOCK_OFFICIAL_APPLY_URL;
-
     openModal({
       title: '공식 홈페이지로 이동하시겠어요?',
       description: "지원을 완료하신 후, 핏미에 돌아와\n진행 상태를 꼭 '결과 대기 중'으로 변경해주세요!",
@@ -398,11 +395,24 @@ export default function PostingDetailPage() {
         {
           label: '이동하기',
           variant: 'primary',
-          onClick: () => {
-            writeMockApplicationHistory(posting.id, '-');
+          onClick: async () => {
+            try {
+              const application = await startPostingApplication(posting.id);
+              const applyUrl = application.applicationUrl || posting.applyUrl;
+
+              if (!applyUrl) {
+                showToast('지원 링크를 찾을 수 없습니다.', 'error');
+                closeModal();
+                return;
+              }
+
+              setPendingApplication(application);
+              setIsWaitingForApplyReturn(true);
+              window.open(applyUrl, '_blank', 'noopener,noreferrer');
+            } catch {
+              showToast('지원 이력 생성에 실패했어요.', 'error');
+            }
             closeModal();
-            setIsWaitingForApplyReturn(true);
-            window.open(applyUrl, '_blank', 'noopener,noreferrer');
           },
         },
       ],
@@ -410,13 +420,13 @@ export default function PostingDetailPage() {
   };
 
   useEffect(() => {
-    if (!isWaitingForApplyReturn || !data) return;
+    if (!isWaitingForApplyReturn || !pendingApplication) return;
 
     const handleReturnToApp = () => {
       if (document.visibilityState === 'hidden') return;
 
       setIsWaitingForApplyReturn(false);
-      openApplyCompleteModal(data);
+      openApplyCompleteModal(pendingApplication);
     };
 
     window.addEventListener('focus', handleReturnToApp);
@@ -426,11 +436,11 @@ export default function PostingDetailPage() {
       window.removeEventListener('focus', handleReturnToApp);
       document.removeEventListener('visibilitychange', handleReturnToApp);
     };
-  }, [data, isWaitingForApplyReturn, openApplyCompleteModal]);
+  }, [isWaitingForApplyReturn, openApplyCompleteModal, pendingApplication]);
 
   return (
     <Layout header={<DetailHeader />} className="bg-white">
-      <section className="min-h-[calc(100dvh-56px)] pb-[112px]">
+      <section className="mx-auto min-h-[calc(100dvh-56px)] w-full max-w-[402px] pb-[112px]">
         {isPending && <Skeleton variant="list" count={2} />}
         {!isValidPostingId && (
           <DetailUnavailableState
@@ -457,45 +467,60 @@ export default function PostingDetailPage() {
           />
         )}
         {data && (
-          <article>
-            <div className="h-[190px] w-full bg-[#E8EEF5]">
+          <article className="flex flex-col items-start gap-6">
+            <div className="h-[200px] w-full bg-[#E8EEF5]">
               <PostingThumbnail src={data.posterUrl} alt={data.title} />
             </div>
 
-            <div className="space-y-4 px-5 py-5">
-              <div className="flex items-center gap-2">
-                <TypeBadge posting={data} />
-                <DayBadge deadline={data.deadline} />
-              </div>
-
-              <div className="space-y-2">
-                <h2 className="text-[18px] font-extrabold leading-[1.45] text-[#202124]">{data.title}</h2>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-1 text-[12px] font-medium text-[#A1A1A1]">
-                    <img src={organizationIcon} alt="" aria-hidden="true" className="size-[13px] shrink-0" />
-                    <span className="truncate">{data.organization}</span>
+            <div className="flex min-h-[422.5px] w-full flex-col items-center justify-center gap-5">
+              <div className="flex h-[94.5px] w-full flex-col items-start gap-5">
+                <div className="flex w-full flex-col items-start gap-3 px-5">
+                  <div className="flex h-[27.5px] items-center gap-2">
+                    <TypeBadge posting={data} />
+                    <DayBadge deadline={data.deadline} variant="detail" />
                   </div>
-                  <div className="flex shrink-0 items-center gap-3 text-[12px] font-medium text-[#8C8C8C]">
-                    <span className="flex items-center gap-1">
-                      <MetricIcon type="view" />
-                      {formatCount(data.viewCount)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MetricIcon type="heart" />
-                      {formatCount(data.savedCount)}
-                    </span>
+
+                  <div className="flex w-full flex-col items-start gap-2">
+                    <h2 className="w-full text-[20px] font-semibold leading-[140%] text-[#000B24]">
+                      {data.title}
+                    </h2>
+                    <div className="flex w-full items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-1 text-[10px] font-medium leading-[160%] text-[#8C8C8C]">
+                        <img
+                          src={organizationIcon}
+                          alt=""
+                          aria-hidden="true"
+                          className="size-[12.35px] shrink-0"
+                        />
+                        <span className="truncate">{data.organization}</span>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2 text-[12px] font-medium leading-[160%] text-[#8C8C8C]">
+                        <span className="flex items-center gap-1">
+                          <MetricIcon type="view" />
+                          {formatCount(data.viewCount)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MetricIcon type="heart" />
+                          {formatCount(data.savedCount)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <section className="min-h-[116px] rounded-2xl border border-[#B2D4FF] bg-gradient-to-b from-[#E2EFFF] to-white px-4 py-4">
-                <h3 className="mb-2 text-[13px] font-extrabold text-[#247BFF]">AI 공모전 정보 요약</h3>
-                <p className="text-[12px] font-medium leading-[1.75] text-[#404040]">
-                  {data.aiSummary || DETAIL_SUMMARY}
-                </p>
+              <section className="flex min-h-[124px] w-[362px] flex-col items-center justify-center gap-1 rounded-2xl bg-[linear-gradient(95.86deg,#EFF6FF_0%,#F5FFFA_100%)] px-4 py-3">
+                <h3 className="flex h-5 w-[330px] items-center text-[14px] font-semibold leading-[140%] tracking-[-0.241437px] text-[#67A6FF]">
+                  FitMe 공모전 정보 요약
+                </h3>
+                <div className="flex min-h-[76px] w-[330px] flex-col items-start gap-1">
+                  <p className="flex min-h-[76px] w-[330px] items-center whitespace-pre-line text-[12px] font-medium leading-[19.2px] text-[#404040] [font-family:Pretendard]">
+                    {data.aiSummary || DETAIL_SUMMARY}
+                  </p>
+                </div>
               </section>
 
-              <section className="pt-1">
+              <section className="flex h-[164px] w-full flex-col items-start gap-7">
                 <DetailInfoTabs activeTab={activeTab} onChange={setActiveTab} />
                 <DetailInfoContent activeTab={activeTab} posting={data} />
               </section>

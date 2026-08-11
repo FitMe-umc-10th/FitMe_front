@@ -8,6 +8,7 @@ import { login } from '@/apis/auth';
 export default function EmailLoginPage() {
   const navigate = useNavigate();
   const setAccessToken = useAuthStore((s) => s.setAccessToken);
+  const setUserId = useAuthStore((s) => s.setUserId);
   const toastError = useToastStore((s) => s.error);
   const setOnboarded = useAuthStore((s) => s.setOnboarded);
   const setUserName = useAuthStore((s) => s.setUserName);
@@ -24,6 +25,7 @@ export default function EmailLoginPage() {
     try {
       const { accessToken, member } = await login({ email, password, keepLogin });
       setAccessToken(accessToken);
+      setUserId(member.memberId);
       setOnboarded(member.isOnboarded); // ← 온보딩 여부 저장
       setUserName(member.name); // ← 이름 저장
       navigate('/');

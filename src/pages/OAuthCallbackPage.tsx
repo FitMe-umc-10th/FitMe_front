@@ -6,6 +6,7 @@ import { useToastStore } from '@/store/toastStore';
 export default function OAuthCallbackPage() {
   const navigate = useNavigate();
   const setAccessToken = useAuthStore((s) => s.setAccessToken);
+  const setUserId = useAuthStore((s) => s.setUserId);
   const setOnboarded = useAuthStore((s) => s.setOnboarded);
   const setUserName = useAuthStore((s) => s.setUserName);
   const toastError = useToastStore((s) => s.error);
@@ -39,12 +40,20 @@ export default function OAuthCallbackPage() {
       return matched ? matched[1] : null;
     };
 
+    const getUserIdFromToken = (token: string) => {
+      try {
+        const [, payload] = token.split('.');
+        const decodedPayload = JSON.parse(atob(payload)) as { sub?: string };
+        const parsedUserId = Number(decodedPayload.sub);
+        return Number.isNaN(parsedUserId) ? null : parsedUserId;
+      } catch {
+        return null;
+      }
+    };
+
     const accessToken = pick('accessToken');
     const isOnboarded = pick('isOnboarded') === 'true';
     const name = pick('name') ?? ''; // 현재 백엔드가 name을 안 보내므로 보통 빈 값
-
-    // 디버그가 필요할 때만 사용 (배포 시에는 주석 유지)
-    // console.log('[OAuth callback] href:', window.location.href);
 
     // 토큰이 없으면 비정상 → 로그인 화면으로 되돌림
     if (!accessToken) {
@@ -55,12 +64,13 @@ export default function OAuthCallbackPage() {
 
     // 전역 상태 저장 → 이후 API 요청에 axios 인터셉터가 토큰 자동 주입
     setAccessToken(accessToken);
+    setUserId(getUserIdFromToken(accessToken));
     setUserName(name);
     setOnboarded(isOnboarded);
 
     // 온보딩 완료면 홈, 미완료면 온보딩으로 (replace: 뒤로가기로 콜백 재진입 방지)
     navigate(isOnboarded ? '/' : '/onboarding', { replace: true });
-  }, [navigate, setAccessToken, setUserName, setOnboarded, toastError]);
+  }, [navigate, setAccessToken, setUserId, setUserName, setOnboarded, toastError]);
 
   return (
     <div className="flex min-h-dvh items-center justify-center">
