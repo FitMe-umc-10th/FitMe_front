@@ -6,12 +6,12 @@ interface Option {
 }
 
 interface DropdownProps {
-  options: Option[];
-  value: string;
+  options: DropdownOption[];
+  value?: string;
   onChange: (value: string) => void;
-  placeholder?: string; // 선택 전 안내 문구
-  fullWidth?: boolean; // true면 가로 꽉 찬 박스 스타일 (온보딩용)
-  align?: 'left' | 'right'; // 메뉴 팝업 정렬 위치
+  placeholder?: string;
+  fullWidth?: boolean;
+  align?: 'left' | 'right'; // 메뉴 팝업 정렬 위치 (기본값 'left')
   variant?: 'menu' | 'bottomSheet';
 }
 

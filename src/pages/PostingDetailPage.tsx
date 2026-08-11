@@ -22,8 +22,6 @@ import type { Posting } from '@/types/posting';
 const DETAIL_SUMMARY =
   '마케팅 분야에 높은 관심을 가지고 계신 학습님께 적합한 공모전입니다. 총 12개의 대기업이 제시한 실무 과제에 대해 마케팅 전략 및 아이디어를 제안해볼 수 있는 기회이고, 실제 기업의 비즈니스 과제를 분석하여 창의적인 마케팅 솔루션을 기획하는 경험을 쌓을 수 있습니다.';
 
-const MOCK_OFFICIAL_APPLY_URL = 'https://www.cjenm.com/ko/';
-
 const DETAIL_INFO = {
   period: {
     date: '2026. 05. 01. (월) ~ 2026. 05. 31. (수) 18시',
@@ -47,6 +45,10 @@ const DETAIL_TABS = [
 ] as const;
 
 type DetailTab = (typeof DETAIL_TABS)[number]['value'];
+type DetailInfoRow = {
+  label: string;
+  value: string;
+};
 
 function formatCount(count?: number) {
   if (typeof count !== 'number') return '0';
@@ -191,6 +193,19 @@ function DetailInfoTabs({
   );
 }
 
+function DetailInfoList({ rows }: { rows: DetailInfoRow[] }) {
+  return (
+    <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
+      {rows.map((row) => (
+        <div key={row.label} className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">{row.label}</dt>
+          <dd className="font-semibold text-[#333333]">{row.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function DetailInfoContent({ activeTab, posting }: { activeTab: DetailTab; posting: Posting }) {
   const period = {
     date: posting.period?.date || DETAIL_INFO.period.date,
@@ -208,49 +223,34 @@ function DetailInfoContent({ activeTab, posting }: { activeTab: DetailTab; posti
 
   if (activeTab === 'benefit') {
     return (
-      <dl className="flex h-[98px] w-full flex-col items-start gap-2 pl-5 pt-0 text-[14px] leading-[140%]">
-        <div className="flex items-start gap-5">
-          <dt className="w-[74px] shrink-0 font-semibold text-[#5184F9]">대상</dt>
-          <dd className="font-medium text-[#262626]">{benefit.target}</dd>
-        </div>
-        <div className="flex items-start gap-5">
-          <dt className="w-[74px] shrink-0 font-semibold text-[#5184F9]">최우수상</dt>
-          <dd className="font-medium text-[#262626]">{benefit.grandPrize}</dd>
-        </div>
-        <div className="flex items-start gap-5">
-          <dt className="w-[74px] shrink-0 font-semibold text-[#5184F9]">입상자 전원</dt>
-          <dd className="font-medium text-[#262626]">{benefit.support}</dd>
-        </div>
-      </dl>
+      <DetailInfoList
+        rows={[
+          { label: '대상', value: benefit.target },
+          { label: '최우수상', value: benefit.grandPrize },
+          { label: '입상자 전원', value: benefit.support },
+        ]}
+      />
     );
   }
 
   if (activeTab === 'eligibility') {
     return (
-      <dl className="flex h-[98px] w-full flex-col items-start gap-2 pl-5 pt-0 text-[14px] leading-[140%]">
-        <div className="flex items-start gap-5">
-          <dt className="w-[74px] shrink-0 font-semibold text-[#5184F9]">학력</dt>
-          <dd className="font-medium text-[#262626]">{eligibility.education}</dd>
-        </div>
-        <div className="flex items-start gap-5">
-          <dt className="w-[74px] shrink-0 font-semibold text-[#5184F9]">인원 규모</dt>
-          <dd className="font-medium text-[#262626]">{eligibility.headcount}</dd>
-        </div>
-      </dl>
+      <DetailInfoList
+        rows={[
+          { label: '학력', value: eligibility.education },
+          { label: '인원 규모', value: eligibility.headcount },
+        ]}
+      />
     );
   }
 
   return (
-    <dl className="flex h-[98px] w-full flex-col items-start gap-2 pl-5 pt-0 text-[14px] leading-[140%]">
-      <div className="flex items-start gap-5">
-        <dt className="w-[52px] shrink-0 font-semibold text-[#5184F9]">일시</dt>
-        <dd className="font-medium text-[#262626]">{period.date}</dd>
-      </div>
-      <div className="flex items-start gap-5">
-        <dt className="w-[52px] shrink-0 font-semibold text-[#5184F9]">접수 방법</dt>
-        <dd className="font-medium text-[#262626]">{period.method}</dd>
-      </div>
-    </dl>
+    <DetailInfoList
+      rows={[
+        { label: '일시', value: period.date },
+        { label: '접수 방법', value: period.method },
+      ]}
+    />
   );
 }
 
@@ -398,7 +398,13 @@ export default function PostingDetailPage() {
           onClick: async () => {
             try {
               const application = await startPostingApplication(posting.id);
-              const applyUrl = application.applicationUrl || posting.applyUrl || MOCK_OFFICIAL_APPLY_URL;
+              const applyUrl = application.applicationUrl || posting.applyUrl;
+
+              if (!applyUrl) {
+                showToast('지원 링크를 찾을 수 없습니다.', 'error');
+                closeModal();
+                return;
+              }
 
               setPendingApplication(application);
               setIsWaitingForApplyReturn(true);
