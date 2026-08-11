@@ -70,6 +70,17 @@ export const getSavedIdFromPayload = (payload: ApiSavedPostMutationPayload, fall
 
 const DEFAULT_DEADLINE = '2099-12-31';
 
+const getFirstText = (...values: Array<string | null | undefined>) =>
+  values.find((value) => value?.trim())?.trim();
+
+const getPostingOrganization = (posting: ApiPostingSummary | ApiPostingDetail) =>
+  getFirstText(
+    posting.organizer,
+    posting.oraganizer,
+    posting.organization,
+    'organizationName' in posting ? posting.organizationName : undefined,
+  ) ?? '기관 정보 없음';
+
 export interface ApiRecentViewedPostingsResponse {
   hasNext: boolean;
   nextCursor?: number | null;
@@ -210,12 +221,8 @@ export const mapApiPostingToPosting = (posting: ApiPostingSummary): Posting => (
   id: posting.postId ?? posting.id ?? 0,
   savedId: posting.savedId ?? undefined,
   type: posting.type ?? 'SCHOLARSHIP',
-  title: posting.title?.trim() || '제목 없는 공고',
-  organization:
-    posting.organizer?.trim() ||
-    posting.oraganizer?.trim() ||
-    posting.organization?.trim() ||
-    '기관 정보 없음',
+  title: getFirstText(posting.title) ?? '제목 없는 공고',
+  organization: getPostingOrganization(posting),
   deadline: posting.deadlineDate ?? getDeadlineFromLabel(posting.deadlineLabel),
   posterUrl: posting.thumbnailUrl ?? '',
   isSaved: posting.isSaved ?? posting.saved ?? false,
@@ -284,9 +291,8 @@ export const mapApiPostingDetailToPosting = (
 ): Posting => ({
   id: posting.postId ?? posting.id ?? posting.announcementId ?? 0,
   type: normalizePostingType(posting.type ?? posting.postType ?? posting.announcementType ?? fallbackType),
-  title: posting.title ?? posting.name ?? '제목 정보 없음',
-  organization:
-    posting.organizer ?? posting.oraganizer ?? posting.organization ?? posting.organizationName ?? '기관 정보 없음',
+  title: getFirstText(posting.title, posting.name) ?? '제목 정보 없음',
+  organization: getPostingOrganization(posting),
   deadline:
     posting.deadline ??
     posting.deadlineDate ??
@@ -315,7 +321,7 @@ export const mapApiPostingDetailToPosting = (
   applyUrl: posting.applicationUrl ?? posting.applyUrl ?? posting.homepageUrl ?? posting.officialUrl,
   period: {
     date: formatPeriodDate(posting),
-    method: posting.applyMethod ?? posting.receptionMethod,
+    method: getFirstText(posting.applyMethod, posting.receptionMethod),
   },
   benefit: {
     target: posting.benefitTarget ?? posting.contestDetail?.target ?? posting.award ?? posting.prize,
