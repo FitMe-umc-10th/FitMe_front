@@ -82,13 +82,34 @@ const isNotFoundError = (error: unknown) => axios.isAxiosError(error) && error.r
 const getSettledPostings = (result: PromiseSettledResult<Posting[]>) =>
   result.status === 'fulfilled' ? result.value : [];
 
-const throwIfEveryPostingRequestFailed = (results: PromiseSettledResult<Posting[]>[]) => {
+type HomePostingFeedResults = readonly [
+  PromiseSettledResult<Posting[]>,
+  PromiseSettledResult<Posting[]>,
+  PromiseSettledResult<Posting[]>,
+  PromiseSettledResult<Posting[]>,
+];
+
+const throwIfEveryPostingRequestFailed = (results: readonly PromiseSettledResult<Posting[]>[]) => {
   const firstRejectedResult = results.find((result) => result.status === 'rejected');
 
   if (results.every((result) => result.status === 'rejected') && firstRejectedResult?.status === 'rejected') {
     throw firstRejectedResult.reason;
   }
 };
+
+const mapHomePostingFeedResults = ([
+  popularResult,
+  recentViewedResult,
+  scholarshipDeadlineResult,
+  contestDeadlineResult,
+]: HomePostingFeedResults): HomePostingFeed => ({
+  popularPostings: getSettledPostings(popularResult),
+  recentViewedPostings: getSettledPostings(recentViewedResult),
+  deadlinePostings: {
+    SCHOLARSHIP: getSettledPostings(scholarshipDeadlineResult),
+    CONTEST: getSettledPostings(contestDeadlineResult),
+  },
+});
 
 export const getPopularPostings = async ({
   cursor,
@@ -138,37 +159,23 @@ export const getClosingSoonPostings = async ({
 };
 
 export const getHomePostingFeed = async (): Promise<HomePostingFeed> => {
-  const [popularResult, recentViewedResult, scholarshipDeadlineResult, contestDeadlineResult] =
-    await Promise.allSettled([
-      getPopularPostings({ size: DEFAULT_HOME_POPULAR_SIZE }),
-      getRecentViewedPostings({ page: 0, size: DEFAULT_HOME_RECENT_VIEWED_SIZE }),
-      getClosingSoonPostings({
-        type: 'SCHOLARSHIP',
-        size: DEFAULT_HOME_CLOSING_SOON_SIZE,
-      }),
-      getClosingSoonPostings({
-        type: 'CONTEST',
-        size: DEFAULT_HOME_CLOSING_SOON_SIZE,
-      }),
-    ]);
-
-  const results = [
-    popularResult,
-    recentViewedResult,
-    scholarshipDeadlineResult,
-    contestDeadlineResult,
-  ];
+  const homePostingRequests = [
+    getPopularPostings({ size: DEFAULT_HOME_POPULAR_SIZE }),
+    getRecentViewedPostings({ page: 0, size: DEFAULT_HOME_RECENT_VIEWED_SIZE }),
+    getClosingSoonPostings({
+      type: 'SCHOLARSHIP',
+      size: DEFAULT_HOME_CLOSING_SOON_SIZE,
+    }),
+    getClosingSoonPostings({
+      type: 'CONTEST',
+      size: DEFAULT_HOME_CLOSING_SOON_SIZE,
+    }),
+  ] as const;
+  const results = await Promise.allSettled(homePostingRequests);
 
   throwIfEveryPostingRequestFailed(results);
 
-  return {
-    popularPostings: getSettledPostings(popularResult),
-    recentViewedPostings: getSettledPostings(recentViewedResult),
-    deadlinePostings: {
-      SCHOLARSHIP: getSettledPostings(scholarshipDeadlineResult),
-      CONTEST: getSettledPostings(contestDeadlineResult),
-    },
-  };
+  return mapHomePostingFeedResults(results);
 };
 
 export const getSavedPostings = async ({
