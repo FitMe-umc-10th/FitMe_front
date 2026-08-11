@@ -36,6 +36,10 @@ const DEFAULT_HOME_POPULAR_SIZE = 8;
 const DEFAULT_HOME_RECENT_VIEWED_SIZE = 10;
 const DEFAULT_HOME_CLOSING_SOON_SIZE = 5;
 
+const POSTS_ENDPOINT = '/api/v1/posts';
+const SAVED_POSTS_ENDPOINT = '/api/v1/saved-posts';
+const USER_APPLICATIONS_ENDPOINT = '/api/v1/user-applications';
+
 export interface ToggleSaveResult {
   isSaved: boolean;
   savedId?: number;
@@ -43,7 +47,7 @@ export interface ToggleSaveResult {
 
 const fetchSavedPostings = async (params: GetSavedPostingsParams = {}) => {
   const { data } = await axiosInstance.get<ApiResponse<ApiSavedPostingsPayload> | ApiSavedPostingsPayload>(
-    '/api/v1/saved-posts',
+    SAVED_POSTS_ENDPOINT,
     {
       params,
     },
@@ -66,8 +70,8 @@ const findSavedIdByPostingId = async (postingId: number) => {
 const getPostingDetailByType = async (postingId: number, type: PostingType): Promise<Posting> => {
   const endpoint =
     type === 'SCHOLARSHIP'
-      ? `/api/v1/posts/scholarship/${postingId}`
-      : `/api/v1/posts/contests/${postingId}`;
+      ? `${POSTS_ENDPOINT}/scholarship/${postingId}`
+      : `${POSTS_ENDPOINT}/contests/${postingId}`;
   const { data } = await axiosInstance.get(endpoint);
 
   return mapApiPostingDetailToPosting(unwrapApiData<ApiPostingDetail>(data), type);
@@ -79,7 +83,7 @@ export const getPopularPostings = async ({
   cursor,
   size = DEFAULT_HOME_POPULAR_SIZE,
 }: GetHomePostingListParams = {}): Promise<Posting[]> => {
-  const { data } = await axiosInstance.get('/api/v1/posts/popular', {
+  const { data } = await axiosInstance.get(`${POSTS_ENDPOINT}/popular`, {
     params: {
       cursor,
       size,
@@ -94,7 +98,7 @@ export const getRecentViewedPostings = async ({
   page = 0,
   size = DEFAULT_HOME_RECENT_VIEWED_SIZE,
 }: GetRecentViewedPostingsParams = {}): Promise<Posting[]> => {
-  const { data } = await axiosInstance.get('/api/v1/posts/recent-views', {
+  const { data } = await axiosInstance.get(`${POSTS_ENDPOINT}/recent-views`, {
     params: {
       page,
       size,
@@ -110,7 +114,7 @@ export const getClosingSoonPostings = async ({
   sort = 'FIT',
   size = DEFAULT_HOME_CLOSING_SOON_SIZE,
 }: GetClosingSoonPostingsParams): Promise<Posting[]> => {
-  const { data } = await axiosInstance.get('/api/v1/posts/closing-soon', {
+  const { data } = await axiosInstance.get(`${POSTS_ENDPOINT}/closing-soon`, {
     params: {
       postType: type === 'ALL' ? undefined : type,
       sort,
@@ -198,7 +202,7 @@ export const startPostingApplication = async (
   postingId: number,
 ): Promise<PostingApplicationResult> => {
   const { data } = await axiosInstance.patch<ApiResponse<ApiPostingApplication> | ApiPostingApplication>(
-    `/api/v1/posts/${postingId}/application`,
+    `${POSTS_ENDPOINT}/${postingId}/application`,
   );
 
   return mapApiPostingApplication(unwrapApiData<ApiPostingApplication>(data));
@@ -208,7 +212,7 @@ export const completePostingApplication = async (
   userApplicationId: number,
 ): Promise<PostingApplicationResult> => {
   const { data } = await axiosInstance.patch<ApiResponse<ApiPostingApplication> | ApiPostingApplication>(
-    `/api/v1/user-applications/${userApplicationId}/status`,
+    `${USER_APPLICATIONS_ENDPOINT}/${userApplicationId}/status`,
     { status: 'PENDING_RESULT' },
   );
 
@@ -228,7 +232,7 @@ export const toggleSave = async (
     }
 
     const { data } = await axiosInstance.delete<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
-      `/api/v1/saved-posts/${targetSavedId}`,
+      `${SAVED_POSTS_ENDPOINT}/${targetSavedId}`,
     );
     const deletedPosting = unwrapApiData<ApiSavedPostMutationPayload>(data);
 
@@ -239,7 +243,7 @@ export const toggleSave = async (
   }
 
   const { data } = await axiosInstance.post<ApiResponse<ApiSavedPosting> | ApiSavedPosting>(
-    '/api/v1/saved-posts',
+    SAVED_POSTS_ENDPOINT,
     { postId: postingId },
   );
   const savedPostingPayload = unwrapApiData<ApiSavedPosting>(data);
