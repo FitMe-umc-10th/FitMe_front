@@ -45,6 +45,10 @@ const DETAIL_TABS = [
 ] as const;
 
 type DetailTab = (typeof DETAIL_TABS)[number]['value'];
+type DetailInfoRow = {
+  label: string;
+  value: string;
+};
 
 function formatCount(count?: number) {
   if (typeof count !== 'number') return '0';
@@ -187,6 +191,19 @@ function DetailInfoTabs({
   );
 }
 
+function DetailInfoList({ rows }: { rows: DetailInfoRow[] }) {
+  return (
+    <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
+      {rows.map((row) => (
+        <div key={row.label} className="grid grid-cols-[74px_1fr] gap-2">
+          <dt className="font-bold text-[#4C96FF]">{row.label}</dt>
+          <dd className="font-semibold text-[#333333]">{row.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function DetailInfoContent({ activeTab, posting }: { activeTab: DetailTab; posting: Posting }) {
   const period = {
     date: posting.period?.date || DETAIL_INFO.period.date,
@@ -204,49 +221,34 @@ function DetailInfoContent({ activeTab, posting }: { activeTab: DetailTab; posti
 
   if (activeTab === 'benefit') {
     return (
-      <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">대상</dt>
-          <dd className="font-semibold text-[#333333]">{benefit.target}</dd>
-        </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">최우수상</dt>
-          <dd className="font-semibold text-[#333333]">{benefit.grandPrize}</dd>
-        </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">입상자 전원</dt>
-          <dd className="font-semibold text-[#333333]">{benefit.support}</dd>
-        </div>
-      </dl>
+      <DetailInfoList
+        rows={[
+          { label: '대상', value: benefit.target },
+          { label: '최우수상', value: benefit.grandPrize },
+          { label: '입상자 전원', value: benefit.support },
+        ]}
+      />
     );
   }
 
   if (activeTab === 'eligibility') {
     return (
-      <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">학력</dt>
-          <dd className="font-semibold text-[#333333]">{eligibility.education}</dd>
-        </div>
-        <div className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">인원 규모</dt>
-          <dd className="font-semibold text-[#333333]">{eligibility.headcount}</dd>
-        </div>
-      </dl>
+      <DetailInfoList
+        rows={[
+          { label: '학력', value: eligibility.education },
+          { label: '인원 규모', value: eligibility.headcount },
+        ]}
+      />
     );
   }
 
   return (
-    <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
-      <div className="grid grid-cols-[74px_1fr] gap-2">
-        <dt className="font-bold text-[#4C96FF]">일시</dt>
-        <dd className="font-semibold text-[#333333]">{period.date}</dd>
-      </div>
-      <div className="grid grid-cols-[74px_1fr] gap-2">
-        <dt className="font-bold text-[#4C96FF]">접수 방법</dt>
-        <dd className="font-semibold text-[#333333]">{period.method}</dd>
-      </div>
-    </dl>
+    <DetailInfoList
+      rows={[
+        { label: '일시', value: period.date },
+        { label: '접수 방법', value: period.method },
+      ]}
+    />
   );
 }
 
