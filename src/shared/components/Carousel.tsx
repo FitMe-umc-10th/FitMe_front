@@ -21,8 +21,10 @@ export default function Carousel({
 }: CarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const interactionTimeoutRef = useRef<number | null>(null);
+  const scrollFrameRef = useRef<number | null>(null);
   const activeItemKeyRef = useRef<React.Key | null>(null);
   const childKeysRef = useRef<React.Key[]>([]);
+  const currentIndexRef = useRef(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
   const childrenArray = useMemo(() => React.Children.toArray(children).filter(Boolean), [children]);
@@ -70,11 +72,11 @@ export default function Carousel({
       : targetChild.offsetLeft;
 
     container.scrollTo({ left: targetLeft, behavior });
-    if (behavior === 'auto') {
+    if (behavior === 'auto' && !spotlight) {
       setCurrentIndex(targetIndex);
       activeItemKeyRef.current = childKeysRef.current[targetIndex] ?? null;
     }
-  }, [count, loop]);
+  }, [count, loop, spotlight]);
 
   // 무한 루프일 때 자식 배열 구성: [마지막 아이템, ...기본 아이템들, 첫 번째 아이템]
   const displayItems = loop && count > 1
@@ -101,6 +103,9 @@ export default function Carousel({
   }, [count, getStoredIndex, getStoredScrollLeft, loop, scrollToIndex, spotlight]);
 
   const updateCurrentIndex = useCallback((nextIndex: number) => {
+    if (currentIndexRef.current === nextIndex) return;
+
+    currentIndexRef.current = nextIndex;
     setCurrentIndex(nextIndex);
     activeItemKeyRef.current = childKeysRef.current[nextIndex] ?? null;
 
@@ -145,43 +150,43 @@ export default function Carousel({
 
   const handleScroll = () => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || scrollFrameRef.current !== null) return;
 
-    const { scrollLeft, clientWidth } = container;
-    if (clientWidth === 0) return;
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      const { scrollLeft, clientWidth } = container;
+      if (clientWidth === 0) return;
 
-    if (scrollStorageKey) {
-      window.sessionStorage.setItem(scrollStorageKey, String(scrollLeft));
-    }
-
-    if (loop && spotlight && count > 1) return;
-
-    const childrenElements = container.children;
-    if (childrenElements.length === 0) return;
-
-    // 컨테이너 중앙 좌표 기준 가장 가까운 자식 인덱스 탐색
-    const containerCenter = scrollLeft + clientWidth / 2;
-    let closestIndex = 0;
-    let minDistance = Infinity;
-
-    for (let i = 0; i < childrenElements.length; i++) {
-      const child = childrenElements[i] as HTMLElement;
-      const childCenter = child.offsetLeft + child.offsetWidth / 2;
-      const distance = Math.abs(containerCenter - childCenter);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = i;
+      if (scrollStorageKey) {
+        window.sessionStorage.setItem(scrollStorageKey, String(scrollLeft));
       }
-    }
 
-    if (loop && count > 1) {
-      let realIndex = closestIndex - 1;
-      if (realIndex < 0) realIndex = count - 1;
-      if (realIndex >= count) realIndex = 0;
-      updateCurrentIndex(realIndex);
-    } else {
-      updateCurrentIndex(Math.min(closestIndex, count - 1));
-    }
+      const childrenElements = container.children;
+      if (childrenElements.length === 0) return;
+
+      const containerCenter = scrollLeft + clientWidth / 2;
+      let closestIndex = 0;
+      let minDistance = Infinity;
+
+      for (let i = 0; i < childrenElements.length; i++) {
+        const child = childrenElements[i] as HTMLElement;
+        const childCenter = child.offsetLeft + child.offsetWidth / 2;
+        const distance = Math.abs(containerCenter - childCenter);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = i;
+        }
+      }
+
+      if (loop && count > 1) {
+        let realIndex = closestIndex - 1;
+        if (realIndex < 0) realIndex = count - 1;
+        if (realIndex >= count) realIndex = 0;
+        updateCurrentIndex(realIndex);
+      } else {
+        updateCurrentIndex(Math.min(closestIndex, count - 1));
+      }
+    });
   };
 
   // 무한 루프 스크롤 위치 보정 (스크롤이 멈췄을 때 실행 - 디바운스 적용하여 크로스브라우징 완벽 지원)
@@ -234,8 +239,8 @@ export default function Carousel({
         if (targetChild) {
           const targetLeft = targetChild.offsetLeft + targetChild.offsetWidth / 2 - clientWidth / 2;
           const currentDiff = Math.abs(scrollLeft - targetLeft);
-          if (currentDiff > 2) {
-            container.scrollTo({ left: targetLeft, behavior: spotlight ? 'auto' : 'smooth' });
+          if (!spotlight && currentDiff > 2) {
+            container.scrollTo({ left: targetLeft, behavior: 'smooth' });
           }
           updateCurrentIndex(closestIndex - 1);
         }
@@ -281,12 +286,15 @@ export default function Carousel({
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [autoPlayInterval, count, currentIndex, isInteracting, loop, scrollToIndex]);
+  }, [autoPlayInterval, count, currentIndex, isInteracting, loop, scrollToIndex, updateCurrentIndex]);
 
   useEffect(() => {
     return () => {
       if (interactionTimeoutRef.current) {
         clearTimeout(interactionTimeoutRef.current);
+      }
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
       }
     };
   }, []);
@@ -326,9 +334,7 @@ export default function Carousel({
         {displayItems.map((child, index) => {
           const activeDisplayIndex = loop && count > 1 ? currentIndex + 1 : currentIndex;
           const realIndex = getRealIndex(index);
-          const isActive = spotlight
-            ? index === activeDisplayIndex
-            : realIndex === currentIndex;
+          const isActive = spotlight ? realIndex === currentIndex : index === activeDisplayIndex;
           // 267.5px 고정 슬롯: (292 - 243) / 2 여백과 12px gap이 상쇄되어
           // 활성 카드와 양옆 카드의 실제 외곽 간격은 항상 12px로 유지된다.
           const spotlightClass = spotlight
@@ -361,7 +367,7 @@ export default function Carousel({
       )}
 
       {showProgress && count > 0 && (
-        <div className="mt-2 flex items-center justify-center gap-2">
+        <div className={`${spotlight ? 'mt-6' : 'mt-2'} flex items-center justify-center gap-2`}>
           {Array.from({ length: count }).map((_, index) => {
             const isActive = index === currentIndex;
 

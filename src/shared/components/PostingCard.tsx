@@ -76,7 +76,7 @@ export default function PostingCard({
     return (
       <div
         onClick={handleClick}
-        className={`relative flex cursor-pointer select-none flex-col items-end justify-between overflow-hidden bg-[#D9F0FF] ${
+        className={`relative flex cursor-pointer select-none flex-col items-end justify-between overflow-hidden bg-[#D9F0FF] transition-[width,height,border-radius,padding,box-shadow] duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
           carouselActive
             ? 'h-[239px] w-[292px] rounded-2xl px-5 py-4 shadow-[0_0_8px_rgba(0,0,0,0.08)]'
             : 'h-[200.82px] w-[243px] rounded-[13.3151px] px-[16.6438px] py-[13.3151px]'
