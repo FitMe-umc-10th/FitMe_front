@@ -47,12 +47,12 @@ export default function SearchBar({
         onFocus={onFocus}
         autoFocus={autoFocus}
         placeholder={placeholder}
-        className="h-12 w-full rounded-xl border border-[#0059FF] bg-white pl-[15px] pr-12 text-[16px] font-medium leading-[140%] text-[#262626] outline-none placeholder:text-[#AFAFAF]"
+        className="h-12 w-full rounded-xl border border-[#0059FF] bg-white pl-[15px] pr-[50px] text-[14px] font-medium leading-[140%] text-[#262626] outline-none placeholder:text-[#AFAFAF]"
       />
       <button
         type="submit"
         aria-label="검색"
-        className="absolute right-4 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center text-[#0059FF]"
+        className="absolute right-[15px] top-1/2 flex size-5 -translate-y-1/2 items-center justify-center text-[#0059FF]"
       >
         <svg viewBox="0 0 20 20" aria-hidden="true" className="size-5">
           <path
