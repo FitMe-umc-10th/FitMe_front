@@ -1,3 +1,4 @@
+import { formatKoreanDate } from '@/shared/utils/date';
 import type { Posting, PostingType } from '@/types/posting';
 
 export interface ApiPostingSummary {
@@ -283,8 +284,8 @@ const formatPeriodDate = (posting: ApiPostingDetail) => {
     posting.endDate ??
     posting.recruitmentEndDate;
 
-  if (startDate && endDate) return `${startDate} ~ ${endDate}`;
-  return endDate ?? '';
+  if (startDate && endDate) return `${formatKoreanDate(startDate)} ~ ${formatKoreanDate(endDate)}`;
+  return formatKoreanDate(endDate);
 };
 
 const getPostingDetailDeadline = (posting: ApiPostingDetail) =>

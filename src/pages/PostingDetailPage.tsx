@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import {
   completePostingApplication,
   getPostingById,
@@ -59,12 +59,12 @@ function DetailHeader() {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-30 mx-auto flex h-[41px] w-full max-w-[402px] items-center justify-center bg-white">
+    <header className="sticky top-0 z-30 mx-auto flex h-[67px] w-full max-w-[402px] items-center justify-center bg-white pb-[14px] pt-3">
       <button
         type="button"
         aria-label="뒤로가기"
         onClick={() => navigate(-1)}
-        className="absolute left-0 flex h-[41px] w-[45px] items-center justify-center rounded-full pl-1 transition-colors hover:bg-gray-100"
+        className="absolute left-0 top-3 flex h-[41px] w-[45px] items-center justify-center rounded-full pl-1 transition-colors hover:bg-gray-100"
       >
         <svg viewBox="0 0 41 41" aria-hidden="true" className="size-[41px]">
           <path
@@ -83,7 +83,7 @@ function DetailHeader() {
       <button
         type="button"
         aria-label="공유하기"
-        className="absolute right-4 flex size-[31px] items-center justify-center rounded-full text-[#262626] transition-colors hover:bg-gray-100"
+        className="absolute right-4 top-[17px] flex size-[31px] items-center justify-center rounded-full text-[#262626] transition-colors hover:bg-gray-100"
       >
         <svg viewBox="0 0 31 31" aria-hidden="true" className="size-[31px]">
           <path
@@ -199,7 +199,7 @@ function DetailInfoList({ rows }: { rows: DetailInfoRow[] }) {
       {rows.map((row) => (
         <div
           key={row.label}
-          className="flex w-[calc(100%_-_20px)] flex-col items-start gap-0.5"
+          className="flex w-[calc(100%_-_20px)] flex-col items-start gap-2"
         >
           <dt className="text-[14px] font-semibold leading-[20px] text-[#5184F9]">
             {row.label}
@@ -314,11 +314,9 @@ function DetailSaveButton({ posting }: { posting: Posting }) {
       aria-label={isSaved ? '찜하기 해제' : '찜하기'}
       disabled={isPending}
       onClick={handleClick}
-      className={`flex h-[61px] w-[61px] shrink-0 flex-col items-center justify-center rounded-[10px] bg-white text-[10px] font-bold transition-all active:scale-95 disabled:opacity-60 ${
-        isSaved ? 'border border-[#D9D9D9] text-[#0059FF]' : 'border-[1.5px] border-[#0059FF] text-[#0059FF]'
-      }`}
+      className="flex h-[61px] w-[61px] shrink-0 flex-col items-center justify-center rounded-xl border-[0.7px] border-[#D9D9D9] bg-white text-[10px] font-medium leading-[160%] text-[#0059FF] transition-all active:scale-95 disabled:opacity-60"
     >
-      <svg viewBox="17 8 28 28" aria-hidden="true" className="mb-1 h-[27.5px] w-[27.5px]">
+      <svg viewBox="17 8 28 28" aria-hidden="true" className="h-[27.5px] w-[27.5px]">
         {isSaved ? (
           <path
             d="M30.5064 30.5221L22.7263 23.1332C18.498 18.6998 24.7136 10.1877 30.5064 17.0742C36.2992 10.1877 42.4867 18.7294 38.2865 23.1332L30.5064 30.5221Z"
@@ -343,6 +341,7 @@ function DetailSaveButton({ posting }: { posting: Posting }) {
 export default function PostingDetailPage() {
   const { postingId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const parsedPostingId = Number(postingId);
   const isValidPostingId = Number.isFinite(parsedPostingId);
   const [activeTab, setActiveTab] = useState<DetailTab>('period');
@@ -381,6 +380,7 @@ export default function PostingDetailPage() {
           onClick: async () => {
             try {
               await completePostingApplication(application.userApplicationId);
+              await queryClient.invalidateQueries({ queryKey: ['historyList'] });
               setPendingApplication(null);
               showToast('지원 상태가 결과 대기 중으로 변경됐어요.', 'success');
             } catch {
@@ -391,7 +391,7 @@ export default function PostingDetailPage() {
         },
       ],
     });
-  }, [closeModal, openModal, showToast]);
+  }, [closeModal, openModal, queryClient, showToast]);
 
   const handleApplyClick = (posting: Posting) => {
     openModal({
@@ -409,6 +409,7 @@ export default function PostingDetailPage() {
           onClick: async () => {
             try {
               const application = await startPostingApplication(posting.id);
+              void queryClient.invalidateQueries({ queryKey: ['historyList'] });
               const applyUrl = application.applicationUrl || posting.applyUrl;
 
               if (!applyUrl) {
@@ -484,18 +485,18 @@ export default function PostingDetailPage() {
             </div>
 
             <div className="flex min-h-[422.5px] w-full flex-col items-center justify-center gap-5">
-              <div className="flex h-[94.5px] w-full flex-col items-start gap-5">
+              <div className="flex w-full flex-col items-start">
                 <div className="flex w-full flex-col items-start gap-3 px-5">
                   <div className="flex h-[27.5px] items-center gap-2">
                     <TypeBadge posting={data} />
                     <DayBadge deadline={data.deadline} variant="detail" />
                   </div>
 
-                  <div className="flex w-full flex-col items-start">
+                  <div className="flex w-full flex-col items-start gap-2">
                     <h2 className="w-full text-[20px] font-semibold leading-[140%] text-[#000B24]">
                       {data.title}
                     </h2>
-                    <div className="mt-0.5 flex w-full items-center justify-between gap-3">
+                    <div className="flex min-h-[19px] w-full items-center justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-1 text-[10px] font-medium leading-[160%] text-[#8C8C8C]">
                         <img
                           src={organizationIcon}
@@ -520,12 +521,18 @@ export default function PostingDetailPage() {
                 </div>
               </div>
 
-              <section className="flex min-h-[124px] w-[362px] flex-col items-center justify-center gap-1 rounded-2xl bg-[linear-gradient(95.86deg,#EFF6FF_0%,#F5FFFA_100%)] px-4 py-3">
+              <section
+                className="flex h-[124px] w-[362px] shrink-0 flex-col items-center gap-1 overflow-hidden rounded-2xl border border-transparent px-4 py-3"
+                style={{
+                  background:
+                    'linear-gradient(95.86deg, #EFF6FF 0%, #F5FFFA 100%) padding-box, linear-gradient(180deg, #B2D4FF 0%, #B2FFD9 100%) border-box',
+                }}
+              >
                 <h3 className="flex h-5 w-[330px] items-center text-[14px] font-semibold leading-[140%] tracking-[-0.241437px] text-[#67A6FF]">
                   FitMe 공모전 정보 요약
                 </h3>
-                <div className="flex min-h-[76px] w-[330px] flex-col items-start gap-1">
-                  <p className="flex min-h-[76px] w-[330px] items-center whitespace-pre-line text-[12px] font-medium leading-[19.2px] text-[#404040] [font-family:Pretendard]">
+                <div className="min-h-0 w-[330px] flex-1 overflow-y-auto overscroll-contain pr-1">
+                  <p className="w-full whitespace-pre-line break-words text-[12px] font-medium leading-[19.2px] text-[#404040] [font-family:Pretendard]">
                     {data.aiSummary || DETAIL_SUMMARY}
                   </p>
                 </div>
@@ -537,12 +544,12 @@ export default function PostingDetailPage() {
               </section>
             </div>
 
-            <div className="fixed bottom-0 left-1/2 z-30 flex w-full max-w-[390px] -translate-x-1/2 items-center gap-3 bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+14px)] pt-3">
+            <div className="fixed bottom-0 left-1/2 z-30 flex w-full max-w-[390px] -translate-x-1/2 items-center gap-3 bg-white px-[14px] pb-[calc(env(safe-area-inset-bottom)+14px)] pt-3">
               <DetailSaveButton posting={data} />
               <button
                 type="button"
                 onClick={() => handleApplyClick(data)}
-                className="h-[61px] flex-1 rounded-[10px] bg-[#0059FF] text-[15px] font-extrabold text-white transition-colors hover:bg-[#004CE0]"
+                className="h-[61px] w-[288px] flex-none rounded-xl bg-[#0059FF] text-[18px] font-semibold leading-[140%] text-white transition-colors hover:bg-[#004CE0]"
               >
                 홈페이지에서 지원하기
               </button>

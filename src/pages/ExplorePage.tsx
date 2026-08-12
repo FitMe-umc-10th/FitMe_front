@@ -338,13 +338,18 @@ export default function ExplorePage() {
                 {recentSearches.map((item) => (
                   <span
                     key={item.searchId ?? item.keyword}
-                    className="inline-flex h-7 shrink-0 cursor-pointer select-none items-center gap-1 whitespace-nowrap rounded-[30px] border border-[#B2D4FF] px-3 py-1 text-[14px] font-medium leading-[140%] text-[#67A6FF] transition-colors hover:bg-[#EFF6FF]"
+                    className="inline-flex h-7 shrink-0 cursor-pointer select-none items-center gap-[4px] whitespace-nowrap rounded-[30px] border border-[#B2D4FF] px-3 py-1 text-[#67A6FF] transition-colors hover:bg-[#EFF6FF]"
                   >
-                    <span onClick={() => handleSelectKeyword(item.keyword)}>{item.keyword}</span>
+                    <span
+                      onClick={() => handleSelectKeyword(item.keyword)}
+                      className="h-5 text-[14px] font-medium leading-[140%]"
+                    >
+                      {item.keyword}
+                    </span>
                     <button
                       type="button"
                       onClick={() => removeRecentSearch(item)}
-                      className="flex size-3.5 cursor-pointer items-center justify-center text-[#67A6FF]"
+                      className="flex size-3.5 shrink-0 cursor-pointer items-center justify-center p-0 text-[#67A6FF]"
                       aria-label={`${item.keyword} 삭제`}
                     >
                       <svg
@@ -410,61 +415,59 @@ export default function ExplorePage() {
           )}
 
           {/* 실시간 인기 공고 헤더 */}
-          <div className="mt-[24px] flex items-baseline gap-[8px] px-[20px]">
-            <h4 className="font-semibold text-[16px] leading-[1.4] text-slate-800">실시간 인기 공고</h4>
-            <span className="font-medium text-[12px] leading-[1.4] text-slate-400">
+          <div className="mt-6 flex h-[22px] items-center gap-2 px-5">
+            <h4 className="text-[16px] font-semibold leading-[140%] text-[#262626]">실시간 인기 공고</h4>
+            <span className="text-[12px] font-medium leading-[140%] text-[#A5A5A5]">
               {displayBaseTime}
             </span>
           </div>
 
           {/* 실시간 인기 공고 목록 (API 데이터 연동) */}
-          <div className="mt-[24px] flex flex-col gap-[20px] px-[20px] w-full">
+          <div className="mt-6 flex w-full flex-col gap-5 px-5">
             {liveSearchData?.realtimePosts?.posts?.map((item) => {
               return (
-                <div
+                <button
+                  type="button"
                   key={item.postId || item.rank}
                   onClick={() => handleRealtimePostClick(item)}
-                  className="flex items-center justify-between cursor-pointer group w-full"
+                  className="group flex h-6 w-full cursor-pointer items-center text-left"
                 >
-                  <div className="flex items-center flex-1 min-w-0">
-                    {/* 순위 (1~3위 파란색) */}
-                    <span
-                      className={`font-semibold text-[14px] w-[16px] text-center mr-[28px] shrink-0 ${
-                        item.rank <= 3 ? 'text-blue-500' : 'text-slate-400'
-                      }`}
-                    >
-                      {item.rank}
-                    </span>
-                    <span className="font-medium text-[14px] text-slate-800 group-hover:text-blue-500 transition-colors truncate flex-1 pr-4">
-                      {item.title}
-                    </span>
-                  </div>
+                  <span
+                    className={`w-[11px] shrink-0 text-center text-[16px] font-semibold leading-[150%] tracking-[-0.02em] ${
+                      item.rank <= 3 ? 'text-[#247BFF]' : 'text-[#595959]'
+                    }`}
+                  >
+                    {item.rank}
+                  </span>
+                  <span className="ml-7 min-w-0 flex-1 truncate pr-3 text-[16px] font-normal leading-[140%] tracking-[-0.02em] text-[#272727] transition-colors group-hover:text-[#247BFF]">
+                    {item.title}
+                  </span>
 
                   {/* 순위 변동 표시 (UP/DOWN/NEW/SAME/STAY) */}
-                  <div className="flex items-center justify-center w-[20px] h-[16px] shrink-0">
+                  <span className="flex size-[23px] shrink-0 items-center justify-center">
                     {(() => {
                       const fl = item.fluctuation?.toString().trim().toUpperCase();
                       if (fl === 'UP' || fl === 'RISE') {
                         return (
-                          <svg width="10" height="8" viewBox="0 0 10 8" className="text-red-500 fill-current">
-                            <polygon points="5,0 10,8 0,8" />
+                          <svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true">
+                            <path d="M5 1L9 7H1L5 1Z" fill="#247BFF" stroke="#5184F9" strokeWidth="1.2" />
                           </svg>
                         );
                       }
                       if (fl === 'DOWN' || fl === 'FALL') {
                         return (
-                          <svg width="10" height="8" viewBox="0 0 10 8" className="text-blue-500 fill-current">
-                            <polygon points="5,8 10,0 0,0" />
+                          <svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true">
+                            <path d="M5 7L1 1H9L5 7Z" fill="#F95178" stroke="#F95178" strokeWidth="1.2" />
                           </svg>
                         );
                       }
                       if (fl === 'NEW') {
-                        return <span className="text-[10px] font-bold text-red-500 leading-none">NEW</span>;
+                        return <span className="text-[9px] font-semibold leading-none text-[#F95178]">NEW</span>;
                       }
-                      return <div className="w-[10px] h-[2px] bg-slate-300 rounded-full" />;
+                      return <span className="h-0 w-[11px] border-t-[1.5px] border-[#B9B9B9]" />;
                     })()}
-                  </div>
-                </div>
+                  </span>
+                </button>
               );
             })}
           </div>

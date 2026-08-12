@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useState, useEffect, useMemo } from 'react';
 
 interface CarouselProps {
   children: React.ReactNode;
@@ -21,10 +21,22 @@ export default function Carousel({
 }: CarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const interactionTimeoutRef = useRef<number | null>(null);
+  const scrollFrameRef = useRef<number | null>(null);
+  const activeItemKeyRef = useRef<React.Key | null>(null);
+  const childKeysRef = useRef<React.Key[]>([]);
+  const currentIndexRef = useRef(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
-  const childrenArray = React.Children.toArray(children).filter(Boolean);
+  const childrenArray = useMemo(() => React.Children.toArray(children).filter(Boolean), [children]);
   const count = childrenArray.length;
+  const childKeys = useMemo(
+    () => childrenArray.map((child, index) =>
+      React.isValidElement(child) && child.key !== null ? child.key : index,
+    ),
+    [childrenArray],
+  );
+  const childKeySignature = childKeys.join('|');
+  childKeysRef.current = childKeys;
   const indexStorageKey = storageKey ? `${storageKey}:index` : undefined;
   const scrollStorageKey = storageKey ? `${storageKey}:scrollLeft` : undefined;
 
@@ -60,10 +72,11 @@ export default function Carousel({
       : targetChild.offsetLeft;
 
     container.scrollTo({ left: targetLeft, behavior });
-    if (behavior === 'auto') {
+    if (behavior === 'auto' && !spotlight) {
       setCurrentIndex(targetIndex);
+      activeItemKeyRef.current = childKeysRef.current[targetIndex] ?? null;
     }
-  }, [count, loop]);
+  }, [count, loop, spotlight]);
 
   // 무한 루프일 때 자식 배열 구성: [마지막 아이템, ...기본 아이템들, 첫 번째 아이템]
   const displayItems = loop && count > 1
@@ -74,28 +87,57 @@ export default function Carousel({
   useEffect(() => {
     if (count === 0) return;
 
+    const storedIndex = getStoredIndex();
+    currentIndexRef.current = storedIndex;
+    activeItemKeyRef.current = childKeysRef.current[storedIndex] ?? null;
+
     const timer = setTimeout(() => {
       const storedScrollLeft = getStoredScrollLeft();
 
       if (!loop && storedScrollLeft !== null && containerRef.current) {
         containerRef.current.scrollTo({ left: storedScrollLeft, behavior: 'auto' });
-        setCurrentIndex(getStoredIndex());
+        setCurrentIndex(storedIndex);
         return;
       }
 
-      scrollToIndex(getStoredIndex());
+      scrollToIndex(storedIndex);
     }, 50);
 
     return () => clearTimeout(timer);
   }, [count, getStoredIndex, getStoredScrollLeft, loop, scrollToIndex, spotlight]);
 
-  const updateCurrentIndex = (nextIndex: number) => {
+  const updateCurrentIndex = useCallback((nextIndex: number) => {
+    const nextItemKey = childKeysRef.current[nextIndex] ?? null;
+
+    if (currentIndexRef.current === nextIndex) {
+      activeItemKeyRef.current = nextItemKey;
+      return;
+    }
+
+    currentIndexRef.current = nextIndex;
     setCurrentIndex(nextIndex);
+    activeItemKeyRef.current = nextItemKey;
 
     if (indexStorageKey) {
       window.sessionStorage.setItem(indexStorageKey, String(nextIndex));
     }
-  };
+  }, [indexStorageKey]);
+
+  useEffect(() => {
+    const activeKey = activeItemKeyRef.current;
+    if (activeKey === null || count === 0) return;
+
+    const preservedIndex = childKeysRef.current.findIndex((key) => key === activeKey);
+    if (preservedIndex < 0 || preservedIndex === currentIndex) return;
+
+    currentIndexRef.current = preservedIndex;
+    setCurrentIndex(preservedIndex);
+    if (indexStorageKey) {
+      window.sessionStorage.setItem(indexStorageKey, String(preservedIndex));
+    }
+    const frameId = window.requestAnimationFrame(() => scrollToIndex(preservedIndex));
+    return () => window.cancelAnimationFrame(frameId);
+  }, [childKeySignature, count, currentIndex, indexStorageKey, scrollToIndex]);
 
   const pauseAutoPlay = () => {
     if (interactionTimeoutRef.current) {
@@ -121,43 +163,43 @@ export default function Carousel({
 
   const handleScroll = () => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || scrollFrameRef.current !== null) return;
 
-    const { scrollLeft, clientWidth } = container;
-    if (clientWidth === 0) return;
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      const { scrollLeft, clientWidth } = container;
+      if (clientWidth === 0) return;
 
-    if (scrollStorageKey) {
-      window.sessionStorage.setItem(scrollStorageKey, String(scrollLeft));
-    }
-
-    if (loop && spotlight && count > 1) return;
-
-    const childrenElements = container.children;
-    if (childrenElements.length === 0) return;
-
-    // 컨테이너 중앙 좌표 기준 가장 가까운 자식 인덱스 탐색
-    const containerCenter = scrollLeft + clientWidth / 2;
-    let closestIndex = 0;
-    let minDistance = Infinity;
-
-    for (let i = 0; i < childrenElements.length; i++) {
-      const child = childrenElements[i] as HTMLElement;
-      const childCenter = child.offsetLeft + child.offsetWidth / 2;
-      const distance = Math.abs(containerCenter - childCenter);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = i;
+      if (scrollStorageKey) {
+        window.sessionStorage.setItem(scrollStorageKey, String(scrollLeft));
       }
-    }
 
-    if (loop && count > 1) {
-      let realIndex = closestIndex - 1;
-      if (realIndex < 0) realIndex = count - 1;
-      if (realIndex >= count) realIndex = 0;
-      updateCurrentIndex(realIndex);
-    } else {
-      updateCurrentIndex(Math.min(closestIndex, count - 1));
-    }
+      const childrenElements = container.children;
+      if (childrenElements.length === 0) return;
+
+      const containerCenter = scrollLeft + clientWidth / 2;
+      let closestIndex = 0;
+      let minDistance = Infinity;
+
+      for (let i = 0; i < childrenElements.length; i++) {
+        const child = childrenElements[i] as HTMLElement;
+        const childCenter = child.offsetLeft + child.offsetWidth / 2;
+        const distance = Math.abs(containerCenter - childCenter);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = i;
+        }
+      }
+
+      if (loop && count > 1) {
+        let realIndex = closestIndex - 1;
+        if (realIndex < 0) realIndex = count - 1;
+        if (realIndex >= count) realIndex = 0;
+        updateCurrentIndex(realIndex);
+      } else {
+        updateCurrentIndex(Math.min(closestIndex, count - 1));
+      }
+    });
   };
 
   // 무한 루프 스크롤 위치 보정 (스크롤이 멈췄을 때 실행 - 디바운스 적용하여 크로스브라우징 완벽 지원)
@@ -210,8 +252,8 @@ export default function Carousel({
         if (targetChild) {
           const targetLeft = targetChild.offsetLeft + targetChild.offsetWidth / 2 - clientWidth / 2;
           const currentDiff = Math.abs(scrollLeft - targetLeft);
-          if (currentDiff > 2) {
-            container.scrollTo({ left: targetLeft, behavior: spotlight ? 'auto' : 'smooth' });
+          if (!spotlight && currentDiff > 2) {
+            container.scrollTo({ left: targetLeft, behavior: 'smooth' });
           }
           updateCurrentIndex(closestIndex - 1);
         }
@@ -229,7 +271,7 @@ export default function Carousel({
       container.removeEventListener('scroll', handleScrollEvent);
       clearTimeout(scrollTimeout);
     };
-  }, [loop, count, spotlight]);
+  }, [loop, count, spotlight, updateCurrentIndex]);
 
   useEffect(() => {
     if (!autoPlayInterval || autoPlayInterval <= 0 || count <= 1 || isInteracting) return;
@@ -257,12 +299,15 @@ export default function Carousel({
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [autoPlayInterval, count, currentIndex, isInteracting, loop, scrollToIndex]);
+  }, [autoPlayInterval, count, currentIndex, isInteracting, loop, scrollToIndex, updateCurrentIndex]);
 
   useEffect(() => {
     return () => {
       if (interactionTimeoutRef.current) {
         clearTimeout(interactionTimeoutRef.current);
+      }
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
       }
     };
   }, []);
@@ -275,13 +320,13 @@ export default function Carousel({
   };
 
   // 무한 루프 시 좌우 여백을 두어 인접 카드가 Figma 시안처럼 살짝 보이도록 맞춘다.
-  const paddingClass = loop ? `${spotlight ? 'px-[35px] py-5' : 'px-[38px] py-3'}` : 'pb-1';
+  const paddingClass = loop ? `${spotlight ? 'px-0' : 'px-[38px] py-3'}` : 'pb-1';
   const gapClass = spotlight ? 'gap-3' : 'gap-4';
   const wrapperClass = 'w-full';
   const scrollPaddingStyle = loop
     ? {
-        scrollPaddingLeft: spotlight ? '35px' : '38px',
-        scrollPaddingRight: spotlight ? '35px' : '38px',
+        scrollPaddingLeft: spotlight ? '0px' : '38px',
+        scrollPaddingRight: spotlight ? '0px' : '38px',
       }
     : undefined;
 
@@ -302,11 +347,11 @@ export default function Carousel({
         {displayItems.map((child, index) => {
           const activeDisplayIndex = loop && count > 1 ? currentIndex + 1 : currentIndex;
           const realIndex = getRealIndex(index);
-          const isActive = spotlight
-            ? index === activeDisplayIndex
-            : realIndex === currentIndex;
+          const isActive = spotlight ? realIndex === currentIndex : index === activeDisplayIndex;
+          // 267.5px 고정 슬롯: (292 - 243) / 2 여백과 12px gap이 상쇄되어
+          // 활성 카드와 양옆 카드의 실제 외곽 간격은 항상 12px로 유지된다.
           const spotlightClass = spotlight
-            ? `transform-gpu transition-all duration-300 ease-out ${
+            ? `flex h-[239px] w-[267.5px] transform-gpu items-center justify-center ${
                 isActive ? 'z-10 opacity-100' : 'z-0 opacity-100'
               }`
             : '';
@@ -316,9 +361,10 @@ export default function Carousel({
               key={index}
               className={`${loop ? 'snap-center flex-shrink-0' : 'snap-start flex-shrink-0'} ${spotlightClass}`}
             >
-              {showIndicator && React.isValidElement(child)
-                ? React.cloneElement(child as React.ReactElement<{ carouselIndexLabel?: string }>, {
-                    carouselIndexLabel: `${realIndex + 1}/${count}`,
+              {(showIndicator || spotlight) && React.isValidElement(child)
+                ? React.cloneElement(child as React.ReactElement<{ carouselIndexLabel?: string; carouselActive?: boolean }>, {
+                    ...(showIndicator ? { carouselIndexLabel: `${realIndex + 1}/${count}` } : {}),
+                    ...(spotlight ? { carouselActive: isActive } : {}),
                   })
                 : child}
             </div>
@@ -334,7 +380,7 @@ export default function Carousel({
       )}
 
       {showProgress && count > 0 && (
-        <div className="mt-2 flex items-center justify-center gap-2">
+        <div className={`${spotlight ? 'mt-6' : 'mt-2'} flex items-center justify-center gap-2`}>
           {Array.from({ length: count }).map((_, index) => {
             const isActive = index === currentIndex;
 
