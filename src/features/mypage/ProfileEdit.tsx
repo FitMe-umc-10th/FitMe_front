@@ -225,10 +225,10 @@ export default function ProfileEdit() {
     >
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col min-h-[calc(100vh-3.5rem)] px-[20px] pb-6 justify-between"
+        className="flex flex-col min-h-[calc(100dvh-3.5rem)] px-[20px] pb-6 justify-between"
       >
         {/* 상단 폼 입력부 */}
-        <div className="space-y-0">
+        <div className="space-y-0 w-full">
           {/* 1. 프로필 이미지 편집 영역 */}
           <div className="flex flex-col items-center justify-center mt-[20px]">
             <div className="relative w-[101px] h-[101px]">
@@ -262,20 +262,20 @@ export default function ProfileEdit() {
             </p>
           </div>
 
-          {/* 2. 학업 정보 설정 (16px 마진 탑) */}
+          {/* 2. 학업 정보 설정 */}
           <section className="mt-[16px]">
-            <h3 className="w-full max-w-[402px] h-[45px] pt-[10px] pb-[10px] flex items-center text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800">
+            <h3 className="w-full h-[45px] pt-[10px] pb-[10px] flex items-center text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800">
               학업 정보
             </h3>
 
-            {/* GPA & 소득구간 입력부 (8px 마진 탑) */}
-            <div className="flex justify-between gap-[12px] mt-[8px] w-full max-w-[362px] mx-auto">
-              {/* GPA 입력 (w-175 h-76) */}
-              <div className="w-[175px] h-[76px] flex flex-col gap-[8px]">
-                <label className="w-[93px] h-[20px] text-xs font-medium text-gray-400 flex items-center">
+            {/* GPA & 소득구간 입력부 (유동 너비 flex-1 적용) */}
+            <div className="flex gap-[12px] mt-[8px] w-full">
+              {/* GPA 입력 */}
+              <div className="flex-1 min-w-0 flex flex-col gap-[8px]">
+                <label className="text-xs font-medium text-gray-400 flex items-center">
                   현재 학점 (GPA)
                 </label>
-                <div className="relative w-[175px] h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between transition-all focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10">
+                <div className="relative w-full h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between transition-all focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10">
                   <input
                     type="text"
                     inputMode="decimal"
@@ -289,15 +289,15 @@ export default function ProfileEdit() {
                 </div>
               </div>
 
-              {/* 소득구간 선택 - 프리미엄 바텀시트 연동 (w-175 h-76) */}
-              <div className="w-[175px] h-[76px] flex flex-col gap-[8px]">
-                <label className="w-[49px] h-[20px] text-xs font-medium text-gray-400 flex items-center">
+              {/* 소득구간 선택 */}
+              <div className="flex-1 min-w-0 flex flex-col gap-[8px]">
+                <label className="text-xs font-medium text-gray-400 flex items-center">
                   소득구간
                 </label>
                 <button
                   type="button"
                   onClick={() => setActiveBottomSheet('income')}
-                  className="w-[175px] h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between hover:border-blue-500 hover:ring-4 hover:ring-blue-500/10 active:scale-[0.98] transition-all text-left focus:outline-none"
+                  className="w-full h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between hover:border-blue-500 hover:ring-4 hover:ring-blue-500/10 active:scale-[0.98] transition-all text-left focus:outline-none"
                 >
                   <span className="text-sm font-bold text-gray-800">{incomeBracket}구간</span>
                   <div className="text-gray-400">
@@ -308,20 +308,20 @@ export default function ProfileEdit() {
             </div>
           </section>
 
-          {/* 3. 맞춤 핏 조건 설정 (20px 마진 탑) */}
+          {/* 3. 맞춤 핏 조건 설정 */}
           <section className="mt-[28px]">
             <h3 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800">
               맞춤 핏 조건 설정
             </h3>
 
-            {/* 관심 직무 및 분야 (8px 마진 탑) */}
+            {/* 관심 직무 및 분야 */}
             <div className="mt-[18px]">
               <label className="text-[14px] font-medium leading-[140%] tracking-normal text-gray-400 select-none block">
                 관심 직무 및 분야
               </label>
 
-              {/* 선택 칩 세트 (12px 마진 탑 - 가로 스와이프 스크롤 연동) */}
-              <div className="flex flex-row gap-2 mt-[6px] w-full max-w-[362px] mx-auto overflow-x-auto whitespace-nowrap scrollbar-none py-1">
+              {/* 선택 칩 세트 (가로 스크롤 가능) */}
+              <div className="flex flex-row gap-2 mt-[6px] w-full overflow-x-auto whitespace-nowrap scrollbar-none py-1">
                 {AVAILABLE_FIELDS.map((field) => {
                   const selected = interests.includes(field.id);
                   return (
@@ -342,8 +342,8 @@ export default function ProfileEdit() {
               </div>
             </div>
 
-            {/* 희망 활동 지역 (선택지 칩 세트와 12px 마진 탑 - 프리미엄 바텀시트 연동) */}
-            <div className="mt-[12px] w-full max-w-[362px] mx-auto">
+            {/* 희망 활동 지역 */}
+            <div className="mt-[12px] w-full">
               <label className="text-[14px] font-medium leading-[140%] tracking-normal text-gray-400 select-none block mb-[12px]">
                 희망 활동 지역
               </label>
@@ -361,8 +361,8 @@ export default function ProfileEdit() {
           </section>
         </div>
 
-        {/* 하단 저장하기 버튼 (희망 지역 셀렉트 박스에서 96px 마진 탑, 크기 w-361 h-56) */}
-        <div className="mt-[96px] w-full max-w-[361px] mx-auto">
+        {/* 하단 저장하기 버튼 */}
+        <div className="mt-10 mb-2 w-full">
           <button
             type="submit"
             disabled={isSaving}
