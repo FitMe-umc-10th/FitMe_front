@@ -60,8 +60,14 @@ export interface Posting {
 
 export interface HomePostingFeed {
   popularPostings: Posting[];
+  recentViewedName: string;
   recentViewedPostings: Posting[];
   deadlinePostings: Record<PostingType, Posting[]>;
+}
+
+export interface RecentViewedPostingFeed {
+  name: string;
+  postings: Posting[];
 }
 
 export type PostingCategoryFilter = PostingType | 'ALL';

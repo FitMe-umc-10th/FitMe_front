@@ -47,7 +47,7 @@ export default function SearchBar({
         onFocus={onFocus}
         autoFocus={autoFocus}
         placeholder={placeholder}
-        className="h-12 w-full rounded-[10px] border border-[#0059FF] bg-white pl-4 pr-12 text-[14px] font-medium text-[#262626] outline-none placeholder:text-[#A5A5A5]"
+        className="h-12 w-full rounded-xl border border-[#0059FF] bg-white pl-[15px] pr-12 text-[14px] font-medium leading-[140%] text-[#262626] outline-none placeholder:text-[#AFAFAF]"
       />
       <button
         type="submit"

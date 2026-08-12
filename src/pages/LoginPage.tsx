@@ -4,6 +4,9 @@ import { Logo } from '@/shared/components/Logo';
 import { useToastStore } from '@/store/toastStore';
 import { useAuthStore } from '@/store/authStore';
 import { linkAccount } from '@/apis/auth';
+import kakaoIcon from '@/assets/icons/kakao.svg';
+import naverIcon from '@/assets/icons/naver.svg';
+import mailIcon from '@/assets/icons/mail.svg';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -79,21 +82,21 @@ export default function LoginPage() {
           onClick={handleKakaoLogin}
           className="flex h-[50px] w-full items-center justify-center gap-2 rounded-lg border border-white bg-[#FEE500] text-[14.7px] font-semibold text-[#181600]"
         >
-          <span aria-hidden>💬</span> 카카오 로그인
+          <img src={kakaoIcon} alt="" aria-hidden="true" className="size-[18px]" /> 카카오 로그인
         </button>
         <button
           type="button"
           onClick={handleNaverLogin}
           className="flex h-[50px] w-full items-center justify-center gap-2 rounded-lg border border-white bg-[#03A94D] text-[14.7px] font-semibold text-white"
         >
-          <span aria-hidden>N</span> 네이버 로그인
+          <img src={naverIcon} alt="" aria-hidden="true" className="size-[18px]" /> 네이버 로그인
         </button>
         <button
           type="button"
           onClick={() => navigate('/login/email')}
           className="flex h-[54px] w-full items-center justify-center gap-2 rounded-lg border border-white bg-[#ECECEC] text-[14.7px] font-medium text-[#606060]"
         >
-          <span aria-hidden>✉️</span> 이메일 로그인
+          <img src={mailIcon} alt="" aria-hidden="true" className="size-[18px]" /> 이메일 로그인
         </button>
         <button
           type="button"

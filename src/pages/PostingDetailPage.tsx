@@ -195,11 +195,18 @@ function DetailInfoTabs({
 
 function DetailInfoList({ rows }: { rows: DetailInfoRow[] }) {
   return (
-    <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
+    <dl className="flex min-h-[98px] w-full flex-col items-start gap-2 pl-5 [font-family:Pretendard]">
       {rows.map((row) => (
-        <div key={row.label} className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">{row.label}</dt>
-          <dd className="font-semibold text-[#333333]">{row.value}</dd>
+        <div
+          key={row.label}
+          className="flex w-[calc(100%_-_20px)] flex-col items-start gap-0.5"
+        >
+          <dt className="text-[14px] font-semibold leading-[20px] text-[#5184F9]">
+            {row.label}
+          </dt>
+          <dd className="w-full whitespace-pre-line break-words text-[14px] font-medium leading-[17px] text-[#262626]">
+            {row.value}
+          </dd>
         </div>
       ))}
     </dl>
@@ -354,18 +361,22 @@ export default function PostingDetailPage() {
   const openApplyCompleteModal = useCallback((application: PostingApplicationResult) => {
     openModal({
       title: '지원을 완료하셨나요?',
-      description: "[예] 버튼을 누르시면, '이력' 탭 상태값이 결과 대기 중으로 변경돼요.\n[아니오] 버튼을 누르시면, '이력' 탭에서 수동으로 설정해야 해요.",
+      description: "완료 버튼을 누르시면, '이력' 탭 상태값이\n결과 대기 중으로 변경돼요.",
       buttons: [
         {
-          label: '아니오, 아직이에요',
+          label: '아직이에요',
           variant: 'secondary',
           onClick: () => {
             setPendingApplication(null);
-            closeModal();
+            openModal({
+              title: '꼭 이력을 관리 해주세요!',
+              description: "이력 탭에 '-' 상태로 추가되었습니다.\n상태 변경 및 삭제는 이력 탭에서 진행해주세요.",
+              buttons: [{ label: '확인', variant: 'primary', onClick: closeModal }],
+            });
           },
         },
         {
-          label: '네, 완료했어요.',
+          label: '완료했어요',
           variant: 'primary',
           onClick: async () => {
             try {
@@ -385,7 +396,7 @@ export default function PostingDetailPage() {
   const handleApplyClick = (posting: Posting) => {
     openModal({
       title: '공식 홈페이지로 이동하시겠어요?',
-      description: "지원을 완료하신 후, 핏미에 돌아와\n진행 상태를 꼭 '결과 대기 중'으로 변경해주세요!",
+      description: "지원을 완료하신 후, 핏미에 돌아와\n진행 상태를 꼭 '지원 완료'로 변경해주세요!",
       buttons: [
         {
           label: '취소',
@@ -469,7 +480,7 @@ export default function PostingDetailPage() {
         {data && (
           <article className="flex flex-col items-start gap-6">
             <div className="h-[200px] w-full bg-[#E8EEF5]">
-              <PostingThumbnail src={data.posterUrl} alt={data.title} />
+              <PostingThumbnail src={data.posterUrl} alt={data.title} type={data.type} />
             </div>
 
             <div className="flex min-h-[422.5px] w-full flex-col items-center justify-center gap-5">
@@ -480,11 +491,11 @@ export default function PostingDetailPage() {
                     <DayBadge deadline={data.deadline} variant="detail" />
                   </div>
 
-                  <div className="flex w-full flex-col items-start gap-2">
+                  <div className="flex w-full flex-col items-start">
                     <h2 className="w-full text-[20px] font-semibold leading-[140%] text-[#000B24]">
                       {data.title}
                     </h2>
-                    <div className="flex w-full items-center justify-between gap-3">
+                    <div className="mt-0.5 flex w-full items-center justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-1 text-[10px] font-medium leading-[160%] text-[#8C8C8C]">
                         <img
                           src={organizationIcon}
@@ -520,7 +531,7 @@ export default function PostingDetailPage() {
                 </div>
               </section>
 
-              <section className="flex h-[164px] w-full flex-col items-start gap-7">
+              <section className="flex min-h-[164px] w-full flex-col items-start gap-7 pb-2">
                 <DetailInfoTabs activeTab={activeTab} onChange={setActiveTab} />
                 <DetailInfoContent activeTab={activeTab} posting={data} />
               </section>

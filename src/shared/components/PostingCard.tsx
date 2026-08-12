@@ -46,7 +46,7 @@ export default function PostingCard({
         className="flex h-[204px] w-[162px] shrink-0 cursor-pointer select-none flex-col overflow-hidden rounded-2xl bg-white drop-shadow-[0_0_8px_rgba(0,0,0,0.08)] transition-all duration-200"
       >
         <div className="relative h-[115px] w-[162px] shrink-0 overflow-hidden rounded-t-2xl bg-[#E6EEF8]">
-          <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
+          <PostingThumbnail src={posting.posterUrl} alt={posting.title} type={posting.type} />
         </div>
 
         <div className="flex h-[89px] w-[162px] flex-col items-start gap-2 rounded-b-2xl bg-white px-3 pb-3 pt-2">
@@ -77,7 +77,7 @@ export default function PostingCard({
         className="relative flex h-[202.16px] w-[243px] cursor-pointer select-none flex-col items-end justify-between overflow-hidden rounded-[13.3151px] bg-[#D9F0FF] px-[16.6438px] py-[13.3151px] transition-all duration-300 ease-out"
       >
         <div className="absolute inset-0 z-0 h-full w-full">
-          <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
+          <PostingThumbnail src={posting.posterUrl} alt={posting.title} type={posting.type} />
           <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.8)_0%,rgba(0,0,0,0)_64.35%)]" />
         </div>
 
@@ -117,7 +117,7 @@ export default function PostingCard({
       className="grid h-[128.01px] w-full max-w-[363px] cursor-pointer select-none grid-cols-[175.14px_187px] gap-0 overflow-hidden rounded-[16px] bg-white drop-shadow-[0_0_8px_rgba(0,0,0,0.08)] transition-all duration-200"
     >
       <div className="h-[128.01px] overflow-hidden rounded-l-[16px] bg-[#E6EEF8]">
-        <PostingThumbnail src={posting.posterUrl} alt={posting.title} />
+        <PostingThumbnail src={posting.posterUrl} alt={posting.title} type={posting.type} />
       </div>
 
       <div className="flex h-[128px] w-[187px] min-w-0 flex-col items-start justify-center gap-4 rounded-r-[16px] bg-white px-3 py-5">

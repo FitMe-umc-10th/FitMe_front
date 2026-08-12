@@ -1,5 +1,5 @@
 import { useState } from 'react';
-
+import eyeIcon from '@/assets/icons/eye.svg';
 interface InputProps {
   value: string;
   onChange: (value: string) => void; // 입력값이 바뀔 때 부모에게 알림
@@ -43,7 +43,12 @@ export default function Input({
             onClick={() => setShowPassword((prev) => !prev)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
           >
-            {showPassword ? '🙈' : '👁️'}
+            <img
+              src={eyeIcon}
+              alt=""
+              aria-hidden="true"
+              className={`size-5 ${showPassword ? 'opacity-100' : 'opacity-40'}`}
+            />
           </button>
         )}
       </div>
