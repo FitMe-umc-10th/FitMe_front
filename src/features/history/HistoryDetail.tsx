@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getHistoryDetail, updateHistoryMemo } from '@/apis/history';
 import organizationIcon from '@/assets/icons/organization.svg';
 import { Layout } from '@/shared/components';
+import { formatKoreanDate } from '@/shared/utils/date';
 import { useToastStore } from '@/store/toastStore';
 import type { UserApplicationDetail } from '@/types/history';
 
@@ -18,11 +19,11 @@ const DETAIL_TABS = [
 
 function DetailRows({ rows }: { rows: DetailRow[] }) {
   return (
-    <dl className="flex w-full flex-col gap-2 pl-5 pr-5">
+    <dl className="flex w-full flex-col gap-2 pl-5 pr-5 [font-family:Pretendard]">
       {rows.map((row) => (
-        <div key={row.label} className="flex min-w-0 flex-col items-start gap-1">
-          <dt className="text-[14px] font-semibold leading-[140%] text-[#5184F9]">{row.label}</dt>
-          <dd className="w-full whitespace-pre-wrap break-words text-[14px] font-medium leading-[140%] text-[#262626]">
+        <div key={row.label} className="flex min-w-0 flex-col items-start gap-2">
+          <dt className="text-[14px] font-semibold leading-5 text-[#5184F9]">{row.label}</dt>
+          <dd className="w-full whitespace-pre-wrap break-words text-[14px] font-medium leading-[17px] text-[#262626]">
             {row.value || '정보가 없습니다.'}
           </dd>
         </div>
@@ -78,12 +79,12 @@ export default function HistoryDetail() {
   };
 
   const detailHeader = (
-    <header className="sticky top-0 z-30 mx-auto flex h-[41px] w-full max-w-[402px] items-center justify-center bg-white">
+    <header className="sticky top-0 z-30 mx-auto flex h-[67px] w-full max-w-[402px] items-center justify-center bg-white pb-[14px] pt-3">
       <button
         type="button"
         onClick={() => navigate(-1)}
         aria-label="뒤로가기"
-        className="absolute left-0 flex h-[41px] w-[45px] items-center justify-center rounded-full pl-1 transition-colors hover:bg-gray-100"
+        className="absolute left-0 top-3 flex h-[41px] w-[45px] items-center justify-center rounded-full pl-1 transition-colors hover:bg-gray-100"
       >
         <svg viewBox="0 0 41 41" aria-hidden="true" className="size-[41px]">
           <path
@@ -101,7 +102,7 @@ export default function HistoryDetail() {
         type="button"
         onClick={handleShare}
         aria-label="공유하기"
-        className="absolute right-4 flex size-[31px] items-center justify-center rounded-full text-[#262626] transition-colors hover:bg-gray-100"
+        className="absolute right-4 top-[17px] flex size-[31px] items-center justify-center rounded-full text-[#262626] transition-colors hover:bg-gray-100"
       >
         <svg viewBox="0 0 31 31" aria-hidden="true" className="size-[31px]">
           <path
@@ -155,7 +156,7 @@ export default function HistoryDetail() {
     {
       label: '일시',
       value: post.applyStartAt && post.applyEndAt
-        ? `${post.applyStartAt.replace(/-/g, '. ')} ~ ${post.applyEndAt.replace(/-/g, '. ')}`
+        ? `${formatKoreanDate(post.applyStartAt)} ~ ${formatKoreanDate(post.applyEndAt)}`
         : undefined,
     },
     { label: '접수 방법', value: post.applicationMethod },

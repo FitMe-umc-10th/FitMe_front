@@ -49,11 +49,11 @@ function SectionHeader({ title, actionLabel = '더보기', onAction, compact = f
         <button
           type="button"
           onClick={onAction}
-          className={`flex h-6 w-[68px] shrink-0 items-center justify-end text-[12px] font-medium leading-[140%] transition-colors hover:text-[#6B7280] ${
+          className={`flex h-6 min-w-[68px] shrink-0 items-center justify-end text-[12px] font-medium leading-[140%] transition-colors hover:text-[#6B7280] ${
             compact ? 'text-[#8C8C8C]' : 'text-[#A1A1A1]'
           }`}
         >
-          <span className="w-8 text-center">{actionLabel}</span>
+          <span className="whitespace-nowrap text-center">{actionLabel}</span>
           <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 shrink-0">
             <path
               d="M9 6.6L15 12L9 17.4"
@@ -119,7 +119,7 @@ export default function HomePage() {
   const recentViewedPostings = data?.recentViewedPostings ?? [];
   const hasRecentViewedPostings = recentViewedPostings.length > 0;
   const recentViewedSectionHeight = isRecentViewedExpanded
-    ? 'h-[368px]'
+    ? 'h-[632px]'
     : hasRecentViewedPostings
       ? 'h-[280px]'
       : 'h-[177px]';
@@ -151,25 +151,31 @@ export default function HomePage() {
           <SectionHeader title="실시간 인기 공고" />
           {isPending && <Skeleton variant="popular" count={2} />}
           {data && (
-            <Carousel
-              showIndicator
-              showProgress
-              loop
-              spotlight
-              storageKey="home-popular-carousel-index"
-              autoPlayInterval={3000}
-            >
-              {data.popularPostings.map((posting) => (
-                <PostingCard key={posting.id} posting={posting} variant="popular" />
-              ))}
-            </Carousel>
+            <div className="-mx-5 w-[calc(100%+40px)]">
+              <Carousel
+                showIndicator
+                showProgress
+                loop
+                spotlight
+                storageKey="home-popular-carousel-index"
+                autoPlayInterval={3000}
+              >
+                {data.popularPostings.map((posting) => (
+                  <PostingCard key={posting.id} posting={posting} variant="popular" />
+                ))}
+              </Carousel>
+            </div>
           )}
         </section>
 
         <section
           className={`relative -mx-5 overflow-hidden ${
-            isRecentViewedListMode
-              ? 'flex flex-col items-start gap-4 bg-[linear-gradient(180deg,#EFF6FF_0%,#F5FFFA_100%)] pt-3'
+            hasRecentViewedPostings
+              ? `bg-[linear-gradient(180deg,#EFF6FF_0%,#F5FFFA_100%)] ${
+                  isRecentViewedListMode
+                    ? 'flex flex-col items-start gap-4 pt-3'
+                    : 'px-5 pt-3'
+                }`
               : 'bg-[#EEF6FF] px-5 pt-5'
           } ${recentViewedSectionHeight}`}
         >
@@ -190,7 +196,7 @@ export default function HomePage() {
             </div>
           )}
           {data && hasRecentViewedPostings && isRecentViewedExpanded && (
-            <div className="mt-5 max-h-[276px] overflow-y-auto pb-4 scrollbar-none">
+            <div className="mt-4 max-h-[548px] overflow-y-auto scrollbar-none">
               <HorizontalPostingList postings={recentViewedPostings} />
             </div>
           )}

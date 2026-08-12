@@ -202,7 +202,11 @@ export const useToggleSave = (postingId: number, options: UseToggleSaveOptions =
     },
     // 3. 작업 종료 후(성공/실패 무관) 최신 상태 동기화를 위해 캐시 무효화를 실행합니다.
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: postingQueryKeys.all });
+      void queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === postingQueryKeys.all[0] &&
+          query.queryKey[1] !== postingQueryKeys.home[1],
+      });
     },
   });
 };
