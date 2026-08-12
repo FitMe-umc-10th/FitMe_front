@@ -87,27 +87,36 @@ export default function Carousel({
   useEffect(() => {
     if (count === 0) return;
 
+    const storedIndex = getStoredIndex();
+    currentIndexRef.current = storedIndex;
+    activeItemKeyRef.current = childKeysRef.current[storedIndex] ?? null;
+
     const timer = setTimeout(() => {
       const storedScrollLeft = getStoredScrollLeft();
 
       if (!loop && storedScrollLeft !== null && containerRef.current) {
         containerRef.current.scrollTo({ left: storedScrollLeft, behavior: 'auto' });
-        setCurrentIndex(getStoredIndex());
+        setCurrentIndex(storedIndex);
         return;
       }
 
-      scrollToIndex(getStoredIndex());
+      scrollToIndex(storedIndex);
     }, 50);
 
     return () => clearTimeout(timer);
   }, [count, getStoredIndex, getStoredScrollLeft, loop, scrollToIndex, spotlight]);
 
   const updateCurrentIndex = useCallback((nextIndex: number) => {
-    if (currentIndexRef.current === nextIndex) return;
+    const nextItemKey = childKeysRef.current[nextIndex] ?? null;
+
+    if (currentIndexRef.current === nextIndex) {
+      activeItemKeyRef.current = nextItemKey;
+      return;
+    }
 
     currentIndexRef.current = nextIndex;
     setCurrentIndex(nextIndex);
-    activeItemKeyRef.current = childKeysRef.current[nextIndex] ?? null;
+    activeItemKeyRef.current = nextItemKey;
 
     if (indexStorageKey) {
       window.sessionStorage.setItem(indexStorageKey, String(nextIndex));
@@ -121,10 +130,14 @@ export default function Carousel({
     const preservedIndex = childKeysRef.current.findIndex((key) => key === activeKey);
     if (preservedIndex < 0 || preservedIndex === currentIndex) return;
 
+    currentIndexRef.current = preservedIndex;
     setCurrentIndex(preservedIndex);
+    if (indexStorageKey) {
+      window.sessionStorage.setItem(indexStorageKey, String(preservedIndex));
+    }
     const frameId = window.requestAnimationFrame(() => scrollToIndex(preservedIndex));
     return () => window.cancelAnimationFrame(frameId);
-  }, [childKeySignature, count, currentIndex, scrollToIndex]);
+  }, [childKeySignature, count, currentIndex, indexStorageKey, scrollToIndex]);
 
   const pauseAutoPlay = () => {
     if (interactionTimeoutRef.current) {
