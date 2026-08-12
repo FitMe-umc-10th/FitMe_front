@@ -123,16 +123,32 @@ function SavedFailureToast({ onClose }: { onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-      role="status"
-      aria-live="polite"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="saved-failure-title"
       onClick={onClose}
     >
       <div
-        className="flex h-[162px] w-full max-w-[362px] flex-col items-center justify-center rounded-[14px] bg-white px-6 text-center"
+        className="flex h-[169px] w-[323px] flex-col overflow-hidden rounded-2xl bg-white"
         onClick={(event) => event.stopPropagation()}
       >
-        <p className="text-[18px] font-bold text-[#262626]">저장 해제에 실패했어요!</p>
-        <p className="mt-3 text-[14px] font-medium text-[#8F8F8F]">네트워크를 확인해주세요.</p>
+        <div className="flex h-[111px] flex-col items-center gap-2 px-8 pb-6 pt-8 text-center">
+          <h2 id="saved-failure-title" className="w-full text-[18px] font-semibold leading-[140%] text-[#1E1E1E]">
+            저장 해제에 실패했어요
+          </h2>
+          <p className="w-full text-[16px] font-normal leading-[140%] tracking-[-0.02em] text-[#8C8C8C]">
+            네트워크를 확인해주세요.
+          </p>
+        </div>
+        <div className="flex h-[58px] items-start justify-center px-3 pb-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-[42px] w-[295px] items-center justify-center rounded-lg bg-[#0059FF] text-[16px] font-semibold leading-[140%] text-white"
+          >
+            확인
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -361,18 +361,22 @@ export default function PostingDetailPage() {
   const openApplyCompleteModal = useCallback((application: PostingApplicationResult) => {
     openModal({
       title: '지원을 완료하셨나요?',
-      description: "[예] 버튼을 누르시면, '이력' 탭 상태값이 결과 대기 중으로 변경돼요.\n[아니오] 버튼을 누르시면, '이력' 탭에서 수동으로 설정해야 해요.",
+      description: "완료 버튼을 누르시면, '이력' 탭 상태값이\n결과 대기 중으로 변경돼요.",
       buttons: [
         {
-          label: '아니오, 아직이에요',
+          label: '아직이에요',
           variant: 'secondary',
           onClick: () => {
             setPendingApplication(null);
-            closeModal();
+            openModal({
+              title: '꼭 이력을 관리 해주세요!',
+              description: "이력 탭에 '-' 상태로 추가되었습니다.\n상태 변경 및 삭제는 이력 탭에서 진행해주세요.",
+              buttons: [{ label: '확인', variant: 'primary', onClick: closeModal }],
+            });
           },
         },
         {
-          label: '네, 완료했어요.',
+          label: '완료했어요',
           variant: 'primary',
           onClick: async () => {
             try {
@@ -392,7 +396,7 @@ export default function PostingDetailPage() {
   const handleApplyClick = (posting: Posting) => {
     openModal({
       title: '공식 홈페이지로 이동하시겠어요?',
-      description: "지원을 완료하신 후, 핏미에 돌아와\n진행 상태를 꼭 '결과 대기 중'으로 변경해주세요!",
+      description: "지원을 완료하신 후, 핏미에 돌아와\n진행 상태를 꼭 '지원 완료'로 변경해주세요!",
       buttons: [
         {
           label: '취소',

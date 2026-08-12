@@ -394,7 +394,7 @@ export default function ProfileEdit() {
 
       {/* 이미지 업로드 방식 바텀시트 모달 */}
       {activeBottomSheet === 'photo' && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 px-0">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-0">
           <div className="absolute inset-0" onClick={() => setActiveBottomSheet(null)} />
           <div className="relative w-full max-w-[390px] rounded-t-3xl bg-white p-5 shadow-2xl animate-fade-in-up pb-[env(safe-area-inset-bottom,20px)]">
             <div className="mx-auto mb-4 h-1.2 w-11 rounded-full bg-gray-200" />
@@ -441,7 +441,7 @@ export default function ProfileEdit() {
 
       {/* 소득구간 선택 바텀시트 모달 */}
       {activeBottomSheet === 'income' && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 px-0">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-0">
           <div className="absolute inset-0" onClick={() => setActiveBottomSheet(null)} />
           <div className="relative w-full max-w-[390px] rounded-t-3xl bg-white p-5 shadow-2xl animate-fade-in-up pb-[env(safe-area-inset-bottom,20px)]">
             <div className="mx-auto mb-4 h-1.2 w-11 rounded-full bg-gray-200" />
@@ -483,7 +483,7 @@ export default function ProfileEdit() {
 
       {/* 희망 활동 지역 선택 바텀시트 모달 */}
       {activeBottomSheet === 'region' && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 px-0">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-0">
           <div className="absolute inset-0" onClick={() => setActiveBottomSheet(null)} />
           <div className="relative w-full max-w-[390px] rounded-t-3xl bg-white p-5 shadow-2xl animate-fade-in-up pb-[env(safe-area-inset-bottom,20px)]">
             <div className="mx-auto mb-4 h-1.2 w-11 rounded-full bg-gray-200" />

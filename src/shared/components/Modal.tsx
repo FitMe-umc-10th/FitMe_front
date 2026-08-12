@@ -17,8 +17,8 @@ type ModalProps = {
 };
 
 const buttonClassByVariant: Record<NonNullable<ModalButton['variant']>, string> = {
-  primary: 'bg-[#4A90E2] text-white',
-  secondary: 'bg-[#F0F0F0] text-[#666666]',
+  primary: 'bg-[#0059FF] text-white',
+  secondary: 'bg-[#F2F2F2] text-[#595959]',
   danger: 'bg-red-500 text-white',
 };
 
@@ -37,8 +37,8 @@ export function Modal({ isOpen, onClose, title, description, buttons, children }
   if (!isOpen) return null;
 
   const modalButtons = buttons ?? [{ label: '확인', onClick: onClose, variant: 'primary' }];
-  const isApplyCompleteModal = title === '지원을 완료하셨나요?';
   const isHistoryStatusError = title === '상태 변경에 실패했어요';
+  const isHistoryNotice = title === '꼭 이력을 관리 해주세요!';
 
   if (isHistoryStatusError) {
     return (
@@ -59,38 +59,37 @@ export function Modal({ isOpen, onClose, title, description, buttons, children }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="flex h-[182px] w-full max-w-[328px] flex-col rounded-[18px] bg-white px-[18px] pb-5 pt-[34px] text-center shadow-xl"
+        className={`flex w-[323px] flex-col overflow-hidden rounded-2xl bg-white ${isHistoryNotice ? 'h-[221px]' : 'h-[199px]'}`}
       >
-        <h2 id="modal-title" className="text-[16.3725px] font-bold leading-5 text-[#333333] [font-family:Inter]">
-          {title}
-        </h2>
-        {description && (
-          <p
-            className={`mt-[11px] whitespace-pre-line font-normal text-[#666666] [font-family:Inter] ${
-              isApplyCompleteModal
-                ? 'mx-auto w-full text-center text-[11px] leading-[13px]'
-                : 'text-center text-[12.7342px] leading-[15px]'
-            }`}
-          >
-            {description}
-          </p>
-        )}
-        {children && <div className="mt-4">{children}</div>}
-        <div className="mt-auto flex justify-center gap-[9px]">
+        <div className={`flex w-full flex-col items-center px-8 pb-6 pt-8 text-center ${isHistoryNotice ? 'h-[163px]' : 'h-[141px]'} gap-4`}>
+          <h2 id="modal-title" className="w-full text-[18px] font-semibold leading-[140%] text-[#1E1E1E]">
+            {title}
+          </h2>
+          {description && (
+            <p className="w-full whitespace-pre-line text-center text-[16px] font-normal leading-[140%] tracking-[-0.02em] text-[#8C8C8C]">
+              {description}
+            </p>
+          )}
+          {children && <div>{children}</div>}
+        </div>
+        <div className="flex h-[58px] w-full items-start justify-center gap-2 px-3 pb-4">
           {modalButtons.map((button) => {
             const variant = button.variant ?? 'primary';
+            const isSingleButton = modalButtons.length === 1;
 
             return (
               <button
                 key={button.label}
                 type="button"
                 onClick={button.onClick ?? onClose}
-                className={`h-[44px] w-[141px] rounded-[7.28px] text-[13.6438px] font-bold leading-[17px] transition-opacity [font-family:Inter] hover:opacity-90 ${buttonClassByVariant[variant]}`}
+                className={`flex h-[42px] items-center justify-center rounded-lg text-[16px] font-semibold leading-[140%] transition-opacity hover:opacity-90 ${
+                  isSingleButton ? 'w-[295px]' : 'w-36'
+                } ${buttonClassByVariant[variant]}`}
               >
                 {button.label}
               </button>
