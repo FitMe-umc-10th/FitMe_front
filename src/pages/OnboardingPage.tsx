@@ -11,6 +11,7 @@ import { validateGpa } from '@/shared/utils/validation';
 import SearchableSelect from '@/shared/components/SearchableSelect';
 import { REGION_OPTIONS } from '@/constants/regions';
 import { UNIVERSITY_OPTIONS } from '@/constants/universities';
+import { useToastStore } from '@/store/toastStore';
 
 const INTERESTS = ['마케팅', '기획/아이디어', '디자인', 'IT/개발', '어학', '영상편집'];
 
@@ -23,6 +24,7 @@ export default function OnboardingPage() {
   const navigate = useNavigate();
   const setOnboarded = useAuthStore((s) => s.setOnboarded);
   const userName = useAuthStore((s) => s.userName);
+  const toastError = useToastStore((s) => s.error);
 
   const [step, setStep] = useState(0);
   const [residence, setResidence] = useState('');
@@ -32,6 +34,7 @@ export default function OnboardingPage() {
   const [interests, setInterests] = useState<string[]>([]);
   const [customInterest, setCustomInterest] = useState('');
   const [incomeSheetOpen, setIncomeSheetOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const gpaError = gpa !== '' ? validateGpa(gpa) || undefined : undefined;
 
@@ -51,6 +54,8 @@ export default function OnboardingPage() {
           : true;
 
   const handleFinish = async () => {
+    if (isSaving) return; // 중복 제출 방지
+    setIsSaving(true);
     try {
       await saveOnboarding({
         region: residence,
@@ -63,10 +68,11 @@ export default function OnboardingPage() {
       // 저장 성공 → 온보딩 완료 처리 후 홈으로
       setOnboarded(true);
       navigate('/');
-    } catch (e) {
-      // 저장 실패 → 홈 안 가고 에러 알림
-      console.error('온보딩 저장 실패:', e);
-      // toast.error('온보딩 저장에 실패했어요. 다시 시도해주세요.'); // toast 있으면
+    } catch {
+      // 저장 실패 → 화면 유지 + 사용자에게 안내
+      toastError('온보딩 저장에 실패했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsSaving(false);
     }
   };
   const labelClass = 'mb-1.5 block font-semibold';
@@ -220,8 +226,8 @@ export default function OnboardingPage() {
           </Button>
         )}
         {step === 4 && (
-          <Button variant="primary" size="lg" fullWidth onClick={handleFinish}>
-            확인하러 가기
+          <Button variant="primary" size="lg" fullWidth onClick={handleFinish} disabled={isSaving}>
+            {isSaving ? '저장 중...' : '확인하러 가기'}
           </Button>
         )}
       </div>

@@ -38,6 +38,7 @@ export default function SignupPage() {
   const [isVerified, setIsVerified] = useState(false); // 인증 완료
   const [showPw, setShowPw] = useState(false); // 비밀번호 보기 토글
   const [showPwConfirm, setShowPwConfirm] = useState(false); // 비밀번호 확인 보기 토글
+  const [isSubmitting, setIsSubmitting] = useState(false); // 가입 요청 중 중복 제출 방지
 
   // 이메일 형식 맞아야 "인증번호 전송" 버튼 활성화
   const emailValue = watch('email') ?? '';
@@ -82,6 +83,8 @@ export default function SignupPage() {
   };
 
   const onSubmit = async (data: SignupForm) => {
+    if (isSubmitting) return; // 이미 제출 중이면 무시
+    setIsSubmitting(true);
     try {
       await signup({
         name: data.name,
@@ -97,6 +100,8 @@ export default function SignupPage() {
     } catch {
       // 409(이메일 중복), 400(유효성) 등 에러 처리
       toast.error('회원가입에 실패했어요. 다시 확인해주세요.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -340,12 +345,12 @@ export default function SignupPage() {
         <button
           type="button"
           onClick={handleSubmit(onSubmit)}
-          disabled={!canSubmit}
+          disabled={!canSubmit || isSubmitting}
           className={`h-14 w-full rounded-xl text-[18px] font-semibold text-white transition-colors ${
-            canSubmit ? 'bg-[#0059FF]' : 'bg-[#D9D9D9]'
+            canSubmit && !isSubmitting ? 'bg-[#0059FF]' : 'bg-[#D9D9D9]'
           }`}
         >
-          가입하기
+          {isSubmitting ? '가입 중...' : '가입하기'}
         </button>
       </div>
     </div>
