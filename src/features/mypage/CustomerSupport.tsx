@@ -183,7 +183,7 @@ export default function CustomerSupport() {
 
       {/* 1:1 문의 로컬 커스텀 모달 */}
       {isInquiryOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6 animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 animate-fade-in">
           {/* 뒷배경 클릭 시 닫기 */}
           <div
             className="absolute inset-0"

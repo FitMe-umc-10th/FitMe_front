@@ -28,6 +28,10 @@ export default function SavedPage() {
   const [activeTab, setActiveTab] = useState<SavedTab>('ALL');
   const [sort, setSort] = useState<SavedSortType>('DEADLINE');
   const [isFailureToastOpen, setIsFailureToastOpen] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
   const savedPostingsParams: GetSavedPostingsParams = {
     category: activeTab,
     sort,
@@ -43,7 +47,7 @@ export default function SavedPage() {
     <Layout tabBar={<TabBar />} className="bg-white">
       {isFailureToastOpen && <SavedFailureToast onClose={() => setIsFailureToastOpen(false)} />}
 
-      <div className="bg-white pt-11">
+      <div className="bg-white pt-[37px]">
         <div className="flex h-[91px] shrink-0 flex-col items-start gap-5">
           <header className="flex h-7 w-full items-center px-5">
             <h1 className="w-[35px] text-center text-[20px] font-semibold leading-[140%] text-[#000B24]">저장</h1>
@@ -119,16 +123,32 @@ function SavedFailureToast({ onClose }: { onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-      role="status"
-      aria-live="polite"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="saved-failure-title"
       onClick={onClose}
     >
       <div
-        className="flex h-[162px] w-full max-w-[362px] flex-col items-center justify-center rounded-[14px] bg-white px-6 text-center"
+        className="flex h-[169px] w-[323px] flex-col overflow-hidden rounded-2xl bg-white"
         onClick={(event) => event.stopPropagation()}
       >
-        <p className="text-[18px] font-bold text-[#262626]">저장 해제에 실패했어요!</p>
-        <p className="mt-3 text-[14px] font-medium text-[#8F8F8F]">네트워크를 확인해주세요.</p>
+        <div className="flex h-[111px] flex-col items-center gap-2 px-8 pb-6 pt-8 text-center">
+          <h2 id="saved-failure-title" className="w-full text-[18px] font-semibold leading-[140%] text-[#1E1E1E]">
+            저장 해제에 실패했어요
+          </h2>
+          <p className="w-full text-[16px] font-normal leading-[140%] tracking-[-0.02em] text-[#8C8C8C]">
+            네트워크를 확인해주세요.
+          </p>
+        </div>
+        <div className="flex h-[58px] items-start justify-center px-3 pb-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-[42px] w-[295px] items-center justify-center rounded-lg bg-[#0059FF] text-[16px] font-semibold leading-[140%] text-white"
+          >
+            확인
+          </button>
+        </div>
       </div>
     </div>
   );

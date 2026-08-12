@@ -30,6 +30,7 @@ const updateHomeFeedSavedState = (
   popularPostings: feed.popularPostings.map((posting) =>
     updatePostingSavedState(posting, postingId, nextSavedState, savedId),
   ),
+  recentViewedName: feed.recentViewedName,
   recentViewedPostings: feed.recentViewedPostings.map((posting) =>
     updatePostingSavedState(posting, postingId, nextSavedState, savedId),
   ),

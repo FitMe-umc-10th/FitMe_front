@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getDeadlineNotificationCount } from '@/apis/deadlineNotification';
+import {
+  deadlineNotificationQueryKeys,
+  getDeadlineNotificationCount,
+} from '@/apis/deadlineNotification';
 import { getHomePostingFeed } from '@/apis/posting';
 import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import notificationBellIcon from '@/assets/icons/notification-bell.svg';
@@ -11,6 +14,7 @@ import EmptyState from '@/shared/components/EmptyState';
 import PostingCard from '@/shared/components/PostingCard';
 import Skeleton from '@/shared/components/Skeleton';
 import { ErrorState, Header, Layout, Logo, Tab, TabBar } from '@/shared/components';
+import { useAuthStore } from '@/store/authStore';
 import type { Posting, PostingType } from '@/types/posting';
 
 type SectionHeaderProps = {
@@ -45,19 +49,19 @@ function SectionHeader({ title, actionLabel = '더보기', onAction, compact = f
         <button
           type="button"
           onClick={onAction}
-          className={`flex shrink-0 items-center gap-0.5 text-[12px] font-medium transition-colors hover:text-[#6B7280] ${
+          className={`flex h-6 w-[68px] shrink-0 items-center justify-end text-[12px] font-medium leading-[140%] transition-colors hover:text-[#6B7280] ${
             compact ? 'text-[#8C8C8C]' : 'text-[#A1A1A1]'
           }`}
         >
-          <span>{actionLabel}</span>
-          <svg viewBox="0 0 24 24" aria-hidden="true" className={compact ? 'size-6' : 'size-4'}>
+          <span className="w-8 text-center">{actionLabel}</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 shrink-0">
             <path
-              d="M9 18L15 12L9 6"
+              d="M9 6.6L15 12L9 17.4"
               fill="none"
               stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
+              strokeLinecap="square"
+              strokeLinejoin="miter"
+              strokeWidth="1.2"
             />
           </svg>
         </button>
@@ -96,6 +100,7 @@ function HorizontalPostingList({ postings }: { postings: Posting[] }) {
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const storedUserName = useAuthStore((state) => state.userName);
   const [activeDeadlineTab, setActiveDeadlineTab] = useState<PostingType>('SCHOLARSHIP');
   const [isRecentViewedExpanded, setIsRecentViewedExpanded] = useState(false);
 
@@ -104,11 +109,13 @@ export default function HomePage() {
     queryFn: getHomePostingFeed,
   });
   const { data: unreadNotificationCount = 0 } = useQuery({
-    queryKey: ['deadlineNotifications', 'unreadCount'],
+    queryKey: deadlineNotificationQueryKeys.unreadCount,
     queryFn: getDeadlineNotificationCount,
   });
 
   const deadlinePostings = data?.deadlinePostings[activeDeadlineTab] ?? [];
+  const fullUserName = (data?.recentViewedName || storedUserName).trim();
+  const recentViewedName = fullUserName.length > 1 ? fullUserName.slice(1) : fullUserName || '사용자';
   const recentViewedPostings = data?.recentViewedPostings ?? [];
   const hasRecentViewedPostings = recentViewedPostings.length > 0;
   const recentViewedSectionHeight = isRecentViewedExpanded
@@ -167,7 +174,7 @@ export default function HomePage() {
           } ${recentViewedSectionHeight}`}
         >
           <SectionHeader
-            title="현수님의 최근 조회 목록"
+            title={`${recentViewedName}님의 최근 조회 목록`}
             actionLabel={isRecentViewedExpanded ? '작게 보기' : '더보기'}
             compact={isRecentViewedListMode}
             onAction={() => {
@@ -213,9 +220,11 @@ export default function HomePage() {
           )}
         </section>
 
-        <section className="space-y-4">
+        <section className="space-y-5">
           <SectionHeader title="마감 임박! 놓치지 마세요" onAction={() => navigate('/explore')} />
-          <Tab tabs={deadlineTabs} active={activeDeadlineTab} onChange={setActiveDeadlineTab} />
+          <div className="-mx-5 w-[calc(100%_+_40px)]">
+            <Tab tabs={deadlineTabs} active={activeDeadlineTab} onChange={setActiveDeadlineTab} />
+          </div>
           {isPending && <Skeleton variant="list" count={3} />}
           {data && deadlinePostings.length > 0 && <HorizontalPostingList postings={deadlinePostings} />}
           {data && deadlinePostings.length === 0 && (

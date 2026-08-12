@@ -221,7 +221,7 @@ export default function MyPageMain() {
 
       {/* 1. 로그아웃 모달 (w-323, h-177) */}
       {isLogoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
           <div className="absolute inset-0" onClick={() => setIsLogoutOpen(false)} />
           <section
             role="dialog"
@@ -264,7 +264,7 @@ export default function MyPageMain() {
 
       {/* 2. 회원탈퇴 모달 (w-323, h-323) */}
       {isWithdrawalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
           <div className="absolute inset-0" onClick={() => setIsWithdrawalOpen(false)} />
           <section
             role="dialog"

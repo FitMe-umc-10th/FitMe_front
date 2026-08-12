@@ -2,35 +2,27 @@ import type { ApiResponse } from '@/types/common';
 import { axiosInstance } from './axiosInstance';
 import type { DeadlineNotificationDTO, UnreadCountResponse } from '@/types/deadlineNotification';
 
-const EMPTY_DEADLINE_NOTIFICATIONS: DeadlineNotificationDTO = {
-  hasNext: false,
-  nextCursor: null,
-  notifications: [],
+export const deadlineNotificationQueryKeys = {
+  all: ['deadlineNotifications'] as const,
+  list: ['deadlineNotifications', 'list'] as const,
+  unreadCount: ['deadlineNotifications', 'unreadCount'] as const,
 };
 
 export const getDeadlineNotifications = async (
   size: number = 15,
   cursor?: number,
 ): Promise<DeadlineNotificationDTO> => {
-  try {
-    const { data } = await axiosInstance.get<ApiResponse<DeadlineNotificationDTO>>(
-      '/api/v1/deadline-notifications',
-      {
-        params: {
-          size,
-          cursor,
-        },
+  const { data } = await axiosInstance.get<ApiResponse<DeadlineNotificationDTO>>(
+    '/api/v1/deadline-notifications',
+    {
+      params: {
+        size,
+        cursor,
       },
-    );
-    const result = data?.result ?? (data as unknown as DeadlineNotificationDTO);
-    return {
-      hasNext: result?.hasNext ?? false,
-      nextCursor: result?.nextCursor ?? null,
-      notifications: result?.notifications ?? [],
-    };
-  } catch {
-    return EMPTY_DEADLINE_NOTIFICATIONS;
-  }
+    },
+  );
+
+  return data.result;
 };
 
 export const getDeadlineNotificationCount = async (): Promise<number> => {

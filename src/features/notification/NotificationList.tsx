@@ -1,25 +1,49 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Layout } from '@/shared/components';
+import { ErrorState, Layout } from '@/shared/components';
 import EmptyState from '@/shared/components/EmptyState';
-import { getDeadlineNotifications } from '@/apis/deadlineNotification';
+import {
+  deadlineNotificationQueryKeys,
+  getDeadlineNotifications,
+} from '@/apis/deadlineNotification';
+
+const NOTIFICATION_PAGE_SIZE = 15;
 
 export default function NotificationList() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  // 1. 알림 데이터 조회
-  const { data: notifications, isLoading } = useQuery({
-    queryKey: ['deadlineNotifications'],
-    queryFn: () => getDeadlineNotifications(15),
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    refetch,
+    dataUpdatedAt,
+  } = useInfiniteQuery({
+    queryKey: deadlineNotificationQueryKeys.list,
+    queryFn: ({ pageParam }) => getDeadlineNotifications(NOTIFICATION_PAGE_SIZE, pageParam),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasNext && lastPage.nextCursor ? lastPage.nextCursor : undefined,
   });
 
-  const handleNotificationClick = (postId: number) => {
-    if (postId) {
+  const notifications = data?.pages.flatMap((page) => page.notifications) ?? [];
+
+  useEffect(() => {
+    if (dataUpdatedAt > 0) {
+      queryClient.setQueryData(deadlineNotificationQueryKeys.unreadCount, 0);
+    }
+  }, [dataUpdatedAt, queryClient]);
+
+  const handleNotificationClick = (postId: number | null) => {
+    if (postId !== null) {
       navigate(`/postings/${postId}`);
     }
   };
-
-  // const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
 
   if (isLoading) {
     return (
@@ -107,9 +131,18 @@ export default function NotificationList() {
       className="bg-white"
     >
       <div className="w-full max-w-[402px] mx-auto bg-white flex flex-col">
-        {notifications && notifications.notifications.length > 0 ? (
+        {isError ? (
+          <div className="px-5 py-20">
+            <ErrorState
+              message="알림을 불러오지 못했습니다."
+              onRetry={() => {
+                void refetch();
+              }}
+            />
+          </div>
+        ) : notifications.length > 0 ? (
           <div className="flex flex-col">
-            {notifications.notifications.map((notification) => {
+            {notifications.map((notification) => {
               const isUnread = !notification.isRead;
               return (
                 <div
@@ -147,6 +180,18 @@ export default function NotificationList() {
                 </div>
               );
             })}
+            {hasNextPage && (
+              <button
+                type="button"
+                disabled={isFetchingNextPage}
+                onClick={() => {
+                  void fetchNextPage();
+                }}
+                className="mx-5 my-4 h-10 rounded-[10px] bg-[#F3F6FA] text-[13px] font-semibold text-[#404040] disabled:text-[#A5A5A5]"
+              >
+                {isFetchingNextPage ? '불러오는 중...' : '알림 더보기'}
+              </button>
+            )}
           </div>
         ) : (
           <div className="py-20 flex items-center justify-center w-full">

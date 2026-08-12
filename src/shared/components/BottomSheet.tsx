@@ -22,7 +22,7 @@ export default function BottomSheet({
 
   return (
     // 딤(어두운) 배경 — 누르면 닫힘
-    <div onClick={onClose} className="fixed inset-0 z-50 flex items-end bg-black/40">
+    <div onClick={onClose} className="fixed inset-0 z-50 flex items-end bg-black/50">
       {/* 시트 본체 — 내부 클릭은 닫힘 막기 */}
       <div onClick={(e) => e.stopPropagation()} className="w-full rounded-t-2xl bg-white p-4">
         {title && <h3 className="mb-3 text-center font-semibold">{title}</h3>}

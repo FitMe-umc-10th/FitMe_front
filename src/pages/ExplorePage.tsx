@@ -4,10 +4,9 @@ import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { getSearchPosts } from '@/apis/explore';
 import type { SearchPostItem, SearchNextCursor, SearchPostsResult } from '@/types/explore';
 import type { Posting } from '@/types/posting';
-import { Layout } from '@/shared/components';
+import { Layout, Tab } from '@/shared/components';
 import { TabBar } from '@/shared/components/TabBar';
 import SearchBar from '@/shared/components/SearchBar';
-import Chip from '@/shared/components/Chip';
 import Dropdown from '@/shared/components/Dropdown';
 import PostingCard from '@/shared/components/PostingCard';
 import EmptyState from '@/shared/components/EmptyState';
@@ -20,14 +19,20 @@ interface RecentSearchItem {
 }
 
 // 공모전 카테고리 정의 (Swagger Enum: PM, MARKETING, DESIGN, IT, VIDEO, ETC)
-const CATEGORIES = ['전체', '마케팅', '기획/아이디어', '디자인', 'IT/개발', '영상/미디어', '기타'];
+const CATEGORIES = ['마케팅', '기획/아이디어', '디자인', 'IT/개발', '어학', '영상편집'];
 
 // 정렬 드롭다운 옵션
 const SORT_OPTIONS = [
   { label: '마감 임박순', value: 'deadline' },
-  { label: '최신순', value: 'latest' },
   { label: '인기순', value: 'popular' },
+  { label: '최신순', value: 'latest' },
 ];
+
+const EXPLORE_TABS = [
+  { label: '전체', value: 'all' },
+  { label: '장학금', value: 'scholarship' },
+  { label: '공모전', value: 'contest' },
+] as const;
 
 // 추천 테마 키워드 (피그마 시안 반영)
 const RECOMMENDED_THEMES = ['고액장학금', '디자인공모전', '해외연수프로그램', '창업지원프로그램'];
@@ -37,8 +42,8 @@ const CATEGORY_MAP: Record<string, 'PM' | 'MARKETING' | 'DESIGN' | 'IT' | 'VIDEO
   '기획/아이디어': 'PM',
   디자인: 'DESIGN',
   'IT/개발': 'IT',
-  '영상/미디어': 'VIDEO',
-  기타: 'ETC',
+  어학: 'ETC',
+  영상편집: 'VIDEO',
 };
 
 const mapSearchPostItemToPosting = (item: SearchPostItem): Posting => ({
@@ -61,6 +66,10 @@ export default function ExplorePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined); // 공모전 카테고리 칩
   const [sortBy, setSortBy] = useState<'deadline' | 'latest' | 'popular'>('deadline'); // 정렬 방식
   const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]); // 최근 검색어 목록
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
 
   // 1. 실시간 검색 데이터 (최근 검색어 & 실시간 인기 공고 API 연동)
   const { data: liveSearchData } = useQuery({
@@ -157,17 +166,6 @@ export default function ExplorePage() {
     });
   };
 
-  // 최근 검색어 전체 삭제
-  const clearRecentSearches = () => {
-    recentSearches.forEach((item) => {
-      if (item.searchId) {
-        deleteSearchKeyword(item.searchId).catch(() => {});
-      }
-    });
-    setRecentSearches([]);
-    localStorage.removeItem('recent-searches');
-  };
-
   // 추천 테마/인기검색어/최근검색어 클릭 시 검색 수행
   const handleSelectKeyword = (selected: string) => {
     setKeyword(selected);
@@ -250,32 +248,49 @@ export default function ExplorePage() {
       header={
         <div
           className={`sticky top-0 z-20 flex flex-col bg-white transition-all ${
-            isSearchFocused ? 'pt-[25px]' : 'pt-[29px] border-b border-slate-100'
+            isSearchFocused ? 'pt-[25px]' : 'border-b border-slate-100 pt-[37px]'
           }`}
         >
+          {!isSearchFocused && (
+            <header className="mb-5 flex h-7 w-full items-center px-5">
+              <h1 className="w-[35px] text-center text-[20px] font-semibold leading-[140%] text-[#000B24]">
+                탐색
+              </h1>
+            </header>
+          )}
+
           {/* 상단 검색바 영역 (오버레이 활성화 시 뒤로가기 화살표가 왼쪽에 노출) */}
-          <div className="flex items-center px-[20px] pb-[8px]">
+          <div
+            className={`flex h-12 items-center ${
+              isSearchFocused ? 'gap-2 px-2' : 'px-5'
+            } ${isSearchFocused ? '' : 'mb-[7px]'}`}
+          >
             {isSearchFocused && (
               <button
                 type="button"
                 onClick={handleCancelSearch}
-                className="shrink-0 w-[16px] h-[16px] flex items-center justify-center text-slate-800 mr-[15px] cursor-pointer"
+                className="flex size-[34px] shrink-0 cursor-pointer items-center justify-center text-[#404040]"
                 aria-label="검색 취소"
               >
                 <svg
-                  viewBox="0 0 24 24"
+                  width="34"
+                  height="34"
+                  viewBox="0 0 34 34"
                   fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-[16px] h-[16px]"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
                 >
-                  <polyline points="15 18 9 12 15 6" />
+                  <path
+                    d="M21.25 9.34961L12.75 16.9996L21.25 24.6496"
+                    stroke="#404040"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
             )}
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <SearchBar
                 value={keyword}
                 onChange={(val) => {
@@ -291,38 +306,16 @@ export default function ExplorePage() {
             </div>
           </div>
 
-          {/* 피그마 규격 대분류 탭 (검색 오버레이가 비활성화일 때만 표시, height: 43px, left: 20px, gap: 10px, border-bottom: 0.5px) */}
           {!isSearchFocused && (
-            <div className="w-full h-[43px] border-b-[0.5px] border-slate-200 flex items-center pl-[20px]">
-              <div className="flex gap-[10px] w-[206px] h-full">
-                {(['all', 'scholarship', 'contest'] as const).map((tabVal) => {
-                  const labels = { all: '전체', scholarship: '장학금', contest: '공모전' };
-                  const tabWidths = {
-                    all: 'w-[52px]',
-                    scholarship: 'w-[67px]',
-                    contest: 'w-[67px]',
-                  };
-                  const isActive = activeTab === tabVal;
-                  return (
-                    <button
-                      key={tabVal}
-                      type="button"
-                      onClick={() => {
-                        setActiveTab(tabVal);
-                        setSelectedCategory(undefined);
-                      }}
-                      className={`${tabWidths[tabVal]} h-[43px] py-[9px] px-[10px] flex items-center justify-center font-semibold text-[18px] leading-[1.4] text-center transition-all cursor-pointer ${
-                        isActive
-                          ? 'text-slate-900 border-b-2 border-blue-500'
-                          : 'text-slate-300 border-b-2 border-transparent'
-                      }`}
-                    >
-                      {labels[tabVal]}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <Tab
+              tabs={[...EXPLORE_TABS]}
+              active={activeTab}
+              onChange={(tab) => {
+                setActiveTab(tab);
+                setSelectedCategory(undefined);
+              }}
+              variant="content"
+            />
           )}
         </div>
       }
@@ -333,44 +326,35 @@ export default function ExplorePage() {
         /* 검색창 포커스 시 노출할 피그마 규격 검색 오버레이 */
         <div className="flex-1 bg-white pt-[20px] pb-6 flex flex-col">
           {/* 최근 검색어 헤더 (왼쪽 20px 떨어져 있음) */}
-          <div className="flex items-center justify-between px-[20px]">
+          <div className="flex items-center px-5">
             <h4 className="font-semibold text-[16px] text-slate-800">최근 검색어</h4>
-            {recentSearches.length > 0 && (
-              <button
-                type="button"
-                onClick={clearRecentSearches}
-                className="text-xs text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-              >
-                전체 삭제
-              </button>
-            )}
           </div>
 
           {/* 최근 검색어 분기 처리 (여부 스페이싱 규격 반영) */}
           {recentSearches.length > 0 ? (
             <div className="mt-[24px]">
               {/* 최근 검색어 가로 스크롤 동글이 */}
-              <div className="flex gap-[8px] px-[20px] overflow-x-auto scrollbar-none">
+              <div className="scrollbar-none flex h-7 gap-2 overflow-x-auto px-5">
                 {recentSearches.map((item) => (
                   <span
                     key={item.searchId ?? item.keyword}
-                    className="inline-flex items-center gap-[4px] px-[12px] py-[8px] rounded-[30px] bg-blue-50 text-blue-500 text-[12px] font-medium leading-[1.4] h-[33px] hover:bg-blue-100 transition-colors cursor-pointer select-none whitespace-nowrap shrink-0"
+                    className="inline-flex h-7 shrink-0 cursor-pointer select-none items-center gap-1 whitespace-nowrap rounded-[30px] border border-[#B2D4FF] px-3 py-1 text-[14px] font-medium leading-[140%] text-[#67A6FF] transition-colors hover:bg-[#EFF6FF]"
                   >
                     <span onClick={() => handleSelectKeyword(item.keyword)}>{item.keyword}</span>
                     <button
                       type="button"
                       onClick={() => removeRecentSearch(item)}
-                      className="text-blue-400 hover:text-blue-600 flex items-center justify-center cursor-pointer w-[9.33px] h-[9.33px]"
+                      className="flex size-3.5 cursor-pointer items-center justify-center text-[#67A6FF]"
                       aria-label={`${item.keyword} 삭제`}
                     >
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="3"
+                        strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="w-[9.33px] h-[9.33px]"
+                        className="size-3.5"
                       >
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -381,15 +365,15 @@ export default function ExplorePage() {
               </div>
 
               {/* 추천 테마 레이아웃 (최근 검색어 칩 하단 24px 거리에 배치) */}
-              <div className="mt-[24px] bg-[#F5F9FF] px-[20px] py-[16px] flex flex-col gap-[16px]">
-                <h4 className="font-semibold text-[16px] text-slate-800">추천 테마</h4>
-                <div className="flex flex-wrap gap-[8px]">
+              <div className="mt-6 flex min-h-[142px] flex-col gap-4 bg-[#EFF6FF] p-5">
+                <h4 className="text-[16px] font-semibold leading-[140%] text-[#262626]">추천 테마</h4>
+                <div className="flex flex-wrap gap-x-1 gap-y-2">
                   {recommendedThemes.map((theme) => (
                     <button
                       key={theme}
                       type="button"
                       onClick={() => handleSelectKeyword(theme)}
-                      className="h-[30px] min-w-[90px] rounded-[100px] border border-blue-200 bg-white px-[10px] py-[5px] text-[14px] font-medium leading-[1.4] text-center text-blue-500 hover:bg-blue-50 transition-colors cursor-pointer select-none"
+                      className="h-7 cursor-pointer select-none rounded-[100px] border border-[#91C1FF] px-3 py-1 text-center text-[14px] font-medium leading-[140%] text-[#67A6FF] transition-colors hover:bg-white"
                     >
                       #{theme}
                     </button>
@@ -407,15 +391,15 @@ export default function ExplorePage() {
               </div>
 
               {/* 추천 테마 레이아웃 (최근 검색어 없음 문구 하단 32px 거리에 배치) */}
-              <div className="mt-[32px] bg-[#F5F9FF] px-[20px] py-[16px] flex flex-col gap-[16px]">
-                <h4 className="font-semibold text-[16px] text-slate-800">추천 테마</h4>
-                <div className="flex flex-wrap gap-[8px]">
+              <div className="mt-8 flex min-h-[142px] flex-col gap-4 bg-[#EFF6FF] p-5">
+                <h4 className="text-[16px] font-semibold leading-[140%] text-[#262626]">추천 테마</h4>
+                <div className="flex flex-wrap gap-x-1 gap-y-2">
                   {recommendedThemes.map((theme) => (
                     <button
                       key={theme}
                       type="button"
                       onClick={() => handleSelectKeyword(theme)}
-                      className="h-[30px] min-w-[90px] rounded-[100px] border border-blue-200 bg-white px-[10px] py-[5px] text-[14px] font-medium leading-[1.4] text-center text-blue-500 hover:bg-blue-50 transition-colors cursor-pointer select-none"
+                      className="h-7 cursor-pointer select-none rounded-[100px] border border-[#91C1FF] px-3 py-1 text-center text-[14px] font-medium leading-[140%] text-[#67A6FF] transition-colors hover:bg-white"
                     >
                       #{theme}
                     </button>
@@ -425,9 +409,9 @@ export default function ExplorePage() {
             </div>
           )}
 
-          {/* 실시간 공고 헤더 (추천 테마와 24px 거리 두고, 기준 표시와 8px 띄움) */}
+          {/* 실시간 인기 공고 헤더 */}
           <div className="mt-[24px] flex items-baseline gap-[8px] px-[20px]">
-            <h4 className="font-semibold text-[16px] leading-[1.4] text-slate-800">실시간 공고</h4>
+            <h4 className="font-semibold text-[16px] leading-[1.4] text-slate-800">실시간 인기 공고</h4>
             <span className="font-medium text-[12px] leading-[1.4] text-slate-400">
               {displayBaseTime}
             </span>
@@ -490,35 +474,34 @@ export default function ExplorePage() {
         <div className="flex flex-col flex-1 pb-4">
           {/* 공모전 탭 선택 시 노출할 분야 세부 카테고리 칩 스크롤 (메뉴와 24px 거리, 칩 간 11.5px 간격, 아래와 20px 격리) */}
           {activeTab === 'contest' && (
-            <div className="flex items-center gap-[11.5px] overflow-x-auto bg-white pl-[20px] pr-[20px] pt-[24px] pb-[20px] border-slate-100 scrollbar-none sticky top-[108px] z-10">
+            <div className="scrollbar-none sticky top-[135px] z-10 mt-6 flex h-9 items-center gap-[5px] overflow-x-auto bg-white px-5">
               {CATEGORIES.map((cat) => (
-                <div key={cat} className="shrink-0">
-                  <Chip
-                    label={cat}
-                    selected={
-                      cat === '전체' ? selectedCategory === undefined : selectedCategory === cat
-                    }
-                    onToggle={() => setSelectedCategory(cat === '전체' ? undefined : cat)}
-                  />
-                </div>
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() =>
+                    setSelectedCategory((current) => (current === cat ? undefined : cat))
+                  }
+                  className={`h-9 shrink-0 rounded-[100px] px-3 text-[14px] leading-[140%] ${
+                    selectedCategory === cat
+                      ? 'bg-[#0059FF] font-medium text-white'
+                      : 'border border-[#D9D9D9] font-normal tracking-[-0.244565px] text-[#8C8C8C]'
+                  }`}
+                >
+                  {cat}
+                </button>
               ))}
             </div>
           )}
 
           {/* 정렬 드롭다운 배치 (칩이 있을 경우 pt-0, 없을 경우 pt-[16px]) */}
-          <div
-            className={`flex items-center justify-between pl-[20px] pr-[20px] ${
-              activeTab === 'contest' ? 'pt-0' : 'pt-[16px]'
-            }`}
-          >
+          <div className={`flex items-center px-5 ${activeTab === 'contest' ? 'pt-5' : 'pt-4'}`}>
             <Dropdown
               options={SORT_OPTIONS}
               value={sortBy}
               onChange={(val) => setSortBy(val as 'deadline' | 'latest' | 'popular')}
+              variant="bottomSheet"
             />
-            <span className="text-xs text-slate-400 font-semibold">
-              {!isLoading && `총 ${postings.length}건`}
-            </span>
           </div>
 
           {/* 로딩 / 에러 / 빈 상태 / 결과 리스트 */}

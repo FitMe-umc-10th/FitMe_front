@@ -50,7 +50,7 @@ export default function Dropdown({
           fullWidth
             ? 'flex w-full items-center justify-between rounded-lg border border-gray-300 px-4 py-3 text-left'
             : isBottomSheet
-              ? 'flex h-5 w-[85px] items-center gap-0 text-[#262626]'
+              ? 'flex h-5 items-center gap-0.5 text-[#262626]'
             : 'flex h-5 items-center gap-1 text-[13px] font-semibold text-[#262626]'
         }
       >
@@ -58,7 +58,7 @@ export default function Dropdown({
           className={
             selected
               ? isBottomSheet
-                ? 'w-[63px] text-center text-[14px] font-normal leading-[140%] tracking-[-0.244565px]'
+                ? 'whitespace-nowrap text-[14px] font-normal leading-[140%] tracking-[-0.244565px]'
                 : ''
               : 'text-gray-400'
           }
@@ -91,11 +91,14 @@ export default function Dropdown({
           <button
             type="button"
             aria-label="정렬 옵션 닫기"
-            className="fixed inset-0 z-40 cursor-default bg-transparent"
+            className="fixed inset-0 z-40 cursor-default bg-black/50"
             onClick={() => setIsOpen(false)}
           />
 
-          <div className="fixed bottom-0 left-1/2 z-50 flex h-[182px] w-full max-w-[390px] -translate-x-1/2 flex-col items-start rounded-t-[30px] bg-white px-5 py-4">
+          <div
+            className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-[402px] -translate-x-1/2 flex-col items-start rounded-t-[30px] bg-white px-5 py-4"
+            style={{ height: 102 + options.length * 40 }}
+          >
             <div className="flex h-[15px] w-full items-start justify-center bg-white pb-[5px] pt-[10px]">
               <div className="h-0 w-7 rounded-full border-t-4 border-[#D9D9D9]" />
             </div>

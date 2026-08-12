@@ -1,16 +1,24 @@
 import { useState } from 'react';
+import defaultScholarshipThumbnail from '@/assets/illustrations/default-scholarship-thumbnail.svg';
+import type { PostingType } from '@/types/posting';
 
 type PostingThumbnailProps = {
   src?: string | null;
   alt: string;
   className?: string;
+  type?: PostingType;
 };
 
-export default function PostingThumbnail({ src, alt, className = 'h-full w-full' }: PostingThumbnailProps) {
+export default function PostingThumbnail({
+  src,
+  alt,
+  className = 'h-full w-full',
+  type,
+}: PostingThumbnailProps) {
   const [hasError, setHasError] = useState(false);
 
   if (!src || hasError) {
-    return <PostingThumbnailFallback className={className} />;
+    return <PostingThumbnailFallback className={className} type={type} />;
   }
 
   return (
@@ -24,7 +32,17 @@ export default function PostingThumbnail({ src, alt, className = 'h-full w-full'
   );
 }
 
-function PostingThumbnailFallback({ className }: { className: string }) {
+function PostingThumbnailFallback({ className, type }: { className: string; type?: PostingType }) {
+  if (type === 'SCHOLARSHIP') {
+    return (
+      <img
+        src={defaultScholarshipThumbnail}
+        alt="장학금 공고 기본 이미지"
+        className={`${className} object-cover`}
+      />
+    );
+  }
+
   return (
     <div
       className={`${className} flex items-center justify-center bg-[#E6EEF8] text-[13px] font-bold text-[#9AA6B2]`}

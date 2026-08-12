@@ -1,13 +1,13 @@
 import type { Posting } from './posting';
 
 export type HistoryStatus =
-  | 'PENDING_RESULT'
-  | 'DOCUMENT_PASSED'
-  | 'FINAL_PASSED'
   | 'NONE'
   | 'DRAFT'
+  | 'PENDING_RESULT'
   | 'IN_PROGRESS'
-  | 'DOCUMENT_PASS';
+  | 'DOCUMENT_PASSED'
+  | 'DOCUMENT_PASS'
+  | 'FINAL_PASSED';
 
 // 1. 목록 조회 전용 Item
 export interface UserApplicationListItem {

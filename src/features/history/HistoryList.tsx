@@ -1,16 +1,52 @@
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Layout, Header, TabBar, Tab } from '@/shared/components';
+import { getHistoryList, updateHistoryStatus } from '@/apis/history';
 import organizationIcon from '@/assets/icons/organization.svg';
+import { Layout, Tab, TabBar } from '@/shared/components';
 import EmptyState from '@/shared/components/EmptyState';
 import { useModalStore } from '@/store/modalStore';
 import { useToastStore } from '@/store/toastStore';
-import { getHistoryList, updateHistoryStatus } from '@/apis/history';
-
-import type { UserApplicationListItem, HistoryStatus } from '@/types/history';
+import type { HistoryStatus, UserApplicationListItem } from '@/types/history';
 
 type TabType = 'IN_PROGRESS' | 'FINAL_PASSED';
+type DisplayStatus = 'PENDING_RESULT' | 'DOCUMENT_PASSED' | 'FINAL_PASSED';
+
+const STATUS_OPTIONS = [
+  { label: '결과 대기', value: 'PENDING_RESULT' },
+  { label: '서류 합격', value: 'DOCUMENT_PASSED' },
+  { label: '최종 합격', value: 'FINAL_PASSED' },
+] as const satisfies ReadonlyArray<{ label: string; value: HistoryStatus }>;
+
+const STATUS_STYLE: Record<DisplayStatus, { label: string; pill: string; selected: string }> = {
+  PENDING_RESULT: {
+    label: '결과 대기',
+    pill: 'h-6 w-[54px] border-[#BFBFBF] text-[#8C8C8C]',
+    selected: 'bg-[#F2F2F2] text-[#8C8C8C]',
+  },
+  DOCUMENT_PASSED: {
+    label: '서류 합격',
+    pill: 'h-[26px] w-14 border-[#A7E0FF] text-[#069AFD]',
+    selected: 'bg-[#EEFAFF] text-[#069AFD]',
+  },
+  FINAL_PASSED: {
+    label: '최종 합격',
+    pill: 'h-6 w-[54px] border-[#CEB8FF] text-[#8D54FF]',
+    selected: 'bg-[#F0EEFF] text-[#8D54FF]',
+  },
+};
+
+const normalizeStatus = (status: HistoryStatus): DisplayStatus => {
+  switch (status) {
+    case 'DOCUMENT_PASS':
+    case 'DOCUMENT_PASSED':
+      return 'DOCUMENT_PASSED';
+    case 'FINAL_PASSED':
+      return 'FINAL_PASSED';
+    default:
+      return 'PENDING_RESULT';
+  }
+};
 
 export default function HistoryList() {
   const navigate = useNavigate();
@@ -18,50 +54,38 @@ export default function HistoryList() {
   const openModal = useModalStore((state) => state.openModal);
   const closeModal = useModalStore((state) => state.closeModal);
   const showToast = useToastStore((state) => state.show);
-
   const [activeTab, setActiveTab] = useState<TabType>('IN_PROGRESS');
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
 
-  // 이력 데이터 조회 (쿼리 파라미터 tab, page, size 전달)
   const { data: histories = [], isLoading } = useQuery<UserApplicationListItem[]>({
     queryKey: ['historyList', activeTab],
     queryFn: () => getHistoryList({ tab: activeTab, page: 0, size: 15 }),
   });
 
-  // 상태 변경 Mutation
   const updateStatusMutation = useMutation({
-    mutationFn: ({
-      userApplicationsId,
-      status,
-    }: {
-      userApplicationsId: number;
-      status: HistoryStatus;
-    }) => updateHistoryStatus(userApplicationsId, status),
+    mutationFn: ({ userApplicationsId, status }: { userApplicationsId: number; status: HistoryStatus }) =>
+      updateHistoryStatus(userApplicationsId, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['historyList'] });
+      void queryClient.invalidateQueries({ queryKey: ['historyList'] });
       showToast('상태가 성공적으로 변경되었습니다.', 'success');
     },
     onError: () => {
       openModal({
         title: '상태 변경에 실패했어요',
         description: '네트워크를 확인하고 다시 시도해주세요.',
-        buttons: [
-          {
-            label: '확인',
-            onClick: closeModal,
-            variant: 'primary',
-          },
-        ],
+        buttons: [{ label: '확인', onClick: closeModal, variant: 'primary' }],
       });
     },
   });
 
-  // 바깥 영역 클릭 시 드롭다운 닫기
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (listRef.current && !listRef.current.contains(event.target as Node)) {
         setOpenDropdownId(null);
       }
     };
@@ -69,64 +93,23 @@ export default function HistoryList() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 탭 필터링 (배열 가드 포함)
-  const filteredHistories = (Array.isArray(histories) ? histories : []).filter((item) => {
-    if (activeTab === 'FINAL_PASSED') {
-      return item.status === 'FINAL_PASSED';
-    }
-    // IN_PROGRESS 탭에는 최종합격이 아닌 모든 건(DRAFT, IN_PROGRESS, DOCUMENT_PASS)이 노출됨
-    return item.status !== 'FINAL_PASSED';
-  });
+  const filteredHistories = histories.filter((item) =>
+    activeTab === 'FINAL_PASSED' ? item.status === 'FINAL_PASSED' : item.status !== 'FINAL_PASSED',
+  );
 
   const tabs = [
     { label: '결과 대기', value: 'IN_PROGRESS' as const },
     { label: '최종 합격', value: 'FINAL_PASSED' as const },
   ];
 
-  const STATUS_OPTIONS = [
-    { label: '결과 대기', value: 'PENDING_RESULT' as const },
-    { label: '서류 합격', value: 'DOCUMENT_PASSED' as const },
-    { label: '최종 합격', value: 'FINAL_PASSED' as const },
-  ];
-
-  const getStatusLabel = (status: HistoryStatus) => {
-    switch (status) {
-      case 'PENDING_RESULT':
-      case 'IN_PROGRESS':
-        return '결과 대기';
-      case 'DOCUMENT_PASSED':
-      case 'DOCUMENT_PASS':
-        return '서류 합격';
-      case 'FINAL_PASSED':
-        return '최종 합격';
-      case 'DRAFT':
-      case 'NONE':
-        return '작성중';
-      default:
-        return '결과 대기';
-    }
-  };
-
-  const getStatusButtonClass = (status: HistoryStatus) => {
-    switch (status) {
-      case 'PENDING_RESULT':
-      case 'IN_PROGRESS':
-        return 'border border-slate-200 text-slate-600 bg-white hover:bg-slate-50';
-      case 'DOCUMENT_PASSED':
-      case 'DOCUMENT_PASS':
-        return 'border border-blue-200 text-blue-500 bg-white hover:bg-blue-50/30';
-      case 'FINAL_PASSED':
-        return 'border border-blue-500 text-blue-600 bg-blue-50/50 hover:bg-blue-100/50';
-      case 'DRAFT':
-      case 'NONE':
-      default:
-        return 'border border-slate-200 text-slate-400 bg-white hover:bg-slate-50';
-    }
-  };
-
   return (
-    <Layout header={<Header title="이력" />} tabBar={<TabBar />} className="bg-slate-50/50">
-      <Tab tabs={tabs} active={activeTab} onChange={(val) => setActiveTab(val)} />
+    <Layout tabBar={<TabBar />} className="bg-white">
+      <div className="bg-white pt-[37px]">
+        <header className="mb-5 flex h-7 w-full items-center px-5">
+          <h1 className="w-[35px] text-center text-[20px] font-semibold leading-[140%] text-[#000B24]">이력</h1>
+        </header>
+        <Tab tabs={tabs} active={activeTab} onChange={setActiveTab} />
+      </div>
 
       {isLoading ? (
         <div className="flex h-64 items-center justify-center">
@@ -135,122 +118,105 @@ export default function HistoryList() {
       ) : filteredHistories.length === 0 ? (
         <div className="pt-[170px]">
           <EmptyState
-            message={
-              activeTab === 'IN_PROGRESS'
-                ? '결과 대기중인 공고가 없어요'
-                : '최종 합격 한 공고가 없어요'
-            }
+            message={activeTab === 'IN_PROGRESS' ? '결과 대기중인 공고가 없어요' : '최종 합격 한 공고가 없어요'}
             subMessage={
               activeTab === 'IN_PROGRESS'
                 ? '나에게 딱 맞는 장학금과 공모전을\n탐색 탭에서 찾아보세요!'
                 : '진행 중인 공고 상태를 최종 합격으로\n바꿔 나의 이력을 관리해봐요.'
             }
             illustration="clock"
-            cta={
-              activeTab === 'IN_PROGRESS'
-                ? {
-                    label: '공고 보러 가기',
-                    onClick: () => navigate('/explore'),
-                  }
-                : undefined
-            }
+            cta={activeTab === 'IN_PROGRESS' ? { label: '공고 보러 가기', onClick: () => navigate('/explore') } : undefined}
           />
         </div>
       ) : (
-        <div
-          className="grid grid-cols-2 gap-x-[14px] gap-y-[16px] px-[15px] py-[20px]"
-          ref={dropdownRef}
-        >
-          {filteredHistories.map((item) => (
-            <div
-              key={item.userApplicationId}
-              onClick={() => navigate(`/history/${item.userApplicationId}`)}
-              className="group relative w-[173px] h-[226.13px] bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer select-none overflow-visible"
-            >
-              {/* 상단: 공고 포스터 영역 */}
-              <div className="w-[173px] h-[102px] rounded-t-[16px] overflow-hidden relative bg-slate-50 flex-shrink-0 z-0">
-                {item.posterImageUrl ? (
-                  <img
-                    src={item.posterImageUrl}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-slate-400 text-[10px]">
-                    이미지 없음
-                  </div>
-                )}
-              </div>
+        <div ref={listRef} className="grid grid-cols-2 gap-x-4 gap-y-6 px-[14px] py-6">
+          {filteredHistories.map((item) => {
+            const status = normalizeStatus(item.status);
+            const style = STATUS_STYLE[status];
 
-              {/* 하단: 서로 침범하며 오버랩되는 흰색 콘텐츠 영역 */}
-              <div className="w-[173px] h-[152.13px] rounded-[16px] border-r border-b border-l border-slate-100 bg-white pt-[12px] pb-[12px] px-[12.43px] flex flex-col justify-between absolute bottom-0 left-0 z-10">
-                {/* 상단: 제목 레이아웃 (w-148.14, h-38.55) */}
-                <div className="w-[148.14px] h-[38.55px] flex flex-col gap-[2px] min-w-0">
-                  <h3 className="font-bold text-slate-800 text-[12px] leading-[1.3] tracking-[-0.24px] truncate group-hover:text-blue-600 transition-colors">
-                    {item.title || '제목 정보 없음'}
-                  </h3>
-                  <div className="flex items-center gap-[4px] text-[10px] text-slate-400 font-medium h-[15px] truncate">
-                    <img src={organizationIcon} alt="" aria-hidden="true" className="size-3.5 shrink-0" />
-                    <span className="truncate">{item.organizer || '기관 정보 없음'}</span>
-                  </div>
-                </div>
-
-                {/* 중간: 메모 박스 (w-146.07, h-42.36) */}
-                <div className="w-[146.07px] h-[42.36px] bg-[#f0f5ff]/70 border border-blue-50/20 rounded-[8px] pt-[5.18px] pr-[7.25px] pb-[5.18px] pl-[7.25px] flex items-center justify-start mx-auto overflow-hidden">
-                  <p className="text-[10px] text-slate-500 font-semibold leading-[1.3] line-clamp-2 text-left">
-                    {item.memo || '작성된 메모가 없습니다.'}
-                  </p>
-                </div>
-
-                {/* 하단: 상태 변경 버튼 및 드롭다운 (버튼과 메모박스 사이 12.43px 차이) */}
-                <div className="relative mt-[12.43px] flex justify-center">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenDropdownId(
-                        openDropdownId === item.userApplicationId ? null : item.userApplicationId,
-                      );
-                    }}
-                    className={`flex items-center justify-center h-7 px-3.5 rounded-full text-[11px] font-semibold transition-all duration-200 active:scale-95 cursor-pointer min-w-[70px] ${getStatusButtonClass(
-                      item.status,
-                    )}`}
-                  >
-                    {getStatusLabel(item.status)}
-                  </button>
-
-                  {/* 드롭다운 옵션 메뉴 */}
-                  {openDropdownId === item.userApplicationId && (
-                    <div className="absolute bottom-9 left-1/2 -translate-x-1/2 z-40 w-[100px] bg-white border border-slate-100 rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.12)] py-1 font-['Pretendard'] overflow-hidden">
-                      {STATUS_OPTIONS.map((statusOption) => (
-                        <button
-                          key={statusOption.value}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenDropdownId(null);
-                            updateStatusMutation.mutate({
-                              userApplicationsId: item.userApplicationId,
-                              status: statusOption.value,
-                            });
-                          }}
-                          className={`w-full py-2 text-center text-[11px] font-semibold transition-colors cursor-pointer
-                              ${
-                                item.status === statusOption.value
-                                  ? 'bg-blue-50/50 text-blue-600'
-                                  : 'text-slate-600 hover:bg-slate-50'
-                              }`}
-                        >
-                          {statusOption.label}
-                        </button>
-                      ))}
-                    </div>
+            return (
+              <article
+                key={item.userApplicationId}
+                onClick={() => navigate(`/history/${item.userApplicationId}`)}
+                className="relative flex h-[226px] w-[173px] cursor-pointer flex-col rounded-2xl bg-white shadow-[0_0_8px_rgba(0,0,0,0.08)]"
+              >
+                <div className="z-0 h-[102px] w-full shrink-0 overflow-hidden rounded-t-2xl bg-[#F2F2F2]">
+                  {item.posterImageUrl ? (
+                    <img src={item.posterImageUrl} alt={item.title} className="size-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="flex size-full items-center justify-center text-[10px] text-[#A5A5A5]">이미지 없음</div>
                   )}
                 </div>
-              </div>
-            </div>
-          ))}
+
+                <div className="relative z-10 -mt-7 flex h-[152px] w-full shrink-0 flex-col items-center rounded-2xl bg-white pb-3">
+                  <div className="flex h-[116px] w-full flex-col items-center justify-center gap-[10px] rounded-t-2xl px-[12px] py-[12px]">
+                    <div className="h-[39px] w-full min-w-0">
+                      <h2 className="truncate text-[14px] font-semibold leading-[140%] tracking-[-0.241437px] text-[#1E1E1E]">
+                        {item.title || '제목 정보 없음'}
+                      </h2>
+                      <div className="mt-0.5 flex h-[17px] items-center gap-1 text-[10px] font-medium leading-[160%] text-[#A5A5A5]">
+                        <img src={organizationIcon} alt="" aria-hidden="true" className="size-2.5 shrink-0 opacity-70" />
+                        <span className="truncate">{item.organizer || '기관 정보 없음'}</span>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`flex w-[146px] items-center rounded-lg bg-[#EFF6FF] px-[7px] py-[5px] ${
+                        item.memo ? 'h-[42px]' : 'h-[26px]'
+                      }`}
+                    >
+                      <p className={`${item.memo ? 'line-clamp-2' : 'truncate'} w-full text-[10px] font-medium leading-[160%] text-[#404040]`}>
+                        {item.memo || '탭하여 메모를 남겨보세요'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="relative flex h-6 justify-center">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenDropdownId(openDropdownId === item.userApplicationId ? null : item.userApplicationId);
+                      }}
+                      className={`flex items-center justify-center rounded-full border bg-black/[0.004] text-[10px] font-medium leading-[160%] ${style.pill}`}
+                    >
+                      {style.label}
+                    </button>
+
+                    {openDropdownId === item.userApplicationId && (
+                      <div className="absolute left-1/2 top-[30px] z-40 flex h-[105px] w-[109px] -translate-x-1/2 flex-col overflow-hidden rounded-lg border border-[#F2F2F2] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
+                        {STATUS_OPTIONS.map((option) => {
+                          const optionStyle = STATUS_STYLE[option.value];
+                          const selected = option.value === status;
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setOpenDropdownId(null);
+                                if (!selected) {
+                                  updateStatusMutation.mutate({
+                                    userApplicationsId: item.userApplicationId,
+                                    status: option.value,
+                                  });
+                                }
+                              }}
+                              className={`flex h-[35px] w-full shrink-0 items-center justify-center border-b border-[#F2F2F2] text-[12px] font-medium leading-[160%] last:border-b-0 ${
+                                selected ? optionStyle.selected : 'bg-white text-[#A5A5A5]'
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
     </Layout>
