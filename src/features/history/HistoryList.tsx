@@ -138,7 +138,7 @@ export default function HistoryList() {
               <article
                 key={item.userApplicationId}
                 onClick={() => navigate(`/history/${item.userApplicationId}`)}
-                className="relative flex h-[226px] w-[173px] cursor-pointer flex-col rounded-2xl bg-white shadow-[0_0_8px_rgba(0,0,0,0.08)]"
+                className="relative flex h-[226px] w-[173px] cursor-pointer flex-col rounded-2xl bg-white shadow-[0_0_8px_0_#00000014]"
               >
                 <div className="z-0 h-[102px] w-full shrink-0 overflow-hidden rounded-t-2xl bg-[#F2F2F2]">
                   {item.posterImageUrl ? (

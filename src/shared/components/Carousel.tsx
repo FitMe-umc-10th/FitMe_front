@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useState, useEffect, useMemo } from 'react';
 
 interface CarouselProps {
   children: React.ReactNode;
@@ -21,10 +21,20 @@ export default function Carousel({
 }: CarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const interactionTimeoutRef = useRef<number | null>(null);
+  const activeItemKeyRef = useRef<React.Key | null>(null);
+  const childKeysRef = useRef<React.Key[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
-  const childrenArray = React.Children.toArray(children).filter(Boolean);
+  const childrenArray = useMemo(() => React.Children.toArray(children).filter(Boolean), [children]);
   const count = childrenArray.length;
+  const childKeys = useMemo(
+    () => childrenArray.map((child, index) =>
+      React.isValidElement(child) && child.key !== null ? child.key : index,
+    ),
+    [childrenArray],
+  );
+  const childKeySignature = childKeys.join('|');
+  childKeysRef.current = childKeys;
   const indexStorageKey = storageKey ? `${storageKey}:index` : undefined;
   const scrollStorageKey = storageKey ? `${storageKey}:scrollLeft` : undefined;
 
@@ -62,6 +72,7 @@ export default function Carousel({
     container.scrollTo({ left: targetLeft, behavior });
     if (behavior === 'auto') {
       setCurrentIndex(targetIndex);
+      activeItemKeyRef.current = childKeysRef.current[targetIndex] ?? null;
     }
   }, [count, loop]);
 
@@ -89,13 +100,26 @@ export default function Carousel({
     return () => clearTimeout(timer);
   }, [count, getStoredIndex, getStoredScrollLeft, loop, scrollToIndex, spotlight]);
 
-  const updateCurrentIndex = (nextIndex: number) => {
+  const updateCurrentIndex = useCallback((nextIndex: number) => {
     setCurrentIndex(nextIndex);
+    activeItemKeyRef.current = childKeysRef.current[nextIndex] ?? null;
 
     if (indexStorageKey) {
       window.sessionStorage.setItem(indexStorageKey, String(nextIndex));
     }
-  };
+  }, [indexStorageKey]);
+
+  useEffect(() => {
+    const activeKey = activeItemKeyRef.current;
+    if (activeKey === null || count === 0) return;
+
+    const preservedIndex = childKeysRef.current.findIndex((key) => key === activeKey);
+    if (preservedIndex < 0 || preservedIndex === currentIndex) return;
+
+    setCurrentIndex(preservedIndex);
+    const frameId = window.requestAnimationFrame(() => scrollToIndex(preservedIndex));
+    return () => window.cancelAnimationFrame(frameId);
+  }, [childKeySignature, count, currentIndex, scrollToIndex]);
 
   const pauseAutoPlay = () => {
     if (interactionTimeoutRef.current) {
@@ -229,7 +253,7 @@ export default function Carousel({
       container.removeEventListener('scroll', handleScrollEvent);
       clearTimeout(scrollTimeout);
     };
-  }, [loop, count, spotlight]);
+  }, [loop, count, spotlight, updateCurrentIndex]);
 
   useEffect(() => {
     if (!autoPlayInterval || autoPlayInterval <= 0 || count <= 1 || isInteracting) return;
@@ -275,13 +299,13 @@ export default function Carousel({
   };
 
   // 무한 루프 시 좌우 여백을 두어 인접 카드가 Figma 시안처럼 살짝 보이도록 맞춘다.
-  const paddingClass = loop ? `${spotlight ? 'px-[35px] py-5' : 'px-[38px] py-3'}` : 'pb-1';
+  const paddingClass = loop ? `${spotlight ? 'px-0' : 'px-[38px] py-3'}` : 'pb-1';
   const gapClass = spotlight ? 'gap-3' : 'gap-4';
   const wrapperClass = 'w-full';
   const scrollPaddingStyle = loop
     ? {
-        scrollPaddingLeft: spotlight ? '35px' : '38px',
-        scrollPaddingRight: spotlight ? '35px' : '38px',
+        scrollPaddingLeft: spotlight ? '0px' : '38px',
+        scrollPaddingRight: spotlight ? '0px' : '38px',
       }
     : undefined;
 
@@ -305,8 +329,10 @@ export default function Carousel({
           const isActive = spotlight
             ? index === activeDisplayIndex
             : realIndex === currentIndex;
+          // 267.5px 고정 슬롯: (292 - 243) / 2 여백과 12px gap이 상쇄되어
+          // 활성 카드와 양옆 카드의 실제 외곽 간격은 항상 12px로 유지된다.
           const spotlightClass = spotlight
-            ? `transform-gpu transition-all duration-300 ease-out ${
+            ? `flex h-[239px] w-[267.5px] transform-gpu items-center justify-center ${
                 isActive ? 'z-10 opacity-100' : 'z-0 opacity-100'
               }`
             : '';
@@ -316,9 +342,10 @@ export default function Carousel({
               key={index}
               className={`${loop ? 'snap-center flex-shrink-0' : 'snap-start flex-shrink-0'} ${spotlightClass}`}
             >
-              {showIndicator && React.isValidElement(child)
-                ? React.cloneElement(child as React.ReactElement<{ carouselIndexLabel?: string }>, {
-                    carouselIndexLabel: `${realIndex + 1}/${count}`,
+              {(showIndicator || spotlight) && React.isValidElement(child)
+                ? React.cloneElement(child as React.ReactElement<{ carouselIndexLabel?: string; carouselActive?: boolean }>, {
+                    ...(showIndicator ? { carouselIndexLabel: `${realIndex + 1}/${count}` } : {}),
+                    ...(spotlight ? { carouselActive: isActive } : {}),
                   })
                 : child}
             </div>

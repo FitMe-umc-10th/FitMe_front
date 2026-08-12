@@ -12,6 +12,7 @@ interface PostingCardProps {
   carouselIndexLabel?: string;
   onSaveFailure?: () => void;
   showSaveErrorToast?: boolean;
+  carouselActive?: boolean;
 }
 
 export default function PostingCard({
@@ -21,6 +22,7 @@ export default function PostingCard({
   carouselIndexLabel,
   onSaveFailure,
   showSaveErrorToast,
+  carouselActive = false,
 }: PostingCardProps) {
   const navigate = useNavigate();
   const heartButtonProps = {
@@ -43,7 +45,7 @@ export default function PostingCard({
     return (
       <div
         onClick={handleClick}
-        className="flex h-[204px] w-[162px] shrink-0 cursor-pointer select-none flex-col overflow-hidden rounded-2xl bg-white drop-shadow-[0_0_8px_rgba(0,0,0,0.08)] transition-all duration-200"
+        className="flex h-[204px] w-[162px] shrink-0 cursor-pointer select-none flex-col overflow-hidden rounded-2xl bg-white shadow-[0_0_8px_0_#00000014] transition-all duration-200"
       >
         <div className="relative h-[115px] w-[162px] shrink-0 overflow-hidden rounded-t-2xl bg-[#E6EEF8]">
           <PostingThumbnail src={posting.posterUrl} alt={posting.title} type={posting.type} />
@@ -74,7 +76,11 @@ export default function PostingCard({
     return (
       <div
         onClick={handleClick}
-        className="relative flex h-[202.16px] w-[243px] cursor-pointer select-none flex-col items-end justify-between overflow-hidden rounded-[13.3151px] bg-[#D9F0FF] px-[16.6438px] py-[13.3151px] transition-all duration-300 ease-out"
+        className={`relative flex cursor-pointer select-none flex-col items-end justify-between overflow-hidden bg-[#D9F0FF] ${
+          carouselActive
+            ? 'h-[239px] w-[292px] rounded-2xl px-5 py-4 shadow-[0_0_8px_rgba(0,0,0,0.08)]'
+            : 'h-[200.82px] w-[243px] rounded-[13.3151px] px-[16.6438px] py-[13.3151px]'
+        }`}
       >
         <div className="absolute inset-0 z-0 h-full w-full">
           <PostingThumbnail src={posting.posterUrl} alt={posting.title} type={posting.type} />
@@ -82,27 +88,31 @@ export default function PostingCard({
         </div>
 
         {carouselIndexLabel && (
-          <div className="relative z-10 flex h-[17px] w-[24.98px] items-center justify-center rounded-full bg-[#A5A5A5] px-[5px] text-center text-[8.32192px] font-normal leading-[17px] tracking-[-0.203525px] text-white">
+          <div className={`relative z-10 flex items-center justify-center rounded-full bg-[#A5A5A5] text-center font-normal text-white ${
+            carouselActive
+              ? 'h-5 w-7 px-[5px] text-[10px] leading-5 tracking-[-0.244565px]'
+              : 'h-[17px] w-[24.98px] px-[5px] text-[8.32192px] leading-[17px] tracking-[-0.203525px]'
+          }`}>
             {carouselIndexLabel}
           </div>
         )}
 
-        <div className="relative z-10 flex h-[91.96px] w-full flex-col items-start gap-[6.66px]">
-          <DayBadge deadline={posting.deadline} variant="glassDark" />
+        <div className={`relative z-10 flex w-full flex-col items-start ${carouselActive ? 'h-[107px] gap-2' : 'h-[90.62px] gap-[6.66px]'}`}>
+          <DayBadge deadline={posting.deadline} variant={carouselActive ? 'glass' : 'glassDark'} />
 
-          <div className="flex h-[61.3px] w-full flex-col items-start gap-[3.33px]">
-            <h3 className="line-clamp-2 h-[38px] w-full text-[13.3151px] font-semibold leading-[140%] text-white">
+          <div className={`flex w-full flex-col items-start ${carouselActive ? 'h-[72px] gap-1' : 'h-[61.3px] gap-[3.33px]'}`}>
+            <h3 className={`line-clamp-2 w-full font-semibold leading-[140%] text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.9)] ${carouselActive ? 'h-11 text-[16px]' : 'h-[38px] text-[13.3151px]'}`}>
               {posting.title}
             </h3>
 
             <div className="flex h-[19.97px] w-full items-center justify-between">
-              <div className="flex min-w-0 items-center gap-[4.16px] text-[8.32192px] font-medium leading-[160%] text-[#BFBFBF]">
-                <img src={organizationIcon} alt="" aria-hidden="true" className="size-[8.32px] shrink-0" />
+              <div className={`flex min-w-0 items-center font-medium leading-[160%] text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.9)] ${carouselActive ? 'gap-[5px] text-[10px]' : 'gap-[4.16px] text-[8.32192px]'}`}>
+                <img src={organizationIcon} alt="" aria-hidden="true" className={`${carouselActive ? 'size-2.5' : 'size-[8.32px]'} shrink-0 brightness-0 invert`} />
                 <span className="truncate">{posting.organization}</span>
               </div>
 
               <div className="flex size-6 shrink-0 items-center justify-center">
-                <HeartButton {...heartButtonProps} tone="muted" />
+                <HeartButton {...heartButtonProps} />
               </div>
             </div>
           </div>
@@ -114,7 +124,7 @@ export default function PostingCard({
   return (
     <div
       onClick={handleClick}
-      className="grid h-[128.01px] w-full max-w-[363px] cursor-pointer select-none grid-cols-[175.14px_187px] gap-0 overflow-hidden rounded-[16px] bg-white drop-shadow-[0_0_8px_rgba(0,0,0,0.08)] transition-all duration-200"
+      className="grid h-[128.01px] w-full max-w-[363px] cursor-pointer select-none grid-cols-[175.14px_187px] gap-0 overflow-hidden rounded-[16px] bg-white shadow-[0_0_8px_0_#00000014] transition-all duration-200"
     >
       <div className="h-[128.01px] overflow-hidden rounded-l-[16px] bg-[#E6EEF8]">
         <PostingThumbnail src={posting.posterUrl} alt={posting.title} type={posting.type} />
@@ -130,14 +140,14 @@ export default function PostingCard({
           </div>
         </div>
 
-        <div className="flex h-[39px] w-[163px] flex-col items-start gap-1">
-          <h3 className="h-5 w-[163px] truncate text-[14px] font-semibold leading-[140%] tracking-[-0.241437px] text-[#1E1E1E]">
+        <div className="flex h-[39px] w-[146px] flex-col items-start gap-1">
+          <h3 className="h-5 w-[146px] truncate text-[14px] font-semibold leading-[140%] tracking-[-0.241437px] text-[#1E1E1E]">
             {posting.title}
           </h3>
 
-          <div className="flex h-[15px] w-[163.35px] items-center gap-1 text-[10px] font-medium leading-[160%] text-[#A5A5A5]">
+          <div className="flex h-[15px] w-[146px] min-w-0 items-center gap-1 text-[10px] font-medium leading-[160%] text-[#A5A5A5]">
             <img src={organizationIcon} alt="" aria-hidden="true" className="size-[12.35px] shrink-0" />
-            <span className="w-[147px] truncate">{posting.organization}</span>
+            <span className="min-w-0 flex-1 truncate">{posting.organization}</span>
           </div>
         </div>
       </div>
