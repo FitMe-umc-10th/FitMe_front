@@ -195,11 +195,18 @@ function DetailInfoTabs({
 
 function DetailInfoList({ rows }: { rows: DetailInfoRow[] }) {
   return (
-    <dl className="space-y-3 py-5 text-[13px] leading-[1.6]">
+    <dl className="flex min-h-[98px] w-full flex-col items-start gap-2 pl-5 [font-family:Pretendard]">
       {rows.map((row) => (
-        <div key={row.label} className="grid grid-cols-[74px_1fr] gap-2">
-          <dt className="font-bold text-[#4C96FF]">{row.label}</dt>
-          <dd className="font-semibold text-[#333333]">{row.value}</dd>
+        <div
+          key={row.label}
+          className="flex w-[calc(100%_-_20px)] flex-col items-start gap-0.5"
+        >
+          <dt className="text-[14px] font-semibold leading-[20px] text-[#5184F9]">
+            {row.label}
+          </dt>
+          <dd className="w-full whitespace-pre-line break-words text-[14px] font-medium leading-[17px] text-[#262626]">
+            {row.value}
+          </dd>
         </div>
       ))}
     </dl>
@@ -520,7 +527,7 @@ export default function PostingDetailPage() {
                 </div>
               </section>
 
-              <section className="flex h-[164px] w-full flex-col items-start gap-7">
+              <section className="flex min-h-[164px] w-full flex-col items-start gap-7 pb-2">
                 <DetailInfoTabs activeTab={activeTab} onChange={setActiveTab} />
                 <DetailInfoContent activeTab={activeTab} posting={data} />
               </section>
