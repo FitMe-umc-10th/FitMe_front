@@ -83,29 +83,44 @@ export default function HistoryList() {
     { label: '최종 합격', value: 'FINAL_PASSED' as const },
   ];
 
+  const STATUS_OPTIONS = [
+    { label: '결과 대기', value: 'PENDING_RESULT' as const },
+    { label: '서류 합격', value: 'DOCUMENT_PASSED' as const },
+    { label: '최종 합격', value: 'FINAL_PASSED' as const },
+  ];
+
   const getStatusLabel = (status: HistoryStatus) => {
     switch (status) {
-      case 'DRAFT':
-        return '작성중';
+      case 'PENDING_RESULT':
       case 'IN_PROGRESS':
         return '결과 대기';
+      case 'DOCUMENT_PASSED':
       case 'DOCUMENT_PASS':
         return '서류 합격';
       case 'FINAL_PASSED':
         return '최종 합격';
+      case 'DRAFT':
+      case 'NONE':
+        return '작성중';
+      default:
+        return '결과 대기';
     }
   };
 
   const getStatusButtonClass = (status: HistoryStatus) => {
     switch (status) {
-      case 'DRAFT':
-        return 'border border-slate-200 text-slate-400 bg-white hover:bg-slate-50';
+      case 'PENDING_RESULT':
       case 'IN_PROGRESS':
         return 'border border-slate-200 text-slate-600 bg-white hover:bg-slate-50';
+      case 'DOCUMENT_PASSED':
       case 'DOCUMENT_PASS':
         return 'border border-blue-200 text-blue-500 bg-white hover:bg-blue-50/30';
       case 'FINAL_PASSED':
         return 'border border-blue-500 text-blue-600 bg-blue-50/50 hover:bg-blue-100/50';
+      case 'DRAFT':
+      case 'NONE':
+      default:
+        return 'border border-slate-200 text-slate-400 bg-white hover:bg-slate-50';
     }
   };
 
@@ -202,34 +217,32 @@ export default function HistoryList() {
                       item.status,
                     )}`}
                   >
-                    {item.status === 'DRAFT' ? '-' : getStatusLabel(item.status)}
+                    {getStatusLabel(item.status)}
                   </button>
 
                   {/* 드롭다운 옵션 메뉴 */}
                   {openDropdownId === item.userApplicationId && (
                     <div className="absolute bottom-9 left-1/2 -translate-x-1/2 z-40 w-[100px] bg-white border border-slate-100 rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.12)] py-1 font-['Pretendard'] overflow-hidden">
-                      {(
-                        ['DRAFT', 'IN_PROGRESS', 'DOCUMENT_PASS', 'FINAL_PASSED'] as HistoryStatus[]
-                      ).map((statusOption) => (
+                      {STATUS_OPTIONS.map((statusOption) => (
                         <button
-                          key={statusOption}
+                          key={statusOption.value}
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             setOpenDropdownId(null);
                             updateStatusMutation.mutate({
                               userApplicationsId: item.userApplicationId,
-                              status: statusOption,
+                              status: statusOption.value,
                             });
                           }}
                           className={`w-full py-2 text-center text-[11px] font-semibold transition-colors cursor-pointer
                               ${
-                                item.status === statusOption
+                                item.status === statusOption.value
                                   ? 'bg-blue-50/50 text-blue-600'
                                   : 'text-slate-600 hover:bg-slate-50'
                               }`}
                         >
-                          {statusOption === 'DRAFT' ? '작성중' : getStatusLabel(statusOption)}
+                          {statusOption.label}
                         </button>
                       ))}
                     </div>
