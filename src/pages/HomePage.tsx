@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getDeadlineNotificationCount } from '@/apis/deadlineNotification';
+import {
+  deadlineNotificationQueryKeys,
+  getDeadlineNotificationCount,
+} from '@/apis/deadlineNotification';
 import { getHomePostingFeed } from '@/apis/posting';
 import { postingQueryKeys } from '@/apis/postingQueryKeys';
 import notificationBellIcon from '@/assets/icons/notification-bell.svg';
@@ -106,7 +109,7 @@ export default function HomePage() {
     queryFn: getHomePostingFeed,
   });
   const { data: unreadNotificationCount = 0 } = useQuery({
-    queryKey: ['deadlineNotifications', 'unreadCount'],
+    queryKey: deadlineNotificationQueryKeys.unreadCount,
     queryFn: getDeadlineNotificationCount,
   });
 

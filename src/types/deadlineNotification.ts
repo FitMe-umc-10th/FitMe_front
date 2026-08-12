@@ -7,8 +7,8 @@ export interface NotificationDTO {
   createdAt: string;
   displayTime: string;
   isRead: boolean;
-  postId: number;
-  postType?: string;
+  postId: number | null;
+  postType: string | null;
 }
 
 export interface DeadlineNotificationDTO {
