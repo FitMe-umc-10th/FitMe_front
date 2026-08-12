@@ -7,6 +7,7 @@ import type {
   HomePostingFeed,
   Posting,
   PostingType,
+  RecentViewedPostingFeed,
 } from '@/types/posting';
 import { axiosInstance } from '@/apis/axiosInstance';
 import {
@@ -84,12 +85,12 @@ const getSettledPostings = (result: PromiseSettledResult<Posting[]>) =>
 
 type HomePostingFeedResults = readonly [
   PromiseSettledResult<Posting[]>,
-  PromiseSettledResult<Posting[]>,
+  PromiseSettledResult<RecentViewedPostingFeed>,
   PromiseSettledResult<Posting[]>,
   PromiseSettledResult<Posting[]>,
 ];
 
-const throwIfEveryPostingRequestFailed = (results: readonly PromiseSettledResult<Posting[]>[]) => {
+const throwIfEveryPostingRequestFailed = (results: readonly PromiseSettledResult<unknown>[]) => {
   const firstRejectedResult = results.find((result) => result.status === 'rejected');
 
   if (results.every((result) => result.status === 'rejected') && firstRejectedResult?.status === 'rejected') {
@@ -104,7 +105,9 @@ const mapHomePostingFeedResults = ([
   contestDeadlineResult,
 ]: HomePostingFeedResults): HomePostingFeed => ({
   popularPostings: getSettledPostings(popularResult),
-  recentViewedPostings: getSettledPostings(recentViewedResult),
+  recentViewedName: recentViewedResult.status === 'fulfilled' ? recentViewedResult.value.name : '',
+  recentViewedPostings:
+    recentViewedResult.status === 'fulfilled' ? recentViewedResult.value.postings : [],
   deadlinePostings: {
     SCHOLARSHIP: getSettledPostings(scholarshipDeadlineResult),
     CONTEST: getSettledPostings(contestDeadlineResult),
@@ -129,7 +132,7 @@ export const getPopularPostings = async ({
 export const getRecentViewedPostings = async ({
   page = 0,
   size = DEFAULT_HOME_RECENT_VIEWED_SIZE,
-}: GetRecentViewedPostingsParams = {}): Promise<Posting[]> => {
+}: GetRecentViewedPostingsParams = {}): Promise<RecentViewedPostingFeed> => {
   const { data } = await axiosInstance.get(`${POSTS_ENDPOINT}/recent-views`, {
     params: {
       page,
@@ -138,7 +141,10 @@ export const getRecentViewedPostings = async ({
   });
   const result = unwrapApiData<ApiRecentViewedPostingsResponse>(data);
 
-  return mapApiPostingList(result.posts ?? []);
+  return {
+    name: result.name,
+    postings: mapApiPostingList(result.posts ?? []),
+  };
 };
 
 export const getClosingSoonPostings = async ({

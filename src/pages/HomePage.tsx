@@ -11,6 +11,7 @@ import EmptyState from '@/shared/components/EmptyState';
 import PostingCard from '@/shared/components/PostingCard';
 import Skeleton from '@/shared/components/Skeleton';
 import { ErrorState, Header, Layout, Logo, Tab, TabBar } from '@/shared/components';
+import { useAuthStore } from '@/store/authStore';
 import type { Posting, PostingType } from '@/types/posting';
 
 type SectionHeaderProps = {
@@ -96,6 +97,7 @@ function HorizontalPostingList({ postings }: { postings: Posting[] }) {
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const storedUserName = useAuthStore((state) => state.userName);
   const [activeDeadlineTab, setActiveDeadlineTab] = useState<PostingType>('SCHOLARSHIP');
   const [isRecentViewedExpanded, setIsRecentViewedExpanded] = useState(false);
 
@@ -109,6 +111,8 @@ export default function HomePage() {
   });
 
   const deadlinePostings = data?.deadlinePostings[activeDeadlineTab] ?? [];
+  const fullUserName = (data?.recentViewedName || storedUserName).trim();
+  const recentViewedName = fullUserName.length > 1 ? fullUserName.slice(1) : fullUserName || '사용자';
   const recentViewedPostings = data?.recentViewedPostings ?? [];
   const hasRecentViewedPostings = recentViewedPostings.length > 0;
   const recentViewedSectionHeight = isRecentViewedExpanded
@@ -167,7 +171,7 @@ export default function HomePage() {
           } ${recentViewedSectionHeight}`}
         >
           <SectionHeader
-            title="현수님의 최근 조회 목록"
+            title={`${recentViewedName}님의 최근 조회 목록`}
             actionLabel={isRecentViewedExpanded ? '작게 보기' : '더보기'}
             compact={isRecentViewedListMode}
             onAction={() => {

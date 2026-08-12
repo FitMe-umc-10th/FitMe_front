@@ -82,6 +82,7 @@ const getPostingOrganization = (posting: ApiPostingSummary | ApiPostingDetail) =
   ) ?? '기관 정보 없음';
 
 export interface ApiRecentViewedPostingsResponse {
+  name: string;
   hasNext: boolean;
   nextCursor?: number | null;
   posts: ApiPostingSummary[];
