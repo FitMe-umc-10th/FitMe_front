@@ -47,7 +47,7 @@ export default function SavedPage() {
     <Layout tabBar={<TabBar />} className="bg-white">
       {isFailureToastOpen && <SavedFailureToast onClose={() => setIsFailureToastOpen(false)} />}
 
-      <div className="bg-white pt-11">
+      <div className="bg-white pt-[37px]">
         <div className="flex h-[91px] shrink-0 flex-col items-start gap-5">
           <header className="flex h-7 w-full items-center px-5">
             <h1 className="w-[35px] text-center text-[20px] font-semibold leading-[140%] text-[#000B24]">저장</h1>

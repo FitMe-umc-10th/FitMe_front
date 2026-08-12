@@ -487,11 +487,11 @@ export default function PostingDetailPage() {
                     <DayBadge deadline={data.deadline} variant="detail" />
                   </div>
 
-                  <div className="flex w-full flex-col items-start gap-2">
+                  <div className="flex w-full flex-col items-start">
                     <h2 className="w-full text-[20px] font-semibold leading-[140%] text-[#000B24]">
                       {data.title}
                     </h2>
-                    <div className="flex w-full items-center justify-between gap-3">
+                    <div className="mt-0.5 flex w-full items-center justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-1 text-[10px] font-medium leading-[160%] text-[#8C8C8C]">
                         <img
                           src={organizationIcon}
