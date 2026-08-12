@@ -469,7 +469,7 @@ export default function PostingDetailPage() {
         {data && (
           <article className="flex flex-col items-start gap-6">
             <div className="h-[200px] w-full bg-[#E8EEF5]">
-              <PostingThumbnail src={data.posterUrl} alt={data.title} />
+              <PostingThumbnail src={data.posterUrl} alt={data.title} type={data.type} />
             </div>
 
             <div className="flex min-h-[422.5px] w-full flex-col items-center justify-center gap-5">
