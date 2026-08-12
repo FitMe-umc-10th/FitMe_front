@@ -6,7 +6,7 @@ import { Logo } from '@/shared/components/Logo';
 import { useToastStore } from '@/store/toastStore';
 import { signup, sendEmailCode, verifyEmailCode } from '@/apis/auth';
 import TermsAgreement from '@/shared/components/TermsAgreement';
-
+import eyeIcon from '@/assets/icons/eye.svg';
 import {
   signupSchema,
   emailSchema,
@@ -272,7 +272,12 @@ export default function SignupPage() {
                     onClick={() => setShowPw((v) => !v)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
                   >
-                    {showPw ? '🙈' : '👁️'}
+                    <img
+                      src={eyeIcon}
+                      alt=""
+                      aria-hidden="true"
+                      className={`size-5 ${showPw ? 'opacity-100' : 'opacity-40'}`}
+                    />
                   </button>
                 </div>
                 {fieldState.error && (
@@ -305,7 +310,12 @@ export default function SignupPage() {
                     onClick={() => setShowPwConfirm((v) => !v)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
                   >
-                    {showPwConfirm ? '🙈' : '👁️'}
+                    <img
+                      src={eyeIcon}
+                      alt=""
+                      aria-hidden="true"
+                      className={`size-5 ${showPwConfirm ? 'opacity-100' : 'opacity-40'}`}
+                    />
                   </button>
                 </div>
                 {fieldState.error && (
