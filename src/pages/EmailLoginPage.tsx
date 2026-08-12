@@ -4,6 +4,7 @@ import { Logo } from '@/shared/components/Logo';
 import { useAuthStore } from '@/store/authStore';
 import { useToastStore } from '@/store/toastStore';
 import { login } from '@/apis/auth';
+import eyeIcon from '@/assets/icons/eye.svg';
 
 export default function EmailLoginPage() {
   const navigate = useNavigate();
@@ -67,7 +68,12 @@ export default function EmailLoginPage() {
             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
             aria-label="비밀번호 보기"
           >
-            {showPassword ? '🙈' : '👁️'}
+            <img
+              src={eyeIcon}
+              alt=""
+              aria-hidden="true"
+              className={`size-5 ${showPassword ? 'opacity-100' : 'opacity-40'}`}
+            />
           </button>
         </div>
 
