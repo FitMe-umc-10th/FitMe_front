@@ -28,6 +28,10 @@ export default function SavedPage() {
   const [activeTab, setActiveTab] = useState<SavedTab>('ALL');
   const [sort, setSort] = useState<SavedSortType>('DEADLINE');
   const [isFailureToastOpen, setIsFailureToastOpen] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
   const savedPostingsParams: GetSavedPostingsParams = {
     category: activeTab,
     sort,
