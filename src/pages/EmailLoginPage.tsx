@@ -18,11 +18,14 @@ export default function EmailLoginPage() {
   const [password, setPassword] = useState('');
   const [keepLogin, setKeepLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // 이메일·비번 둘 다 1자 이상이어야 버튼 활성화
   const canSubmit = email.trim() !== '' && password.trim() !== '';
 
   const handleLogin = async () => {
+    if (isLoading) return; // 이미 요청 중이면 무시
+    setIsLoading(true);
     try {
       const { accessToken, member } = await login({ email, password, keepLogin });
       setAccessToken(accessToken);
@@ -32,6 +35,8 @@ export default function EmailLoginPage() {
       navigate('/');
     } catch {
       toastError('로그인에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,12 +99,12 @@ export default function EmailLoginPage() {
         <button
           type="button"
           onClick={handleLogin}
-          disabled={!canSubmit}
+          disabled={!canSubmit || isLoading}
           className={`h-14 w-full rounded-xl text-[18px] font-semibold text-white transition-colors ${
-            canSubmit ? 'bg-[#0059FF]' : 'bg-[#D9D9D9]'
+            canSubmit && !isLoading ? 'bg-[#0059FF]' : 'bg-[#D9D9D9]'
           }`}
         >
-          로그인
+          {isLoading ? '로그인 중...' : '로그인'}
         </button>
       </div>
     </div>
