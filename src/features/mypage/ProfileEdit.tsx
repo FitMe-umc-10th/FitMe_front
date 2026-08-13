@@ -14,6 +14,8 @@ import { dataURLtoFile } from '@/shared/utils/file';
 import defaultPersonImg from '@/assets/illustrations/default_person.svg';
 import chevronLeftIcon from '@/assets/icons/chevron-left.svg';
 import cameraIcon from '@/assets/icons/camera_img.svg';
+import SearchableSelect from '@/shared/components/SearchableSelect';
+import { REGION_OPTIONS } from '@/constants/regions';
 
 const AVAILABLE_FIELDS = [
   { id: 1, name: '마케팅' },
@@ -23,13 +25,7 @@ const AVAILABLE_FIELDS = [
   { id: 5, name: '어학' },
   { id: 6, name: '영상편집' },
 ];
-const AVAILABLE_REGIONS = [
-  '서울특별시 전체',
-  '경기도 전체',
-  '인천광역시 전체',
-  '부산광역시 전체',
-  '대구광역시 전체',
-];
+
 const INCOME_BRACKETS = Array.from({ length: 10 }, (_, i) => i + 1);
 
 export default function ProfileEdit() {
@@ -367,31 +363,15 @@ export default function ProfileEdit() {
               <label className="text-[14px] font-medium leading-[140%] tracking-[0px] text-[#A5A5A5] select-none block mb-[12px]">
                 희망 활동 지역
               </label>
-              <button
-                type="button"
-                onClick={() => setActiveBottomSheet('region')}
-                className="w-full h-[48px] rounded-[12px] border border-gray-200 bg-white py-[12px] px-[15px] flex items-center justify-between shadow-sm hover:border-blue-500 hover:ring-4 hover:ring-blue-500/10 active:scale-[0.98] transition-all text-left focus:outline-none"
-              >
-                <span className="text-[16px] font-medium leading-[140%] tracking-[-0.24px] text-[#1E1E1E]">
-                  {region}
-                </span>
-                <svg
-                  width="6"
-                  height="11"
-                  viewBox="0 0 6 11"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="shrink-0"
-                >
-                  <path
-                    d="M1 1L5 5.5L1 10"
-                    stroke="#737373"
-                    strokeWidth="1.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
+
+              {/* 기존 <button> 다 지우고 딱 이 자리에 이거 쳐넣어라! */}
+              <SearchableSelect
+                fullWidth
+                placeholder="지역을 검색하세요"
+                options={REGION_OPTIONS}
+                value={region}
+                onChange={setRegion}
+              />
             </div>
           </section>
         </div>
@@ -520,22 +500,22 @@ export default function ProfileEdit() {
             </h3>
 
             <div className="space-y-2 mb-5">
-              {AVAILABLE_REGIONS.map((reg) => (
+              {REGION_OPTIONS.map((opt) => (
                 <button
-                  key={reg}
+                  key={opt.value}
                   type="button"
                   onClick={() => {
-                    setRegion(reg);
+                    setRegion(opt.value);
                     setActiveBottomSheet(null);
-                    toast.success(`${reg} 지역이 선택되었습니다.`);
+                    toast.success(`${opt.label} 지역이 선택되었습니다.`);
                   }}
                   className={`w-full py-3.5 text-center text-sm font-semibold rounded-xl transition-all ${
-                    region === reg
+                    region === opt.value
                       ? 'bg-blue-600 text-white shadow-sm font-bold'
                       : 'bg-gray-50 text-gray-600 hover:bg-gray-100/50'
                   }`}
                 >
-                  {reg}
+                  {opt.label}
                 </button>
               ))}
             </div>
