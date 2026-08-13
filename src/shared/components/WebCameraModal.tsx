@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToastStore } from '@/store/toastStore';
-import cameraIcon from '@/assets/icons/camera-icon.svg';
+import cameraIcon from '@/assets/icons/camera_img.svg';
+import closeXIcon from '@/assets/icons/close-x.svg';
 
 export interface WebCameraModalProps {
   isOpen: boolean;
@@ -12,9 +13,13 @@ export default function WebCameraModal({ isOpen, onClose, onCapture }: WebCamera
   const toast = useToastStore();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setCapturedImage(null);
+      return;
+    }
 
     let isMounted = true;
 
@@ -45,10 +50,10 @@ export default function WebCameraModal({ isOpen, onClose, onCapture }: WebCamera
 
   // 비디오 태그 스트림 바인딩
   useEffect(() => {
-    if (isOpen && cameraStream && videoRef.current) {
+    if (isOpen && cameraStream && videoRef.current && !capturedImage) {
       videoRef.current.srcObject = cameraStream;
     }
-  }, [isOpen, cameraStream]);
+  }, [isOpen, cameraStream, capturedImage]);
 
   // 컴포넌트 닫힘/언마운트 시 트랙 정지 및 정리
   useEffect(() => {
@@ -64,9 +69,11 @@ export default function WebCameraModal({ isOpen, onClose, onCapture }: WebCamera
       cameraStream.getTracks().forEach((track) => track.stop());
       setCameraStream(null);
     }
+    setCapturedImage(null);
     onClose();
   };
 
+  // 1. 사진 촬영 (확인 모드로 전환)
   const handleCapture = () => {
     if (videoRef.current) {
       const video = videoRef.current;
@@ -75,10 +82,26 @@ export default function WebCameraModal({ isOpen, onClose, onCapture }: WebCamera
       canvas.height = video.videoHeight || 400;
       const ctx = canvas.getContext('2d');
       if (ctx) {
+        // 프리뷰 화면과 일치하도록 좌우 반전 처리
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-        onCapture(dataUrl);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        setCapturedImage(dataUrl);
       }
+    }
+  };
+
+  // 2. 다시 촬영 (라이브 카메라로 복귀)
+  const handleRetake = () => {
+    setCapturedImage(null);
+  };
+
+  // 3. 사진 최종 적용 (업로드)
+  const handleConfirmUse = () => {
+    if (capturedImage) {
+      onCapture(capturedImage);
+      toast.success('촬영한 사진이 프로필에 적용되었습니다.');
     }
     handleClose();
   };
@@ -86,39 +109,81 @@ export default function WebCameraModal({ isOpen, onClose, onCapture }: WebCamera
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/85 p-4 animate-fade-in">
-      <div className="relative flex flex-col items-center w-full max-w-[360px] bg-slate-900 rounded-3xl p-6 text-white shadow-2xl">
-        <h3 className="text-lg font-bold mb-4 text-center">사진 촬영</h3>
-
-        {/* 카메라 실시간 프리뷰 (원형 프레임) */}
-        <div className="relative size-[240px] rounded-full overflow-hidden border-4 border-blue-500 shadow-lg bg-black flex items-center justify-center mb-6">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="size-full object-cover -scale-x-100"
-          />
-        </div>
-
-        {/* 촬영 / 취소 컨트롤 버튼 */}
-        <div className="flex gap-3 w-full">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/50 p-4 animate-fade-in backdrop-blur-sm">
+      <div className="relative flex flex-col items-center w-full max-w-[360px] bg-white rounded-[24px] p-6 text-gray-900 shadow-2xl animate-fade-in-up border border-gray-100">
+        {/* 상단 헤더 */}
+        <div className="w-full flex items-center justify-between mb-4">
+          <h3 className="text-[20px] font-semibold leading-[140%] text-[#1E1E1E]">
+            {capturedImage ? '사진 확인' : '사진 촬영'}
+          </h3>
           <button
             type="button"
             onClick={handleClose}
-            className="flex-1 h-12 bg-slate-800 hover:bg-slate-700 text-gray-300 font-semibold rounded-xl text-sm transition-all"
+            className="p-1 rounded-full text-[#8C8C8C] hover:bg-gray-100 hover:text-[#1E1E1E] transition-colors focus:outline-none"
+            aria-label="닫기"
           >
-            취소
-          </button>
-          <button
-            type="button"
-            onClick={handleCapture}
-            className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5"
-          >
-            <img src={cameraIcon} className="size-5 filter invert brightness-200" alt="" />
-            촬영하기
+            <img src={closeXIcon} className="size-5 text-[#8C8C8C]" alt="" />
           </button>
         </div>
+
+        {/* 원형 프리뷰 프레임 (촬영 전: 실시간 비디오, 촬영 후: 캡처된 정지 이미지) */}
+        <div className="relative size-[220px] rounded-full overflow-hidden bg-gray-100 flex items-center justify-center shadow-inner mb-6">
+          {capturedImage ? (
+            <img
+              src={capturedImage}
+              alt="촬영된 사진"
+              className="size-full object-cover animate-fade-in"
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="size-full object-cover -scale-x-100"
+            />
+          )}
+        </div>
+
+        {/* 컨트롤 버튼 그룹 */}
+        {capturedImage ? (
+          /* [촬영 후 확인 모드] 다시 촬영 vs 적용하기 */
+          <div className="flex gap-3 w-full">
+            <button
+              type="button"
+              onClick={handleRetake}
+              className="flex-1 h-[52px] bg-[#F2F2F2] hover:bg-[#E5E5E5] text-[#737373] font-medium rounded-xl text-[16px] leading-[140%] tracking-[-0.24px] transition-all active:scale-[0.98]"
+            >
+              다시 촬영
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmUse}
+              className="flex-1 h-[52px] bg-[#0059FF] hover:bg-blue-700 text-white font-semibold rounded-xl text-[16px] leading-[140%] tracking-[-0.24px] transition-all shadow-md active:scale-[0.98] flex items-center justify-center"
+            >
+              사용하기
+            </button>
+          </div>
+        ) : (
+          /* [촬영 전 라이브 모드] 취소 vs 촬영하기 */
+          <div className="flex gap-3 w-full">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="flex-1 h-[52px] bg-[#F2F2F2] hover:bg-[#E5E5E5] text-[#737373] font-medium rounded-xl text-[16px] leading-[140%] tracking-[-0.24px] transition-all active:scale-[0.98]"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={handleCapture}
+              className="flex-1 h-[52px] bg-[#0059FF] hover:bg-blue-700 text-white font-semibold rounded-xl text-[16px] leading-[140%] tracking-[-0.24px] transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <img src={cameraIcon} className="w-[16px] h-[15px] filter brightness-0 invert" alt="" />
+              촬영하기
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -29,12 +29,11 @@ export default function NotificationSettings() {
     }
   }, [notificationSettings]);
 
-  // 2. 알림 설정 수정 Mutation
+  // 2. 알림 설정 수정 Mutation (실패 시에만 에러 토스트 표시)
   const { mutate: updateSettings } = useMutation({
     mutationFn: updateNotificationSettings,
     onSuccess: (updatedNotificationSettings) => {
       queryClient.setQueryData(['notificationSettings'], updatedNotificationSettings);
-      toast.success('알림 설정이 성공적으로 저장되었습니다.');
     },
     onError: () => {
       toast.error('알림 설정 변경에 실패했습니다.');
@@ -81,9 +80,9 @@ export default function NotificationSettings() {
     return (
       <Layout
         header={
-          <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
+          <header className="relative flex h-14 items-center bg-white px-4">
             <div className="w-[41px] h-[41px]" />
-            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard text-center">
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] tracking-[0px] text-[#000B24] select-none text-center">
               알림 설정
             </h1>
           </header>
@@ -100,18 +99,18 @@ export default function NotificationSettings() {
   return (
     <Layout
       header={
-        <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
+        <header className="relative flex h-14 items-center bg-white px-5">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="w-[41px] h-[41px] flex items-center justify-center rounded-full text-gray-800 hover:bg-gray-50 active:scale-95 transition-all shrink-0"
+            className="flex items-center justify-center p-0 text-gray-800 hover:opacity-70 active:scale-95 transition-all shrink-0 focus:outline-none"
+            aria-label="뒤로가기"
           >
-            <img src={chevronLeftIcon} className="size-6" alt="뒤로가기" />
+            <img src={chevronLeftIcon} className="w-[10.25px] h-[18.45px] block" alt="뒤로가기" />
           </button>
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 font-pretendard select-none text-center">
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] tracking-[0px] text-[#000B24] select-none text-center">
             알림 설정
           </h1>
-          <div className="w-[41px] h-[41px]" />
         </header>
       }
       className="bg-white"
@@ -119,17 +118,17 @@ export default function NotificationSettings() {
       <div className="w-full max-w-[402px] mx-auto bg-white flex flex-col">
         {/* 1. 알림 수신 이메일 설정 블록 */}
         <section className="pt-[24px] pl-[20px] pr-[20px] flex flex-col text-left">
-          <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800 font-pretendard select-none">
-            알람 수신 이메일
+          <h2 className="text-[18px] font-semibold leading-[140%] tracking-[0px] text-[#1E1E1E] select-none">
+            알림 수신 이메일
           </h2>
 
           {/* 타이틀과 설명 사이의 4px 간격 */}
-          <p className="mt-[4px] text-[12px] font-medium leading-[160%] tracking-normal text-gray-400 font-pretendard select-none">
+          <p className="mt-[4px] text-[12px] font-medium leading-[160%] tracking-[0px] text-[#A5A5A5] select-none">
             맞춤 공고 및 마감일 리마인드 메일을 받을 주소입니다.
           </p>
 
-          {/* 음영(shadow)을 없앤 이메일 박스 (w-362 min-h-[59px]) */}
-          <div className="mt-[24px] w-full max-w-[362px] min-h-[59px] rounded-[16px] bg-blue-50/50 p-[15px] flex items-center justify-between transition-all mx-auto">
+          {/* 음영(shadow)을 없앤 이메일 박스 (w-362 min-h-[59px] bg-[#EFF6FF] pl-20 pr-15 py-15) */}
+          <div className="mt-[24px] w-full max-w-[362px] min-h-[59px] rounded-[16px] bg-[#EFF6FF] py-[15px] pr-[15px] pl-[20px] flex items-center justify-between transition-all mx-auto">
             {isEditingEmail ? (
               <div className="flex flex-col gap-1.5 w-full">
                 <div className="flex flex-1 items-center justify-between gap-2">
@@ -180,13 +179,13 @@ export default function NotificationSettings() {
               </div>
             ) : (
               <>
-                <span className="text-[14px] font-normal leading-[140%] tracking-[-0.24px] text-gray-800 font-pretendard truncate pr-4">
+                <span className="text-[14px] font-normal leading-[140%] tracking-[-0.24px] text-[#1E1E1E] truncate pr-4">
                   {notificationSettings?.notificationEmail || '이메일을 등록해주세요.'}
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsEditingEmail(true)}
-                  className="w-[57px] h-[33px] flex items-center justify-center rounded-[12px] border border-gray-200 bg-white text-xs font-medium text-[12px] leading-[160%] tracking-normal text-gray-700 hover:bg-gray-50 active:scale-95 transition-all shrink-0"
+                  className="w-[57px] h-[33px] flex items-center justify-center rounded-[12px] border border-gray-200 bg-white text-[12px] font-medium leading-[160%] tracking-[0px] text-[#1E1E1E] hover:bg-gray-50 active:scale-95 transition-all shrink-0"
                 >
                   변경
                 </button>
@@ -201,7 +200,7 @@ export default function NotificationSettings() {
             {/* 앱 푸시 알림 */}
             <li className="w-full max-w-[402px] h-[75px] pt-[24px] pr-[20px] pb-[24px] pl-[20px] flex items-center justify-between border-t border-b border-gray-100/80">
               <div className="w-[253px] h-[45px] flex flex-col justify-center text-left">
-                <span className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800 font-pretendard select-none">
+                <span className="text-[18px] font-semibold leading-[140%] tracking-[0px] text-[#1E1E1E] select-none">
                   앱 푸시 알림
                 </span>
               </div>
@@ -218,10 +217,10 @@ export default function NotificationSettings() {
               }`}
             >
               <div className="w-[253px] h-[45px] flex flex-col gap-[4px] justify-center text-left">
-                <span className="text-[16px] font-medium leading-[140%] tracking-normal text-gray-800 font-pretendard select-none">
+                <span className="text-[16px] font-medium leading-[140%] tracking-[0px] text-[#404040] select-none">
                   맞춤 공고 추천 알림
                 </span>
-                <p className="text-[12px] font-medium text-gray-400 leading-[140%] font-pretendard select-none">
+                <p className="text-[12px] font-medium leading-[160%] tracking-[0px] text-[#A5A5A5] select-none">
                   내 핏 조건에 맞는 새로운 공고가 등록되면 알려드려요.
                 </p>
               </div>
@@ -239,10 +238,10 @@ export default function NotificationSettings() {
               }`}
             >
               <div className="w-[253px] h-[45px] flex flex-col gap-[4px] justify-center text-left">
-                <span className="text-[16px] font-medium leading-[140%] tracking-normal text-gray-800 font-pretendard select-none">
+                <span className="text-[16px] font-medium leading-[140%] tracking-[0px] text-[#404040] select-none">
                   마감일 임박 리마인드
                 </span>
-                <p className="text-[12px] font-medium text-gray-400 leading-[140%] font-pretendard select-none">
+                <p className="text-[12px] font-medium leading-[160%] tracking-[0px] text-[#A5A5A5] select-none">
                   찜한 공고의 마감일 전에 리마인드를 보내드려요.
                 </p>
               </div>
