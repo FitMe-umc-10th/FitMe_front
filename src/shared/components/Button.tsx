@@ -15,18 +15,17 @@ export default function Button({
   onClick,
   children,
 }: ButtonProps) {
-  const base =
-    'rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  const base = 'rounded-xl font-semibold transition-colors disabled:cursor-not-allowed';
 
   const variants = {
-    primary: 'bg-blue-500 text-white hover:bg-blue-600',
-    secondary: 'bg-gray-100 text-gray-800 hover:bg-gray-200',
+    primary: 'bg-[#0059FF] text-white hover:bg-[#0047CC] disabled:bg-[#D9D9D9] disabled:text-white',
+    secondary: 'bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:bg-[#D9D9D9]',
   };
 
   const sizes = {
     sm: 'px-3 py-1.5 text-sm',
     md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
+    lg: 'h-14 px-6 text-[18px] leading-[140%]',
   };
 
   return (

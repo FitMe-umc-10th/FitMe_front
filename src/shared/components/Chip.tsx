@@ -9,11 +9,11 @@ export default function Chip({ label, selected, onToggle }: ChipProps) {
     <button
       type="button"
       onClick={onToggle}
-      className={`h-[32px] min-w-[60px] rounded-[100px] pt-[6px] pb-[6px] pl-[11.5px] pr-[11.5px] text-[12px] font-semibold transition-colors whitespace-nowrap cursor-pointer flex items-center justify-center
+      className={`flex h-[42px] cursor-pointer items-center justify-center whitespace-nowrap rounded-[100px] border px-[15px] text-[16px] font-medium leading-[140%] transition-colors
         ${
           selected
-            ? 'bg-blue-500 text-white'
-            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            ? 'border-transparent bg-[#247BFF] text-white' // 선택: 파란 배경 + 흰 글자
+            : 'border-[#D9D9D9] bg-white text-[#8C8C8C] hover:bg-[#F5F8FF]' // 미선택: 회색 테두리 + 회색 글자
         }`}
     >
       {label}
