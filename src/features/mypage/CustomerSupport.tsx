@@ -24,6 +24,7 @@ export default function CustomerSupport() {
   const [replyEmail, setReplyEmail] = useState('');
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [content, setContent] = useState('');
+  const [isSuccessToastVisible, setIsSuccessToastVisible] = useState(false);
 
   // FAQ 아코디언 개별 제어를 위한 로컬 상태
   const [expandedFaqId, setExpandedFaqId] = useState<number | null>(null);
@@ -36,10 +37,13 @@ export default function CustomerSupport() {
   const { mutate: sendInquiry, isPending: isSubmitting } = useMutation({
     mutationFn: submitInquiry,
     onSuccess: () => {
-      toast.success('1:1 문의가 성공적으로 접수되었습니다.');
       setReplyEmail('');
       setContent('');
       setIsInquiryOpen(false);
+      setIsSuccessToastVisible(true);
+      setTimeout(() => {
+        setIsSuccessToastVisible(false);
+      }, 3000);
     },
     onError: () => {
       toast.error('문의 제출 중 에러가 발생했습니다.');
@@ -68,10 +72,10 @@ export default function CustomerSupport() {
     return (
       <Layout
         header={
-          <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
-            <div className="w-[41px] h-[41px]" />
-            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 text-center">
-              고객 센터
+          <header className="relative flex h-14 items-center bg-white px-5">
+            <div className="w-[10.25px]" />
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] tracking-[0px] text-[#000B24] select-none text-center">
+              고객센터
             </h1>
           </header>
         }
@@ -88,18 +92,18 @@ export default function CustomerSupport() {
   return (
     <Layout
       header={
-        <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
+        <header className="relative flex h-14 items-center bg-white px-5">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="w-[41px] h-[41px] flex items-center justify-center rounded-full text-gray-800 hover:bg-gray-50 active:scale-95 transition-all shrink-0"
+            className="flex items-center justify-center p-0 text-gray-800 hover:opacity-70 active:scale-95 transition-all shrink-0 focus:outline-none"
+            aria-label="뒤로가기"
           >
-            <img src={chevronLeftIcon} className="size-6" alt="뒤로가기" />
+            <img src={chevronLeftIcon} className="w-[10.25px] h-[18.45px] block" alt="뒤로가기" />
           </button>
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 select-none text-center">
-            고객 센터
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] tracking-[0px] text-[#000B24] select-none text-center">
+            고객센터
           </h1>
-          <div className="w-[41px] h-[41px]" />
         </header>
       }
       className="bg-white"
@@ -109,7 +113,7 @@ export default function CustomerSupport() {
         <div className="flex flex-col w-full">
           {/* 자주 묻는 질문 타이틀 레이아웃 */}
           <div className="w-full h-[28px] flex items-center mt-[24px] text-left">
-            <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800 select-none">
+            <h2 className="text-[18px] font-semibold leading-[140%] tracking-[0px] text-[#1E1E1E] select-none">
               자주 묻는 질문
             </h2>
           </div>
@@ -124,28 +128,28 @@ export default function CustomerSupport() {
                     key={faq.faqId}
                     className="w-full flex flex-col border-b border-gray-100/80"
                   >
-                    {/* 질문 버튼 (h-80, pt-28 pb-28) */}
+                    {/* 질문 버튼 (긴 질문도 다음 줄로 자동 줄바꿈) */}
                     <button
                       type="button"
                       onClick={() => handleFaqToggle(faq.faqId)}
-                      className="w-full h-[80px] py-[28px] flex items-center justify-between text-left focus:outline-none transition-colors hover:bg-gray-50/30"
+                      className="w-full min-h-[80px] py-[24px] flex items-center justify-between text-left focus:outline-none transition-colors hover:bg-gray-50/30 gap-[12px]"
                     >
-                      {/* 질문 텍스트 스택 (flex-1 gap-16) */}
-                      <div className="flex-1 h-[22px] flex items-center gap-[16px] min-w-0 pr-2">
-                        <span className="text-[16px] font-bold text-[#0066ff] shrink-0 select-none">
+                      {/* 질문 텍스트 스택 */}
+                      <div className="flex-1 flex items-start gap-[16px] min-w-0">
+                        <span className="text-[16px] font-bold text-[#0066ff] leading-[140%] shrink-0 select-none">
                           Q.
                         </span>
-                        <span className="text-[16px] font-semibold leading-[140%] tracking-normal text-gray-800 truncate select-none">
+                        <span className="text-[16px] font-medium leading-[140%] tracking-[0px] text-[#1E1E1E] select-none break-keep">
                           {faq.question}
                         </span>
                       </div>
 
                       {/* 화살표 아이콘 */}
-                      <div className="w-[24px] h-[24px] flex items-center justify-center shrink-0 text-gray-400">
+                      <div className="flex items-center justify-center shrink-0">
                         <img
                           src={chevronDownIcon}
-                          className={`size-6 transition-transform duration-200 ${
-                            isExpanded ? 'rotate-180 text-blue-500' : ''
+                          className={`w-[13.86px] h-[7.74px] transition-transform duration-200 ${
+                            isExpanded ? 'rotate-180' : ''
                           }`}
                           alt=""
                         />
@@ -174,7 +178,7 @@ export default function CustomerSupport() {
           <button
             type="button"
             onClick={() => setIsInquiryOpen(true)}
-            className="w-full h-[56px] bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-[18px] leading-[140%] tracking-normal text-center shadow-md active:scale-[0.98] transition-all flex items-center justify-center"
+            className="w-full h-[56px] bg-[#0059FF] hover:bg-blue-700 text-white font-semibold rounded-xl text-[18px] leading-[140%] tracking-[0px] text-center shadow-md active:scale-[0.98] transition-all flex items-center justify-center"
           >
             1:1 문의 남기기
           </button>
@@ -197,7 +201,7 @@ export default function CustomerSupport() {
           >
             {/* Layout 1: Header (w-323 h-67, pt-32 pb-10 px-20, rounded-t-16) */}
             <div className="w-[323px] h-[67px] pt-[32px] pr-[20px] pb-[10px] pl-[20px] rounded-t-[16px] flex items-center justify-between shrink-0 bg-white">
-              <h3 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-900 text-left">
+              <h3 className="text-[18px] font-semibold leading-[140%] tracking-[0px] text-[#1E1E1E] text-left">
                 1:1 문의 남기기
               </h3>
               {/* x 버튼 (w-24 h-24) */}
@@ -207,7 +211,7 @@ export default function CustomerSupport() {
                 disabled={isSubmitting}
                 className="w-[24px] h-[24px] flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors focus:outline-none active:scale-90"
               >
-                <img src={closeXIcon} className="size-6" alt="닫기" />
+                <img src={closeXIcon} className="w-[16px] h-[16px]" alt="닫기" />
               </button>
             </div>
 
@@ -215,7 +219,7 @@ export default function CustomerSupport() {
             <div className="w-[323px] pt-[10px] pb-[16px] flex flex-col items-center shrink-0 bg-white">
               {/* 1. 답변 받을 이메일 라벨 */}
               <div className="w-[283px] text-left">
-                <label className="text-[14px] font-semibold leading-[140%] tracking-[-0.24px] text-gray-900 select-none">
+                <label className="text-[14px] font-semibold leading-[140%] tracking-[-0.24px] text-[#1E1E1E] select-none">
                   답변 받을 이메일
                 </label>
               </div>
@@ -227,37 +231,60 @@ export default function CustomerSupport() {
                 onChange={(e) => setReplyEmail(e.target.value)}
                 placeholder="contact@fitme.com"
                 disabled={isSubmitting}
-                className="w-[283px] min-h-[46px] mt-[15px] p-[15px] rounded-[8px] border border-gray-200 bg-white text-[12px] font-medium leading-[140%] tracking-normal text-gray-800 focus:border-blue-500 focus:outline-none transition-all placeholder-gray-400 placeholder:text-[12px]"
+                className="w-[283px] min-h-[46px] mt-[15px] p-[15px] rounded-[8px] border border-gray-200 bg-white text-[12px] font-medium leading-[140%] tracking-normal text-gray-800 focus:border-blue-500 focus:outline-none transition-all placeholder-[#A5A5A5] placeholder:text-[12px] placeholder:font-normal"
               />
 
-              {/* 3. 문의 내용 라벨 (mt-15) */}
-              <div className="w-[283px] text-left mt-[15px]">
-                <label className="text-[14px] font-semibold leading-[140%] tracking-[-0.24px] text-gray-900 select-none">
+              {/* 3. 문의 내용 라벨 & 실시간 글자수 카운터 */}
+              <div className="w-[283px] flex items-center justify-between text-left mt-[15px]">
+                <label className="text-[14px] font-semibold leading-[140%] tracking-[-0.24px] text-[#1E1E1E] select-none">
                   문의 내용
                 </label>
+                <span
+                  className={`text-[12px] font-medium leading-[140%] tracking-[0px] select-none ${
+                    content.length >= 500 ? 'text-red-500 font-semibold' : 'text-[#A5A5A5]'
+                  }`}
+                >
+                  {content.length}/500
+                </span>
               </div>
 
-              {/* 4. 문의 내용 입력 상자 (w-283, 상하좌우 15px 패딩, 12px 폰트) */}
+              {/* 4. 문의 내용 입력 상자 (500자 엄격 제한 및 실시간 연동) */}
               <textarea
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val.length <= 500) {
+                    setContent(val);
+                  } else {
+                    setContent(val.slice(0, 500));
+                  }
+                }}
                 placeholder="서비스 이용 중 불편한 점이나 건의사항을 자세히 적어주세요. (최대 500자)"
                 disabled={isSubmitting}
                 maxLength={500}
-                className="w-[283px] h-[98px] mt-[15px] p-[15px] rounded-[8px] bg-gray-100 text-[12px] font-medium leading-[140%] tracking-normal text-gray-800 focus:bg-gray-100 focus:outline-none transition-all resize-none placeholder-gray-400 placeholder:text-[12px]"
+                className="w-[283px] h-[98px] mt-[10px] p-[15px] rounded-[8px] bg-gray-100 text-[12px] font-medium leading-[160%] tracking-[0px] text-gray-800 focus:bg-gray-100 focus:outline-none transition-all resize-none placeholder-[#A5A5A5] placeholder:text-[12px] placeholder:font-medium placeholder:leading-[160%] placeholder:tracking-[0px]"
               />
 
-              {/* 5. 문의 접수하기 버튼 (w-295 h-42, 패딩 상하 10px 좌우 32px, gap 10px, mt-24, mb-0, font-medium 두께 조절) */}
+              {/* 5. 문의 접수하기 버튼 (w-295 h-42, 패딩 상하 10px 좌우 32px, gap 10px, mt-24, mb-0, font-semibold 두께 조절) */}
               <button
                 type="button"
                 onClick={handleInquirySubmit}
                 disabled={isSubmitting}
-                className="w-[295px] h-[42px] py-[10px] px-[32px] gap-[10px] mt-[24px] flex items-center justify-center rounded-[8px] bg-blue-600 hover:bg-blue-700 text-white font-medium text-[16px] leading-[140%] tracking-normal text-center transition-all active:scale-95 disabled:opacity-50"
+                className="w-[295px] h-[42px] py-[10px] px-[32px] gap-[10px] mt-[24px] flex items-center justify-center rounded-[8px] bg-[#0059FF] hover:bg-blue-700 text-white font-semibold text-[16px] leading-[140%] tracking-[0px] text-center transition-all active:scale-95 disabled:opacity-50"
               >
                 {isSubmitting ? '접수 중...' : '문의 접수하기'}
               </button>
             </div>
           </section>
+        </div>
+      )}
+
+      {/* 1:1 문의 전용 피그마 완료 토스트 (w-362 h-43, rounded-8, bg-#A5A5A5, bottom 96px) */}
+      {isSuccessToastVisible && (
+        <div className="fixed bottom-[96px] left-1/2 -translate-x-1/2 z-50 flex items-center justify-center w-[calc(100%-40px)] max-w-[362px] min-h-[43px] py-[12px] px-[20px] rounded-[8px] bg-[#A5A5A5] shadow-lg animate-fade-in-up select-none pointer-events-none">
+          <span className="text-[12px] font-medium leading-[160%] tracking-[0px] text-white select-none">
+            1:1 문의 접수가 완료되었습니다.
+          </span>
         </div>
       )}
     </Layout>

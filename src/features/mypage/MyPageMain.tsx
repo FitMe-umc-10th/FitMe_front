@@ -93,22 +93,24 @@ export default function MyPageMain() {
 
           {/* 상단: "마이페이지" 흰색 글자 */}
           <div className="relative z-10 pt-4">
-            <h2 className="text-xl font-semibold tracking-tight text-white">마이페이지</h2>
+            <h2 className="text-[20px] font-semibold leading-[140%] tracking-[0px] text-white">마이페이지</h2>
           </div>
 
           {/* 하단: 유저 정보 및 수정 버튼 */}
           <div className="relative z-10 flex items-end justify-between">
             <div className="space-y-1.5">
-              <h3 className="text-2xl font-medium tracking-tight text-white">
+              <h3 className="text-[24px] font-semibold leading-[140%] tracking-[0px] text-white">
                 {profile.profile.name}
               </h3>
-              <p className="text-sm font-medium text-slate-300">{profile.profile.universityName}</p>
+              <p className="text-[16px] font-normal leading-[140%] tracking-[-0.02em] text-[#A5A5A5]">
+                {profile.profile.universityName}
+              </p>
             </div>
             <div>
               <button
                 type="button"
                 onClick={() => navigate('/my/profile')}
-                className="w-[63px] h-[22px] rounded-full bg-white text-gray-800 text-[9.5px] font-medium tracking-tighter flex items-center justify-center pt-[3px] pr-[6px] pb-[3px] pl-[6px] gap-[3px] shadow-sm transition-all hover:bg-gray-50 active:scale-95 focus:outline-none"
+                className="h-[22px] px-2 rounded-full bg-white text-[#737373] text-[10px] font-medium leading-[160%] tracking-[0px] text-center flex items-center justify-center shadow-sm transition-all hover:bg-gray-50 active:scale-95 focus:outline-none whitespace-nowrap"
               >
                 내 정보 수정
               </button>
@@ -119,14 +121,16 @@ export default function MyPageMain() {
         {/* 2. 나의 활동 요약 (좌우 패딩 20px 컨테이너) */}
         <div className="space-y-6 px-[20px] pb-6 pt-7">
           <section className="space-y-2.5">
-            <h3 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800">
+            <h3 className="text-[18px] font-semibold leading-[140%] tracking-[0px] text-[#1E1E1E]">
               나의 활동 요약
             </h3>
-            <div className="w-full max-w-[362px] h-[78px] rounded-[8px] pt-[15px] pr-[32.5px] pb-[15px] pl-[32.5px] flex items-center justify-between border border-gray-100 bg-white shadow-sm mx-auto">
+            <div className="w-full max-w-[362px] h-[78px] rounded-[8px] pt-[15px] pr-[32.5px] pb-[15px] pl-[32.5px] flex items-center justify-between border border-gray-100 bg-white shadow-[0px_0px_8px_0px_var(--ColorPrimary15)] mx-auto">
               {/* 지원 완료 */}
-              <div className="flex flex-col items-center justify-center w-[38px] h-[48px] gap-[7px] text-center">
-                <p className="text-xs font-medium text-gray-400 whitespace-nowrap">지원 완료</p>
-                <p className="text-base font-bold text-gray-800 leading-none">
+              <div className="flex flex-col items-center justify-center min-w-[48px] h-[48px] gap-[7px] text-center">
+                <p className="text-[10px] font-medium leading-[160%] tracking-[0px] text-[#A5A5A5] whitespace-nowrap">
+                  지원 완료
+                </p>
+                <p className="text-[18px] font-semibold leading-[140%] tracking-[0px] text-[#1E1E1E] text-center whitespace-nowrap">
                   {profile.activitySummary.completedApplicationCount || 0}회
                 </p>
               </div>
@@ -135,9 +139,11 @@ export default function MyPageMain() {
               <div className="w-[0.5px] h-[37px] bg-gray-200/80 pointer-events-none" />
 
               {/* 누적 장학금 */}
-              <div className="flex flex-col items-center justify-center w-[65px] h-[48px] gap-[7px] text-center">
-                <p className="text-xs font-medium text-gray-400 whitespace-nowrap">누적 장학금</p>
-                <p className="text-base font-bold text-blue-600 leading-none">
+              <div className="flex flex-col items-center justify-center min-w-[70px] h-[48px] gap-[7px] text-center">
+                <p className="text-[10px] font-medium leading-[160%] tracking-[0px] text-[#A5A5A5] whitespace-nowrap">
+                  누적 장학금
+                </p>
+                <p className="text-[18px] font-semibold leading-[140%] tracking-[0px] text-[#0059FF] text-center whitespace-nowrap">
                   {formatScholarship(profile.activitySummary.totalScholarshipAmount || 0)}
                 </p>
               </div>
@@ -146,9 +152,11 @@ export default function MyPageMain() {
               <div className="w-[0.5px] h-[37px] bg-gray-200/80 pointer-events-none" />
 
               {/* 결과 대기 */}
-              <div className="flex flex-col items-center justify-center w-[38px] h-[48px] gap-[7px] text-center">
-                <p className="text-xs font-medium text-gray-400 whitespace-nowrap">결과 대기</p>
-                <p className="text-base font-bold text-gray-800 leading-none">
+              <div className="flex flex-col items-center justify-center min-w-[48px] h-[48px] gap-[7px] text-center">
+                <p className="text-[10px] font-medium leading-[160%] tracking-[0px] text-[#A5A5A5] whitespace-nowrap">
+                  결과 대기
+                </p>
+                <p className="text-[18px] font-semibold leading-[140%] tracking-[0px] text-[#1E1E1E] text-center whitespace-nowrap">
                   {profile.activitySummary.pendingResultCount || 0}건
                 </p>
               </div>
@@ -157,7 +165,7 @@ export default function MyPageMain() {
 
           {/* 3. 일반 설정 */}
           <section className="space-y-0 mt-[24px]">
-            <h3 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-800">
+            <h3 className="text-[18px] font-semibold leading-[140%] tracking-[0px] text-[#1E1E1E]">
               일반 설정
             </h3>
             <div className="w-full max-w-[362px] flex flex-col mt-[16px] px-1 mx-auto">
@@ -167,8 +175,8 @@ export default function MyPageMain() {
                 onClick={() => navigate('/my/notifications')}
                 className="w-full h-[24px] flex items-center justify-between hover:opacity-75 active:opacity-60 transition-opacity text-left focus:outline-none"
               >
-                <span className="text-sm font-semibold text-[#8C8C8C]">알림 설정</span>
-                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
+                <span className="text-[14px] font-medium leading-[140%] tracking-[0px] text-[#8C8C8C]">알림 설정</span>
+                <img src={chevronRightIcon} className="w-[6px] h-[11px] shrink-0" alt="" />
               </button>
 
               {/* 공지사항 */}
@@ -178,12 +186,12 @@ export default function MyPageMain() {
                 className="w-full h-[24px] flex items-center justify-between mt-[16px] hover:opacity-75 active:opacity-60 transition-opacity text-left focus:outline-none"
               >
                 <div className="relative inline-flex items-center">
-                  <span className="text-sm font-semibold text-[#8C8C8C]">공지사항</span>
+                  <span className="text-[14px] font-medium leading-[140%] tracking-[0px] text-[#8C8C8C]">공지사항</span>
                   {hasNewNotice && (
                     <span className="absolute -top-0.5 -right-2 size-1.5 rounded-full bg-red-500 ring-2 ring-white" />
                   )}
                 </div>
-                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
+                <img src={chevronRightIcon} className="w-[6px] h-[11px] shrink-0" alt="" />
               </button>
 
               {/* 고객센터 및 문의 */}
@@ -192,26 +200,26 @@ export default function MyPageMain() {
                 onClick={() => navigate('/my/support')}
                 className="w-full h-[24px] flex items-center justify-between mt-[18px] hover:opacity-75 active:opacity-60 transition-opacity text-left focus:outline-none"
               >
-                <span className="text-sm font-semibold text-[#8C8C8C]">고객센터 및 문의</span>
-                <img src={chevronRightIcon} className="size-4.5 text-gray-400" alt="" />
+                <span className="text-[14px] font-medium leading-[140%] tracking-[0px] text-[#8C8C8C]">고객센터 및 문의</span>
+                <img src={chevronRightIcon} className="w-[6px] h-[11px] shrink-0" alt="" />
               </button>
             </div>
           </section>
 
           {/* 4. 로그아웃 및 회원탈퇴 푸터 버튼 */}
-          <div className="flex items-center justify-center gap-3 mt-[36px] pb-6 text-xs font-semibold text-gray-400">
+          <div className="flex items-center justify-center gap-3 mt-[36px] pb-6 text-[12px] font-medium leading-[160%] tracking-[0px] text-[#A5A5A5] text-center">
             <button
               type="button"
               onClick={handleLogoutClick}
-              className="hover:text-gray-600 active:text-gray-800 transition-colors border-b"
+              className="underline underline-offset-[3px] decoration-[#A5A5A5] hover:text-gray-600 active:text-gray-800 transition-colors"
             >
               로그아웃
             </button>
-            <span className="text-gray-200 select-none">|</span>
+            <span className="text-[#D9D9D9] select-none">|</span>
             <button
               type="button"
               onClick={handleWithdrawalClick}
-              className="hover:text-gray-600 active:text-gray-800 transition-colors border-b"
+              className="underline underline-offset-[3px] decoration-[#A5A5A5] hover:text-gray-600 active:text-gray-800 transition-colors"
             >
               회원탈퇴
             </button>
@@ -226,7 +234,7 @@ export default function MyPageMain() {
           <section
             role="dialog"
             aria-modal="true"
-            className="relative w-[323px] h-[177px] rounded-[24px] bg-white pt-[24px] pb-[24px] px-[20px] flex flex-col justify-between items-center text-center shadow-2xl animate-fade-in-up"
+            className="relative w-[323px] h-[177px] rounded-[24px] bg-white pt-[32px] pb-[24px] px-[20px] flex flex-col justify-between items-center text-center shadow-2xl animate-fade-in-up"
           >
             <div className="flex flex-col items-center w-full">
               <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-900 text-center">
@@ -237,7 +245,7 @@ export default function MyPageMain() {
               </p>
             </div>
 
-            <div className="flex gap-[8px] justify-center w-full mt-auto">
+            <div className="flex gap-[8px] justify-center w-full mt-[24px]">
               <button
                 type="button"
                 onClick={() => setIsLogoutOpen(false)}
@@ -250,7 +258,6 @@ export default function MyPageMain() {
                 onClick={() => {
                   setIsLogoutOpen(false);
                   logout();
-                  toast.success('로그아웃 되었습니다.');
                   navigate('/login', { replace: true });
                 }}
                 className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
