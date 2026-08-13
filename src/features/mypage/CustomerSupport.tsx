@@ -24,6 +24,7 @@ export default function CustomerSupport() {
   const [replyEmail, setReplyEmail] = useState('');
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [content, setContent] = useState('');
+  const [isSuccessToastVisible, setIsSuccessToastVisible] = useState(false);
 
   // FAQ 아코디언 개별 제어를 위한 로컬 상태
   const [expandedFaqId, setExpandedFaqId] = useState<number | null>(null);
@@ -36,10 +37,13 @@ export default function CustomerSupport() {
   const { mutate: sendInquiry, isPending: isSubmitting } = useMutation({
     mutationFn: submitInquiry,
     onSuccess: () => {
-      toast.success('1:1 문의 접수가 완료되었습니다.');
       setReplyEmail('');
       setContent('');
       setIsInquiryOpen(false);
+      setIsSuccessToastVisible(true);
+      setTimeout(() => {
+        setIsSuccessToastVisible(false);
+      }, 3000);
     },
     onError: () => {
       toast.error('문의 제출 중 에러가 발생했습니다.');
@@ -272,6 +276,15 @@ export default function CustomerSupport() {
               </button>
             </div>
           </section>
+        </div>
+      )}
+
+      {/* 1:1 문의 전용 피그마 완료 토스트 (w-362 h-43, rounded-8, bg-#A5A5A5, bottom 96px) */}
+      {isSuccessToastVisible && (
+        <div className="fixed bottom-[96px] left-1/2 -translate-x-1/2 z-50 flex items-center justify-center w-[calc(100%-40px)] max-w-[362px] min-h-[43px] py-[12px] px-[20px] rounded-[8px] bg-[#A5A5A5] shadow-lg animate-fade-in-up select-none pointer-events-none">
+          <span className="text-[12px] font-medium leading-[160%] tracking-[0px] text-white select-none">
+            1:1 문의 접수가 완료되었습니다.
+          </span>
         </div>
       )}
     </Layout>
