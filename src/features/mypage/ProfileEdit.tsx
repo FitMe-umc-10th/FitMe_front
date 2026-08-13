@@ -96,7 +96,6 @@ export default function ProfileEdit() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profileDetail'] });
       queryClient.invalidateQueries({ queryKey: ['profileSetting'] });
-      toast.success('프로필이 성공적으로 저장되었습니다.');
       navigate('/my');
     },
     onError: () => {
@@ -125,14 +124,12 @@ export default function ProfileEdit() {
 
       // 3. 최종 저장용 fileUrl을 프로필 이미지 상태로 저장
       setProfileImg(presignedData.fileUrl);
-      toast.success('프로필 이미지가 성공적으로 업로드되었습니다.');
     } catch (err) {
       console.error('S3 이미지 업로드 실패 (로컬 프리뷰 폴백):', err);
       // S3 API 미구현 시 로컬 FileReader 프리뷰로 안전하게 폴백
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImg(reader.result as string);
-        toast.success('프로필 이미지가 선택되었습니다.');
       };
       reader.readAsDataURL(file);
     }
@@ -176,9 +173,9 @@ export default function ProfileEdit() {
     return (
       <Layout
         header={
-          <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
-            <div className="w-[41px] h-[41px]" />
-            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 text-center">
+          <header className="relative flex h-14 items-center bg-white px-5">
+            <div className="w-[10.25px]" />
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] tracking-[0px] text-[#000B24] select-none text-center">
               내 프로필
             </h1>
           </header>

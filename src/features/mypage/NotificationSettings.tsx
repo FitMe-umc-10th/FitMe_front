@@ -29,12 +29,11 @@ export default function NotificationSettings() {
     }
   }, [notificationSettings]);
 
-  // 2. 알림 설정 수정 Mutation
+  // 2. 알림 설정 수정 Mutation (실패 시에만 에러 토스트 표시)
   const { mutate: updateSettings } = useMutation({
     mutationFn: updateNotificationSettings,
     onSuccess: (updatedNotificationSettings) => {
       queryClient.setQueryData(['notificationSettings'], updatedNotificationSettings);
-      toast.success('알림 설정이 성공적으로 저장되었습니다.');
     },
     onError: () => {
       toast.error('알림 설정 변경에 실패했습니다.');

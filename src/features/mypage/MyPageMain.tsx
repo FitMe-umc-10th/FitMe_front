@@ -234,7 +234,7 @@ export default function MyPageMain() {
           <section
             role="dialog"
             aria-modal="true"
-            className="relative w-[323px] h-[177px] rounded-[24px] bg-white pt-[24px] pb-[24px] px-[20px] flex flex-col justify-between items-center text-center shadow-2xl animate-fade-in-up"
+            className="relative w-[323px] h-[177px] rounded-[24px] bg-white pt-[32px] pb-[24px] px-[20px] flex flex-col justify-between items-center text-center shadow-2xl animate-fade-in-up"
           >
             <div className="flex flex-col items-center w-full">
               <h2 className="text-[18px] font-semibold leading-[140%] tracking-normal text-gray-900 text-center">
@@ -245,7 +245,7 @@ export default function MyPageMain() {
               </p>
             </div>
 
-            <div className="flex gap-[8px] justify-center w-full mt-auto">
+            <div className="flex gap-[8px] justify-center w-full mt-[24px]">
               <button
                 type="button"
                 onClick={() => setIsLogoutOpen(false)}
@@ -258,7 +258,6 @@ export default function MyPageMain() {
                 onClick={() => {
                   setIsLogoutOpen(false);
                   logout();
-                  toast.success('로그아웃 되었습니다.');
                   navigate('/login', { replace: true });
                 }}
                 className="w-[144px] h-[42px] flex items-center justify-center rounded-[8px] text-[16px] font-medium leading-[140%] tracking-normal text-center transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
