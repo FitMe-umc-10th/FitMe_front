@@ -81,9 +81,9 @@ export default function NoticeList() {
                   <button
                     type="button"
                     onClick={() => handleToggle(notice.announcementId)}
-                    className={`w-full h-[75px] px-[20px] py-[24px] flex items-center justify-between border-b border-gray-100 transition-colors focus:outline-none ${
-                      isNewNotice ? 'bg-[#EFF6FF]' : 'bg-white hover:bg-gray-50/50'
-                    }`}
+                    className={`w-full h-[75px] px-[20px] py-[24px] flex items-center justify-between transition-colors focus:outline-none ${
+                      isExpanded ? '' : 'border-b border-gray-100'
+                    } ${isNewNotice ? 'bg-[#EFF6FF]' : 'bg-white hover:bg-gray-50/50'}`}
                   >
                     <div className="flex items-center gap-[8px] min-w-0">
                       {/* 안내 배지 (w-45 h-27, 8px gap) */}
@@ -108,16 +108,19 @@ export default function NoticeList() {
                     </span>
                   </button>
 
-                  {/* 펼쳐지는 본문 내용 */}
+                  {/* 펼쳐지는 본문 내용 (고객센터와 동일한 둥근 카드 스타일) */}
                   {isExpanded && (
                     <div
-                      className={`px-[20px] py-[24px] text-[14px] leading-[150%] text-gray-600 whitespace-pre-wrap border-b border-gray-100 animate-fade-in-up ${
-                        isNewNotice ? 'bg-[#EFF6FF]' : 'bg-[#F9FAFB]'
+                      className={`w-full px-[20px] pb-[20px] border-b border-gray-100 ${
+                        isNewNotice ? 'bg-[#EFF6FF]' : 'bg-white'
                       }`}
                     >
-                      {isDetailLoading || (noticeDetail && noticeDetail.announcementId !== notice.announcementId)
-                        ? '공지사항 내용을 불러오는 중입니다...'
-                        : noticeDetail?.content || '내용이 없습니다.'}
+                      <div className="w-full min-h-[106px] p-[15px] rounded-[8px] bg-[#f4f8ff] text-gray-700 text-[12px] font-medium leading-[160%] tracking-normal text-left whitespace-pre-wrap animate-fade-in-up flex flex-col justify-center">
+                        {isDetailLoading ||
+                        (noticeDetail && noticeDetail.announcementId !== notice.announcementId)
+                          ? '공지사항 내용을 불러오는 중입니다...'
+                          : noticeDetail?.content || '내용이 없습니다.'}
+                      </div>
                     </div>
                   )}
                 </div>
