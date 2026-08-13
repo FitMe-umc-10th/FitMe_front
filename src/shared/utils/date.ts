@@ -33,3 +33,42 @@ export const formatKoreanDate = (dateStr?: string | null): string => {
 
   return `${year}. ${month}. ${day}. (${weekday})`;
 };
+
+export const formatRelativeTime = (dateStr?: string | null): string => {
+  if (!dateStr) return '';
+
+  // 이미 상대 시간 형식("2시간 전", "어제" 등)인 경우 그대로 반환
+  if (
+    dateStr.includes('전') ||
+    dateStr.includes('어제') ||
+    dateStr.includes('오늘') ||
+    dateStr.includes('방금')
+  ) {
+    return dateStr;
+  }
+
+  const targetDate = new Date(dateStr);
+  if (Number.isNaN(targetDate.getTime())) {
+    return dateStr;
+  }
+
+  const now = new Date();
+  const diffMs = now.getTime() - targetDate.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffMin < 1) return '방금 전';
+  if (diffMin < 60) return `${diffMin}분 전`;
+  if (diffHour < 24) return `${diffHour}시간 전`;
+  if (diffDay === 1) return '어제';
+  if (diffDay < 7) return `${diffDay}일 전`;
+  if (diffDay < 30) return `${Math.floor(diffDay / 7)}주 전`;
+
+  const year = targetDate.getFullYear();
+  const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+  const day = String(targetDate.getDate()).padStart(2, '0');
+  return `${year}.${month}.${day}`;
+};
+

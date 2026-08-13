@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getAnnouncements, getAnnouncementDetail } from '@/apis/announcements';
 import { Layout } from '@/shared/components';
 import chevronLeftIcon from '@/assets/icons/chevron-left.svg';
+import { formatRelativeTime } from '@/shared/utils/date';
 
 export default function NoticeList() {
   const navigate = useNavigate();
@@ -31,10 +32,10 @@ export default function NoticeList() {
     return (
       <Layout
         header={
-          <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
-            <div className="w-[41px] h-[41px]" />
-            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 text-center">
-              공지 사항
+          <header className="relative flex h-14 items-center bg-white px-5">
+            <div className="w-[10.25px]" />
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] tracking-[0px] text-[#000B24] select-none text-center">
+              공지사항
             </h1>
           </header>
         }
@@ -51,18 +52,18 @@ export default function NoticeList() {
   return (
     <Layout
       header={
-        <header className="relative flex h-14 items-center bg-white px-4 border-b border-gray-100/50">
+        <header className="relative flex h-14 items-center bg-white px-5">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="w-[41px] h-[41px] flex items-center justify-center rounded-full text-gray-800 hover:bg-gray-50 active:scale-95 transition-all shrink-0"
+            className="flex items-center justify-center p-0 text-gray-800 hover:opacity-70 active:scale-95 transition-all shrink-0 focus:outline-none"
+            aria-label="뒤로가기"
           >
-            <img src={chevronLeftIcon} className="size-6" alt="뒤로가기" />
+            <img src={chevronLeftIcon} className="w-[10.25px] h-[18.45px] block" alt="뒤로가기" />
           </button>
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] text-gray-950 select-none text-center">
-            공지 사항
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold leading-[140%] tracking-[0px] text-[#000B24] select-none text-center">
+            공지사항
           </h1>
-          <div className="w-[41px] h-[41px]" />
         </header>
       }
       className="bg-white"
@@ -72,6 +73,7 @@ export default function NoticeList() {
           <div className="flex flex-col bg-white">
             {notices.map((notice) => {
               const isExpanded = expandedId === notice.announcementId;
+              const isNewNotice = Boolean(notice.isNew);
 
               return (
                 <div key={notice.announcementId} className="w-full flex flex-col">
@@ -79,36 +81,38 @@ export default function NoticeList() {
                   <button
                     type="button"
                     onClick={() => handleToggle(notice.announcementId)}
-                    className={`w-full h-[75px] px-[20px] py-[24px] flex items-center justify-between transition-colors focus:outline-none ${
-                      notice.isNew ? 'bg-[#f0f6ff]/70' : 'bg-white border-b border-gray-100/80'
+                    className={`w-full h-[75px] px-[20px] py-[24px] flex items-center justify-between border-b border-gray-100 transition-colors focus:outline-none ${
+                      isNewNotice ? 'bg-[#EFF6FF]' : 'bg-white hover:bg-gray-50/50'
                     }`}
                   >
                     <div className="flex items-center gap-[8px] min-w-0">
                       {/* 안내 배지 (w-45 h-27, 8px gap) */}
                       <span
                         className={`w-[45px] h-[27px] rounded-[8px] text-[12px] font-semibold leading-[160%] tracking-[-0.24px] flex items-center justify-center shrink-0 ${
-                          notice.isNew ? 'bg-[#e6f0ff] text-[#0066ff]' : 'bg-gray-100 text-gray-500'
+                          isNewNotice
+                            ? 'bg-[#DBEAFE] text-[#247BFF]'
+                            : 'bg-[#F2F2F2] text-[#737373]'
                         }`}
                       >
                         안내
                       </span>
                       {/* 공지사항 제목 (16px SemiBold, leading-140%) */}
-                      <span className="text-[16px] font-semibold leading-[140%] tracking-normal text-gray-800 truncate select-none">
+                      <span className="text-[16px] font-semibold leading-[140%] tracking-[0px] text-[#1E1E1E] truncate select-none text-left">
                         {notice.title}
                       </span>
                     </div>
 
-                    {/* 시간 표시 (12px Medium, leading-160%) */}
-                    <span className="text-[12px] font-medium leading-[160%] tracking-normal text-gray-400 shrink-0 select-none ml-2">
-                      {notice.createdAt}
+                    {/* 시간 표시 (12px Medium, leading-160%, 상대 시간 포맷) */}
+                    <span className="text-[12px] font-medium leading-[160%] tracking-[0px] text-[#A5A5A5] shrink-0 select-none ml-2">
+                      {formatRelativeTime(notice.createdAtString || notice.createdAt)}
                     </span>
                   </button>
 
                   {/* 펼쳐지는 본문 내용 */}
                   {isExpanded && (
                     <div
-                      className={`px-[20px] py-[24px] text-[14px] leading-[150%] text-gray-600 whitespace-pre-wrap border-b border-gray-100/80 animate-fade-in-up ${
-                        notice.isNew ? 'bg-[#f0f6ff]/40' : 'bg-slate-50/50'
+                      className={`px-[20px] py-[24px] text-[14px] leading-[150%] text-gray-600 whitespace-pre-wrap border-b border-gray-100 animate-fade-in-up ${
+                        isNewNotice ? 'bg-[#EFF6FF]' : 'bg-[#F9FAFB]'
                       }`}
                     >
                       {isDetailLoading || (noticeDetail && noticeDetail.announcementId !== notice.announcementId)
