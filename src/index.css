@@ -1,6 +1,11 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
 @import 'tailwindcss';
 
+:root {
+  --ColorPrimary: #0059FF;
+  --ColorPrimary15: rgba(0, 89, 255, 0.15);
+}
+
 /* 모바일 우선. 기본 리셋 */
 html,
 body,
