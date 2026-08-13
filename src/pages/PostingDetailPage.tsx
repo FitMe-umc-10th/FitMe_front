@@ -15,6 +15,7 @@ import PostingThumbnail from '@/shared/components/PostingThumbnail';
 import Skeleton from '@/shared/components/Skeleton';
 import { useToggleSave } from '@/shared/hooks/useToggleSave';
 import { Layout } from '@/shared/components';
+import { copyTextToClipboard } from '@/shared/utils/clipboard';
 import { useModalStore } from '@/store/modalStore';
 import { useToastStore } from '@/store/toastStore';
 import type { Posting } from '@/types/posting';
@@ -55,7 +56,7 @@ function formatCount(count?: number) {
   return count.toLocaleString('ko-KR');
 }
 
-function DetailHeader() {
+function DetailHeader({ onShare }: { onShare: () => void }) {
   const navigate = useNavigate();
 
   return (
@@ -83,6 +84,7 @@ function DetailHeader() {
       <button
         type="button"
         aria-label="공유하기"
+        onClick={onShare}
         className="absolute right-4 top-[17px] flex size-[31px] items-center justify-center rounded-full text-[#262626] transition-colors hover:bg-gray-100"
       >
         <svg viewBox="0 0 31 31" aria-hidden="true" className="size-[31px]">
@@ -357,6 +359,22 @@ export default function PostingDetailPage() {
     enabled: isValidPostingId,
   });
 
+  const handleShare = useCallback(async () => {
+    const applicationUrl = data?.applyUrl || data?.applicationUrl;
+
+    if (!applicationUrl) {
+      showToast('지원 링크를 찾을 수 없습니다.', 'error');
+      return;
+    }
+
+    try {
+      await copyTextToClipboard(applicationUrl);
+      showToast('공고 URL이 클립보드에 복사되었습니다', 'success');
+    } catch {
+      showToast('공고 URL 복사에 실패했습니다.', 'error');
+    }
+  }, [data?.applicationUrl, data?.applyUrl, showToast]);
+
   const openApplyCompleteModal = useCallback((application: PostingApplicationResult) => {
     openModal({
       title: '지원을 완료하셨나요?',
@@ -451,7 +469,7 @@ export default function PostingDetailPage() {
   }, [isWaitingForApplyReturn, openApplyCompleteModal, pendingApplication]);
 
   return (
-    <Layout header={<DetailHeader />} className="bg-white">
+    <Layout header={<DetailHeader onShare={handleShare} />} className="bg-white">
       <section className="mx-auto min-h-[calc(100dvh-56px)] w-full max-w-[402px] pb-[112px]">
         {isPending && <Skeleton variant="list" count={2} />}
         {!isValidPostingId && (
