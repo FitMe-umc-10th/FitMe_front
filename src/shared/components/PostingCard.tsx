@@ -88,26 +88,41 @@ export default function PostingCard({
         </div>
 
         {carouselIndexLabel && (
-          <div className={`relative z-10 flex items-center justify-center rounded-full bg-[#A5A5A5] text-center font-normal text-white ${
-            carouselActive
-              ? 'h-5 w-7 px-[5px] text-[10px] leading-5 tracking-[-0.244565px]'
-              : 'h-[17px] w-[24.98px] px-[5px] text-[8.32192px] leading-[17px] tracking-[-0.203525px]'
-          }`}>
+          <div
+            className={`relative z-10 flex items-center justify-center rounded-full bg-[#A5A5A5] text-center font-normal text-white ${
+              carouselActive
+                ? 'h-5 w-7 px-[5px] text-[10px] leading-5 tracking-[-0.244565px]'
+                : 'h-[17px] w-[24.98px] px-[5px] text-[8.32192px] leading-[17px] tracking-[-0.203525px]'
+            }`}
+          >
             {carouselIndexLabel}
           </div>
         )}
 
-        <div className={`relative z-10 flex w-full flex-col items-start ${carouselActive ? 'h-[107px] gap-2' : 'h-[90.62px] gap-[6.66px]'}`}>
+        <div
+          className={`relative z-10 flex w-full flex-col items-start ${carouselActive ? 'gap-2' : 'gap-[6.66px]'}`}
+        >
           <DayBadge deadline={posting.deadline} variant={carouselActive ? 'glass' : 'glassDark'} />
 
-          <div className={`flex w-full flex-col items-start ${carouselActive ? 'h-[72px] gap-1' : 'h-[61.3px] gap-[3.33px]'}`}>
-            <h3 className={`line-clamp-2 w-full font-semibold leading-[140%] text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.9)] ${carouselActive ? 'h-11 text-[16px]' : 'h-[38px] text-[13.3151px]'}`}>
+          <div
+            className={`flex w-full flex-col items-start ${carouselActive ? 'gap-1' : 'gap-[3.33px]'}`}
+          >
+            <h3
+              className={`line-clamp-2 w-full font-semibold leading-[140%] text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.9)] ${carouselActive ? 'text-[16px]' : 'text-[13.3151px]'}`}
+            >
               {posting.title}
             </h3>
 
             <div className="flex h-[19.97px] w-full items-center justify-between">
-              <div className={`flex min-w-0 items-center font-medium leading-[160%] text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.9)] ${carouselActive ? 'gap-[5px] text-[10px]' : 'gap-[4.16px] text-[8.32192px]'}`}>
-                <img src={organizationIcon} alt="" aria-hidden="true" className={`${carouselActive ? 'size-2.5' : 'size-[8.32px]'} shrink-0 brightness-0 invert`} />
+              <div
+                className={`flex min-w-0 items-center font-medium leading-[160%] text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.9)] ${carouselActive ? 'gap-[5px] text-[10px]' : 'gap-[4.16px] text-[8.32192px]'}`}
+              >
+                <img
+                  src={organizationIcon}
+                  alt=""
+                  aria-hidden="true"
+                  className={`${carouselActive ? 'size-2.5' : 'size-[8.32px]'} shrink-0 brightness-0 invert`}
+                />
                 <span className="truncate">{posting.organization}</span>
               </div>
 
@@ -146,7 +161,12 @@ export default function PostingCard({
           </h3>
 
           <div className="flex h-[15px] w-[146px] min-w-0 items-center gap-1 text-[10px] font-medium leading-[160%] text-[#A5A5A5]">
-            <img src={organizationIcon} alt="" aria-hidden="true" className="size-[12.35px] shrink-0" />
+            <img
+              src={organizationIcon}
+              alt=""
+              aria-hidden="true"
+              className="size-[12.35px] shrink-0"
+            />
             <span className="min-w-0 flex-1 truncate">{posting.organization}</span>
           </div>
         </div>
