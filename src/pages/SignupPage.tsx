@@ -216,7 +216,7 @@ export default function SignupPage() {
                     type="button"
                     disabled={!emailFormatValid}
                     onClick={sendCode}
-                    className={`h-12 shrink-0 rounded-lg px-3 text-[10px] font-medium text-white ${
+                    className={`flex h-12 w-[86px] shrink-0 items-center justify-center rounded-xl px-[10px] text-[12px] font-medium leading-[160%] text-white ${
                       emailFormatValid ? 'bg-[#0059FF]' : 'bg-[#D9D9D9]'
                     }`}
                   >
@@ -246,7 +246,7 @@ export default function SignupPage() {
               type="button"
               disabled={!codeSent || isVerified}
               onClick={verifyCode}
-              className={`h-12 shrink-0 rounded-lg px-3 text-[10px] font-medium text-white ${
+              className={`flex h-12 w-[86px] shrink-0 items-center justify-center rounded-xl px-[10px] text-[12px] font-medium leading-[160%] text-white ${
                 codeSent && !isVerified ? 'bg-[#0059FF]' : 'bg-[#D9D9D9]'
               }`}
             >

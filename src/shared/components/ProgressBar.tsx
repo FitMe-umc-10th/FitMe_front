@@ -8,14 +8,14 @@ export function ProgressBar({ current, total }: ProgressBarProps) {
 
   return (
     <div
-      className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200"
+      className="h-2 w-full overflow-hidden rounded-[10px] bg-[#D9D9D9]"
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={total}
       aria-valuenow={current}
     >
       <div
-        className="h-full rounded-full bg-blue-600"
+        className="h-full rounded-[10px] bg-[#0059FF]"
         style={{
           width: `${percent}%`,
           // 푸딩 탄성 — 목표 살짝 넘었다가 되돌아옴
