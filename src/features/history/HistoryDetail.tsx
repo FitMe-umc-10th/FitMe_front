@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getHistoryDetail, updateHistoryMemo } from '@/apis/history';
 import organizationIcon from '@/assets/icons/organization.svg';
 import { Layout } from '@/shared/components';
+import { copyTextToClipboard } from '@/shared/utils/clipboard';
 import { formatKoreanDate } from '@/shared/utils/date';
 import { useToastStore } from '@/store/toastStore';
 import type { UserApplicationDetail } from '@/types/history';
@@ -71,11 +72,21 @@ export default function HistoryDetail() {
     if (historyItem && memoText !== (historyItem.memo || '')) updateMemoMutation.mutate(memoText);
   };
 
-  const handleShare = () => {
-    void navigator.clipboard.writeText(window.location.href).then(
-      () => showToast('이력 상세 링크가 클립보드에 복사되었습니다.', 'success'),
-      () => showToast('공유 링크 복사에 실패했습니다.', 'error'),
-    );
+  const handleShare = async () => {
+    if (!historyItem) return;
+
+    const applicationUrl = historyItem.post.applyUrl || historyItem.post.applicationUrl;
+    if (!applicationUrl) {
+      showToast('지원 링크를 찾을 수 없습니다.', 'error');
+      return;
+    }
+
+    try {
+      await copyTextToClipboard(applicationUrl);
+      showToast('공고 URL이 클립보드에 복사되었습니다', 'success');
+    } catch {
+      showToast('공고 URL 복사에 실패했습니다.', 'error');
+    }
   };
 
   const detailHeader = (
@@ -100,7 +111,7 @@ export default function HistoryDetail() {
       <h1 className="h-7 text-center text-[20px] font-semibold leading-[140%] text-[#000B24]">이력 상세</h1>
       <button
         type="button"
-        onClick={handleShare}
+        onClick={() => void handleShare()}
         aria-label="공유하기"
         className="absolute right-4 top-[17px] flex size-[31px] items-center justify-center rounded-full text-[#262626] transition-colors hover:bg-gray-100"
       >
