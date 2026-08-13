@@ -121,9 +121,18 @@ export default function SignupPage() {
           type="button"
           onClick={() => navigate(-1)}
           aria-label="뒤로가기"
-          className="absolute left-5 text-2xl text-gray-800"
+          className="absolute left-5 flex h-9 w-[18px] items-center justify-center"
         >
-          ‹
+          <svg viewBox="0 0 18 36" aria-hidden="true" className="h-9 w-[18px]">
+            <path
+              d="M12.5 8 5.5 18l7 10"
+              fill="none"
+              stroke="#1E1E1E"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
         <h1 className="text-[20px] font-semibold text-[#111827]">회원가입</h1>
       </div>

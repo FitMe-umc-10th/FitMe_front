@@ -28,7 +28,7 @@ export function TabBar({ items = DEFAULT_ITEMS }: TabBarProps) {
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                `flex h-full flex-col items-center justify-center gap-1 text-[12px] font-semibold transition-colors ${
+                `flex h-full flex-col items-center justify-center gap-1 text-[12px] font-medium transition-colors ${
                   isActive ? 'text-[#0059FF]' : 'text-[#A5A5A5]'
                 }`
               }
