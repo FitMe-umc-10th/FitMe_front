@@ -1,4 +1,4 @@
-export type PostingType = 'SCHOLARSHIP' | 'CONTEST';
+export type PostingType = 'SCHOLARSHIP' | 'CONTEST' | 'ETC';
 
 export interface Posting {
   id: number;
@@ -62,7 +62,7 @@ export interface HomePostingFeed {
   popularPostings: Posting[];
   recentViewedName: string;
   recentViewedPostings: Posting[];
-  deadlinePostings: Record<PostingType, Posting[]>;
+  deadlinePostings: Record<'SCHOLARSHIP' | 'CONTEST', Posting[]>;
 }
 
 export interface RecentViewedPostingFeed {

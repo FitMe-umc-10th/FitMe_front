@@ -272,6 +272,7 @@ export const mapApiPostingApplication = (application: ApiPostingApplication): Po
 
 const normalizePostingType = (type?: ApiPostingType): PostingType => {
   if (type === 'CONTEST') return 'CONTEST';
+  if (type === 'ETC') return 'ETC';
   return 'SCHOLARSHIP';
 };
 

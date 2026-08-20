@@ -18,8 +18,8 @@ interface RecentSearchItem {
   keyword: string;
 }
 
-// 공모전 카테고리 정의 (Swagger Enum: PM, MARKETING, DESIGN, IT, VIDEO, ETC)
-const CATEGORIES = ['마케팅', '기획/아이디어', '디자인', 'IT/개발', '어학', '영상편집'];
+// 공모전 카테고리 정의 (Swagger Enum: PM, MARKETING, DESIGN, IT, VIDEO, LANGUAGE, ETC)
+const CATEGORIES = ['마케팅', '기획/아이디어', '디자인', 'IT/개발', '어학', '영상편집', '기타'];
 
 // 정렬 드롭다운 옵션
 const SORT_OPTIONS = [
@@ -37,18 +37,22 @@ const EXPLORE_TABS = [
 // 추천 테마 키워드 (피그마 시안 반영)
 const RECOMMENDED_THEMES = ['고액장학금', '디자인공모전', '해외연수프로그램', '창업지원프로그램'];
 
-const CATEGORY_MAP: Record<string, 'PM' | 'MARKETING' | 'DESIGN' | 'IT' | 'VIDEO' | 'ETC'> = {
+const CATEGORY_MAP: Record<
+  string,
+  'PM' | 'MARKETING' | 'DESIGN' | 'IT' | 'VIDEO' | 'LANGUAGE' | 'ETC'
+> = {
   마케팅: 'MARKETING',
   '기획/아이디어': 'PM',
   디자인: 'DESIGN',
   'IT/개발': 'IT',
-  어학: 'ETC',
+  어학: 'LANGUAGE',
   영상편집: 'VIDEO',
+  기타: 'ETC',
 };
 
 const mapSearchPostItemToPosting = (item: SearchPostItem): Posting => ({
   id: item.postId,
-  type: item.type === 'CONTEST' ? 'CONTEST' : 'SCHOLARSHIP',
+  type: item.type === 'CONTEST' ? 'CONTEST' : item.type === 'ETC' ? 'ETC' : 'SCHOLARSHIP',
   title: item.title,
   organization: item.organization,
   deadline: item.deadlineDate,

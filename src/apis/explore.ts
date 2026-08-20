@@ -5,7 +5,7 @@ import type { SearchPostsResult } from '@/types/explore';
 export interface GetSearchPostsParams {
   type?: 'ALL' | 'SCHOLARSHIP' | 'CONTEST' | 'ETC';
   sort?: 'DEADLINE' | 'RECENT';
-  category?: 'PM' | 'MARKETING' | 'DESIGN' | 'IT' | 'VIDEO' | 'ETC';
+  category?: 'PM' | 'MARKETING' | 'DESIGN' | 'IT' | 'VIDEO' | 'LANGUAGE' | 'ETC';
   keyword?: string;
   idCursor?: number;
   deadlineCursor?: string;

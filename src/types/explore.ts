@@ -6,7 +6,7 @@ export interface SearchPostItem {
   deadlineLabel: string;
   organization: string;
   thumbnailUrl: string;
-  category: 'PM' | 'MARKETING' | 'DESIGN' | 'IT' | 'VIDEO' | 'ETC' | null;
+  category: 'PM' | 'MARKETING' | 'DESIGN' | 'IT' | 'VIDEO' | 'LANGUAGE' | 'ETC' | null;
   saved: boolean;
 }
 
