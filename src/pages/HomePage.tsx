@@ -15,7 +15,7 @@ import PostingCard from '@/shared/components/PostingCard';
 import Skeleton from '@/shared/components/Skeleton';
 import { ErrorState, Header, Layout, Logo, Tab, TabBar } from '@/shared/components';
 import { useAuthStore } from '@/store/authStore';
-import type { Posting, PostingType } from '@/types/posting';
+import type { Posting } from '@/types/posting';
 
 type SectionHeaderProps = {
   title: string;
@@ -24,7 +24,9 @@ type SectionHeaderProps = {
   compact?: boolean;
 };
 
-const deadlineTabs: { label: string; value: PostingType }[] = [
+type HomeDeadlineTab = 'SCHOLARSHIP' | 'CONTEST';
+
+const deadlineTabs: { label: string; value: HomeDeadlineTab }[] = [
   { label: '장학금', value: 'SCHOLARSHIP' },
   { label: '공모전', value: 'CONTEST' },
 ];
@@ -101,7 +103,7 @@ function HorizontalPostingList({ postings }: { postings: Posting[] }) {
 export default function HomePage() {
   const navigate = useNavigate();
   const storedUserName = useAuthStore((state) => state.userName);
-  const [activeDeadlineTab, setActiveDeadlineTab] = useState<PostingType>('SCHOLARSHIP');
+  const [activeDeadlineTab, setActiveDeadlineTab] = useState<HomeDeadlineTab>('SCHOLARSHIP');
   const [isRecentViewedExpanded, setIsRecentViewedExpanded] = useState(false);
 
   const { data, isPending, isError, refetch } = useQuery({

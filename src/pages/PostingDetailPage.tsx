@@ -157,9 +157,12 @@ function MetricIcon({ type }: { type: 'view' | 'heart' }) {
 }
 
 function TypeBadge({ posting }: { posting: Posting }) {
+  const typeLabel =
+    posting.type === 'SCHOLARSHIP' ? '장학금' : posting.type === 'ETC' ? '기타' : '공모전';
+
   return (
-    <span className="inline-flex h-[27px] w-14 items-center justify-center rounded-2xl bg-[#EFF6FF] px-3 py-1 text-[12px] font-medium leading-[160%] text-[#0059FF] [font-family:Pretendard]">
-      {posting.type === 'SCHOLARSHIP' ? '장학금' : '공모전'}
+    <span className="inline-flex h-[27px] min-w-14 items-center justify-center rounded-2xl bg-[#EFF6FF] px-3 py-1 text-[12px] font-medium leading-[160%] text-[#0059FF] [font-family:Pretendard]">
+      {typeLabel}
     </span>
   );
 }
